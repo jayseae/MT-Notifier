@@ -2,8 +2,8 @@
 # MT-Notifier: Configure subscriptions to your blog.
 # A Plugin for Movable Type
 #
-# Release '2.4.3'
-# January 21, 2005
+# Release '2.4.5'
+# March 1, 2005
 #
 # http://jayseae.cxliv.org/notifier/
 # http://www.amazon.com/o/registry/2Y29QET3Y472A/
@@ -27,7 +27,7 @@ use vars qw(@ISA $FILESET $FILEURL $VERSION);
 @ISA = qw(MT::App::CMS);
 $FILESET = 'n2x';
 $FILEURL = 'mt-notifier.cgi';
-$VERSION = '2.4.3';
+$VERSION = '2.4.5';
 
 sub uri {
   $_[0]->path . ($_[0]->{author} ? MT::ConfigMgr->instance->AdminScript : $_[0]->script);
@@ -1027,7 +1027,7 @@ sub manage_address {
   $mail = $app->{query}->param('mail') unless $mail;
   $code = $app->{query}->param('code') unless $code;
   my %param = (by_address => 1, do_javascript => 1, manage_items => 1);
-  my $error;
+  my ($error, $redir);
   if ($mail && $code) {
     $param{akey} = $akey;
     $param{code} = $code;
@@ -1061,6 +1061,7 @@ sub manage_address {
       my $permit = $app->get_configuration_option($dkey, 'type');
       my $type = $app->{query}->param('type') || $permit;
       $error = $app->subs('add', $type, $dkey, $mail);
+      $redir = 1 unless $error;
     } else {
       $error = 4;
     }
@@ -1077,7 +1078,11 @@ sub manage_address {
   }
   $param{method} = $app->{query}->param('method');
   $param{notifier_message} = status_message($app, $error);
-  $app->build_page('notifier.tmpl', \%param);
+  if ($redir && (my $url = $app->{query}->param('url'))) {
+    print "Location: $url\n\n";
+  } else {
+    $app->build_page('notifier.tmpl', \%param);
+  }
 }
 
 sub manage_record {

@@ -1,8 +1,8 @@
 MT-Notifier: Configure subscriptions to your blog.
 A Plugin for Movable Type
 
-Release '2.4.3'
-January 21, 2005
+Release '2.4.5'
+March 1, 2005
 
 http://jayseae.cxliv.org/notifier/
 http://www.amazon.com/o/registry/2Y29QET3Y472A/
@@ -191,6 +191,12 @@ change the value of dkey to "<$MTCategoryID$>:C", and for blogs, change the valu
 is sent correctly to the mt-notifier script, it doesn't matter how the value gets
 populated.
 
+If you'd like to return the user to a page other than the default MT-Notifier
+confirmation page, specify an input field named "url", containing the location
+of the page you'd like to use for redirection after the subscription is processed.
+
+    <input type="hidden" name="url" value="<$MTBlogURL$>" />
+
 Because of the changes to the architecture in MT-Notifier v2.0.1, your existing stand-
 alone forms will probably need to be changed so that they will still work.
 
@@ -218,6 +224,12 @@ showing some love so that I don't have to make that decision.  Thanks.
 *** -------------------------------------------------------------------- ***
 
 Changelog:
+2.4.5
+  - Added ability to specify parameter "url" on subscription form.
+  - March 1, 2005
+2.4.4
+  - Added MTNotifierCatID template tag to display ID of context category.
+  - February 15, 2005
 2.4.3
   - Fixed blog or category subscriptions when subscription type set (like 2.3.5).
   - January 21, 2005
