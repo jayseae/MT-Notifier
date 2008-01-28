@@ -1,0 +1,300 @@
+MT-Notifier
+A Plugin for Movable Type
+
+Release 1.4.1
+March 17, 2004
+
+http://www.cxliv.org/jayseae/notifier/
+
+Copyright (c) 2003-2004, Chad Everett (plugins@cxliv.org)
+
+The program is licensed under the Open Software License version 2.0
+http://www.opensource.org/licenses/osl-2.0.php
+
+If you find the software useful or even like it, then a simple 'thank you'
+is always appreciated.  A reference back is even nicer so others can find
+out about me.  If you figure out how you can make money from the software,
+do what you feel is right.  I do have a wish list at Amazon if you are in
+need of an idea.  :)
+
+*** -------------------------------------------------------------------- ***
+
+This Movable Type plugin allows you to provide a subscription service to
+your users so that they can keep up on changes to your site without having
+to check back repeatedly.  Notifier also has support for blog-wide opt-out
+of notifications and allows the customization of the "from" address on the
+notification messages on a per-blog or per-installation basis.
+
+*** -------------------------------------------------------------------- ***
+
+Installation:
+
+- Install the necessary files to your web server.
+
+mt-notifier.cgi to your main MT directory (chmod to 755)
+
+notifier.pm to extlib/jayseae/notifier.pm under your main MT directory
+
+notifier.tmpl to tmpl/cms/notifier.tmpl under your main MT directory
+
+- Using a browser, connect to mt-notifier.cgi so that you can set the
+default "from" addresses for your blog(s):
+
+        http://www.example.com/cgi-bin/mt/mt-notifier.cgi
+
+You are required to login to access manual mode, which provides you with a
+menu of options.  After logging in to your Movable Type account, scroll to
+the bottom of the page.  The next-to-last section allows you to enter an
+email address to use as your default.  Enter the email address and select
+the blog for which this will be the default, then click GO.  You can set the
+default for all blogs on this installation by selecting the * All Blogs *
+option from the list.
+
+This default address is used when sending notification messages.  In order
+to determine the "from" address, the plugin first looks for a default
+address for that blog.  If that is not found, the plugin looks for an email
+address configured as a default for all blogs.  If that is not found, the
+plugin then checks the entry author profile to see if there is an email
+address in the profile.  If there is still not a default sender address,
+the plugin uses 'user@domain.com'.  So if you see this address on your
+notifications, it means that you haven't configured a default anywhere.
+
+- If you'd like to use your existing comments form to allow users to add an
+email to the subscription list, add a field named "subscribe" to the form.
+I used a checkbox myself, you may want to use a hidden field to subscribe
+everyone automatically.
+
+Make sure that you update not only your comments form on the individual
+template or comment listing template, but also your comment preview and
+comment error templates too, or else you may lose that setting.
+
+As there is no MT template tag for this value, you'll either need to use
+PHP to set the value of the field correctly, or simply display the field
+again and let the user check it again before submitting.  If the latter,
+you may want to include a message to that effect to draw their attention.
+
+*** -------------------------------------------------------------------- ***
+
+Installation:
+
+Beginning with version 1.4 of MT-Notifier, the plugin will attempt to apply
+the hack necessary to the modules you need to update in order to install the
+plugin.  Simply access the manual mode menu.  At the top of the screen, you
+will see the modules you have installed that have this feature available,
+as well as links to make the changes (install/uninstall).
+
+Even if you don't use the auto-hack feature, you may want to make use of the
+auto-backup feature.  Simply by clicking a link, you can create a backup of
+the modules used by MT-Notifier.  If you then make a change that breaks your
+system, simply restore the backup and you're back in business.
+
+If you don't use the auto-hack feature, you'll need to do it manually.  Here
+are the instructions if this describes you...
+
+- Create a backup copy of your Comments.pm module.  This can be found in
+the lib/MT/App folder underneath your main MT directory.  This step is not
+required, but you're going to edit it, so why not have a backup, just in
+case?  Especially because of the auto-backup feature built into the manual
+mode screen, it's painless.
+
+- Using one of your copies of Comments.pm, search for:
+
+        return $app->redirect($link_url);
+
+You will find it around line 236 of the standard (v2.66) distribution of 
+Movable Type.  Immediately before this line is a closing brace (}).  Insert
+these lines just before that brace:
+
+        require jayseae::notifier;
+        &jayseae::notifier::notify ( $app, $blog, $entry, $comment );
+
+The code in that area will look like this when you are done:
+
+        require jayseae::notifier;
+        &jayseae::notifier::notify ( $app, $blog, $entry, $comment );
+    }
+    return $app->redirect($link_url);
+}
+
+Save the module and replace the version on your server.  You did make a
+copy as a backup in case something went wrong, didn't you?  If you find
+that your comments have suddenly broken, and you used the auto-backup
+option, simply click the "restore" link to go back where you were.
+
+- If you are using MT-Blacklist version 1.61b or prior, you'll also want
+to perform these steps on Blacklist.pm.  Perform the same search, you'll
+find it around line 3119.  If you use version 1.62 or higher, you'll want
+to look in the MTBLPost.pm file instead, but the instructions are the same.
+If you use version 1.64 or higher, be aware that there are two locations
+where you need to make the change to the file, you only need to change
+the one for the version of Movable Type that you are using.  Or you can
+use the auto-hack feature and let it update both locations for you.
+
+- Finally, make sure that email notification is turned on in your blog, or
+nothing will be sent at all!
+
+*** -------------------------------------------------------------------- ***
+
+Using Manual Mode:
+
+If you connect directly to the script (mt-notifier.cgi), you are required
+to login to your MT installation.  Once you do, you are presented with five
+options.
+
+- Purge Notifier Records
+
+This option allows you to remove records, so please be careful.  You can
+purge all records, all subscription records, all opt-out records and all
+records that are invalid (a deleted blog or entry, for instance, will
+result in an invalid key).  You can also delete subscription records that
+have a corresponding opt-out record.
+
+So if someone subscribes to your entries, then decides they don't want
+anything and creates an opt-out for your blog, this will go through that
+list and remove the entries from the subscription.  This isn't necessary,
+as anyone who is on an opt-out list will not receive notifications.  But
+it will help to keep your files clean, and you may see improved performance
+because of it.
+
+- Subscribe an Address
+
+Enter an email address and select an entry to subscribe to from the drop-
+down list.
+
+- Cancel a Subscription
+
+Select a subscription from the list to remove that subscription.
+
+- Block All Notifications to an Address
+
+Enter an email address and select the blog to block.  If you want to block
+multiple blogs, you'll need to select each individually.
+
+- Remove Notification Block from an Address
+
+Select an opt-out record to remove that record from the database.  Use this
+if someone submits an opt-out request in error and really wants to receive
+subscriptions.
+
+- Configure Default "From" Address
+
+Enter an email address and select the blog that will make use of the email
+you specified when sending notifications.
+
+- Remove Default "From" Address
+
+Select the default address from the list to remove it.
+
+*** -------------------------------------------------------------------- ***
+
+Using Automatic Mode:
+
+In order to subscribe an address to an entry or create an opt-out record,
+you will need to send a string with the appropriate information.  By using
+the automatic mode or making use of your comments form, you can minimize the
+need for the manual mode.  To subscribe, include the mode (sub), the email
+address (email) and the entry ID or the blog ID:
+
+ http://www.example.com/cgi-bin/mt/mt-notifier.cgi
+    ?__mode=sub&email=user@domain.com&entry_id=1
+
+This subscribes user@domain.com to entry #1.  Note this should all be on one
+line to work correctly.
+
+ http://www.example.com/cgi-bin/mt/mt-notifier.cgi
+    ?__mode=sub&email=user@domain.com&blog_id=1
+
+This actually subscribes the same email address (user@domain.com) to the
+opt-out list on blog #1.  It may seem somewhat counter-intuitive at first,
+as it seems that you are removing the user from the list, but in reality you
+are adding the email address to an opt-out list (thus, a subscription).
+
+Here is an example form for subscribing a user to an entry without requiring
+that they post a comment (use inside your individual entry template):
+
+<form method="get" action="http://www.example.com/cgi-bin/mt/mt-notifier.cgi">
+  <input type="hidden" name="__mode" value="sub">
+  <input type="hidden" name="entry_id" value="<$MTEntryID$>">
+  <font>Subscribe Without Commenting</font><br/ ><br />
+  <input name="email" />
+  <input type="submit" class="button" value="Go">
+</form>
+
+By changing the name of the "entry_id" field to "blog_id", and setting the
+value of that field to your blog ID instead of the entry ID, you will have
+a form to allow people to add themselves to your opt-out list.
+
+*** -------------------------------------------------------------------- ***
+
+Upgrading from Scripty Goddess Subscribe to Comments:
+
+Prior to uploading notifier.pm, edit the file and search for $sgs - this is
+the path to the Scripty Goddess subscription file.  This line of the module
+looks something like this:
+
+  my $sgs = '/home/username/public_html/commentsubscribe/subscriptions.inc';
+
+Change the path (and the file name if necessary) to the subscription file,
+making sure to leave the surrounding quotes and the ending semicolon.  Then,
+upload the notifier.pm file to your server, as described above in the section
+on installation.
+
+Once installed, connect to mt-notifier.cgi in your browser with a __mode
+parameter of csg, and this will convert your Scripty Goddess subscription
+file into the records required in the PluginData table, for use with
+MT-Notifier.
+
+Your URL to access the script in this method will look something like this:
+
+ http://www.example.com/cgi-bin/mt/mt-notifier.cgi?__mode=csg
+
+You will be required to log in to your Movable Type installation in order to
+perform this action.  If you would like to further secure your installation
+from re-importation at a later date, set the value of the $sgs variable back
+to the original value (or some other, invalid, setting) so that if someone
+does manage to crack your security, it won't be able to find the file.
+
+*** -------------------------------------------------------------------- ***
+
+Using Notifications:
+
+Once installed, Notifier will send a brief email describing the comment and
+a link to the entry where the comment was left.  Also included are a link that
+allows unsubscribing from the subscription, and a link to opt-out of all
+communications from that site.  The user needs only to click on the link
+in order to unsubscribe or opt-out.  These methods do not require the user
+to login to the MT system.
+
+While the system should work as expected, make sure you only subscribe
+yourself or some close friends in the beginning, to make sure you understand
+what is happening!
+
+*** -------------------------------------------------------------------- ***
+
+Changelog:
+1.4.1
+  - Fixed $sender variable declaration.
+  - March 17, 2004
+1.4
+  - Added auto-backup and auto-hack functions.
+  - Fixed some tags in the template to be XHTML-compliant.
+  - February 6, 2004
+1.3
+  - Added conversion of ScriptyGoddess subscription data.
+  - Fixed distribution package.
+  - December 15, 2003
+1.2
+  - Added per-blog and per-install default "from" addresses.
+  - Added subroutine to get an email address for the sender.
+  - Added purge of address information.
+  - Fixed purges to work correctly.
+  - Removed $SENDER variable.
+  - December 10, 2003
+1.1
+  - Added redirect information on confirmation screen.
+  - Added additional author information to notification email.
+  - Use entry author first, then $SENDER.
+  - November 20, 2003
+1.0
+  - Initial release
+  - November 19, 2003

@@ -1,0 +1,461 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<html>
+<head>
+
+<meta name="description" content="MOVABLE TYPE: Personal Publishing System" />
+<meta http-equiv="Content-Type" content="text/html; charset=<TMPL_VAR NAME=LANGUAGE_ENCODING>" />
+
+<title>Notifier | MOVABLE TYPE</title>
+
+<link rel="stylesheet" href="<TMPL_VAR NAME=STATIC_URI>styles.css" type="text/css">
+
+<script language="JavaScript">
+<!--
+
+if ((!(navigator.appVersion.indexOf('MSIE') != -1) &&
+      (parseInt(navigator.appVersion)==4))) {
+    document.write("<STYLE TYPE=\"text/css\">");
+    document.write("BODY { margin-top: -8px; margin-left: -8px; }"); 
+    document.write("</style>");
+}
+
+var origWidth, origHeight;
+if ((navigator.appName == 'Netscape') &&
+    (parseInt(navigator.appVersion) == 4)) {
+    origWidth = innerWidth;
+    origHeight = innerHeight;
+    window.onresize = restore;
+}
+
+function restore () {
+    if (innerWidth != origWidth || innerHeight != origHeight)
+        location.reload();
+}
+
+//-->
+</script>
+
+</head>
+
+<body>
+
+<!-- Logo and top nav -->
+
+<table border="0" cellspacing="0" cellpadding="0" width="100%">
+
+<tr>
+<td width="188" valign="top"><a href="http://www.movabletype.org/" target="_blank"><img src="<TMPL_VAR NAME=STATIC_URI>images/mt-logo.gif" align="top" width="233" height="68" border="0"></a></td>
+<td width="100%" valign="top">
+
+<TMPL_IF NAME=AUTHOR_NAME>
+
+	<table border="0" cellspacing="0" cellpadding="0">
+
+	<tr>
+	<td valign="top">
+
+		<table border="0" cellspacing="0" cellpadding="0">
+		<tr>
+		<td><a href="<TMPL_VAR NAME=MT_SCRIPT_URL>"><img src="<TMPL_VAR NAME=STATIC_URI>images/lang-<TMPL_VAR NAME=LANGUAGE_TAG>/topnav-menu.gif" width="42" height="27" border="0"></a></td>
+		<td><a target="manual" href="<TMPL_VAR NAME=STATIC_URI>docs/mtmanual.html"><img src="<TMPL_VAR NAME=STATIC_URI>images/lang-<TMPL_VAR NAME=LANGUAGE_TAG>/topnav-help.gif" width="40" height="27" border="0"></a></td>
+		<td><a href="<TMPL_VAR NAME=MT_SCRIPT_URL>?__mode=logout"><img src="<TMPL_VAR NAME=STATIC_URI>images/lang-<TMPL_VAR NAME=LANGUAGE_TAG>/topnav-logout.gif" width="48" height="27" border="0"></a></td>
+		<td><TMPL_IF NAME=BLOG_NAME><a target="_blank" href="<TMPL_VAR NAME=BLOG_URL>"><img src="<TMPL_VAR NAME=STATIC_URI>images/lang-<TMPL_VAR NAME=LANGUAGE_TAG>/topnav-view-site.gif" width="54" height="27" border="0"></a></TMPL_IF></td>
+		</tr>
+		</table>
+
+	</td>
+	<td valign="top">
+
+	<TMPL_IF NAME=BLOG_NAME>
+
+		<table border="0" cellspacing="0" cellpadding="0">
+		<tr>
+		<td valign="top"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="1" height="8"></td>
+		</tr>
+		
+		<tr>
+		<form method="get" action="<TMPL_VAR NAME=MT_SCRIPT_URL>">
+		<input type="hidden" name="__mode" value="search_replace">
+		<input type="hidden" name="blog_id" value="<TMPL_VAR NAME=BLOG_ID>">
+		<input type="hidden" name="search_cols" value="title,text,text_more">
+		<td>&nbsp;</td>
+		<td valign="top"><input class="search" name="search" size="15"></td>
+		<td>&nbsp;</td>
+		<td valign="top"><input class="button-search" type="submit" name="search" value="<MT_TRANS phrase="Search">"></td>
+		</form>
+		</tr>
+		</table>
+
+	</TMPL_IF>
+
+	</td>
+	</tr>
+	
+	<tr>
+	<form method="get" action="<TMPL_VAR NAME=MT_SCRIPT_URL>">
+	<input type="hidden" name="__mode" value="menu">
+	<td valign="top">
+	
+		<table border="0" cellspacing="0" cellpadding="1">
+		<tr>
+		<td>&nbsp;</td>
+		<td valign="middle"><select class="blog" name="blog_id">
+		<TMPL_LOOP NAME=TOP_BLOG_LOOP>
+		<option value="<TMPL_VAR NAME=TOP_BLOG_ID>"<TMPL_IF NAME=TOP_BLOG_SELECTED> selected</TMPL_IF>><TMPL_VAR NAME=TOP_BLOG_NAME>
+		</TMPL_LOOP>
+		</select></td>
+		<td><input type="image" src="<TMPL_VAR NAME=STATIC_URI>images/lang-<TMPL_VAR NAME=LANGUAGE_TAG>/topnav-go-button.gif" width="35" height="28" border="0"></td>
+		<td align="right"><font class="title">&nbsp;<MT_TRANS phrase="User:"> <a href="<TMPL_VAR NAME=MT_SCRIPT_URL>?__mode=view&_type=author&id=<TMPL_VAR NAME=AUTHOR_ID>"><TMPL_VAR NAME=AUTHOR_NAME></a></font></td>
+		</tr>
+		</table>
+	</td>
+	</form>
+	</tr>
+	</table>
+
+</TMPL_IF>
+
+</td>
+</tr>
+
+</table>
+
+<!-- End logo and top nav -->
+
+<!-- Begin main content -->
+
+<table border="0" cellspacing="0" cellpadding="0">
+
+	<tr>
+	<td width="39"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="39" height="1"></td>
+	<td valign="top" width="500"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="500" height="1"></td>
+	</tr>
+
+	<tr>
+	<td><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="1" height="30"></td>
+	</tr>
+
+	<tr>
+	<td width="39"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="39" height="1"></td>
+	<td valign="top" width="500"><TMPL_IF NAME=AUTHOR_ID><a class="title" href="<TMPL_VAR NAME=MT_SCRIPT_URL>">Main Menu &gt;</a> </TMPL_IF><font class="pagetitle">Notifier</font></td>
+	</tr>
+
+	<tr>
+	<td width="39"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="39" height="1"></td>
+	<td valign="top" width="500" bgcolor="#CCCCCC"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="1" height="1"></td>
+	</tr>
+
+	<TMPL_IF NAME=NOTIFIER_MESSAGE>
+	<tr>
+	<td colspan="2"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="1" height="10"></td>
+	</tr>
+
+	<tr>
+	<td width="39"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="39" height="1"></td>
+	<td valign="top" width="500">
+      <p class="message"><TMPL_VAR NAME=NOTIFIER_MESSAGE></p>
+      </td>
+      </tr>
+	</TMPL_IF>
+
+	<tr>
+	<td colspan="2"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="1" height="10"></td>
+	</tr>
+
+	<TMPL_IF NAME=AUTHOR_NAME>
+	<tr>
+      <a name="modstat"></a>
+	<td width="39"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="39" height="1"></td>
+	<td valign="top" width="500">
+	<form method="get" action="<TMPL_VAR NAME=SCRIPT_URL>">
+	<input type="hidden" name="__mode" value="mod">
+	<input type="hidden" name="__auth" value="<TMPL_VAR NAME=AUTHOR_ID>">
+      <font class="pagetitle">Movable Type Module Status</font><br />
+      <font class="instructional">These are the modules that you have installed on your system that may require updating by MT-Notifier before you will be able to make use of notifications. Each module is listed, along with the status of that module and perhaps an option to perform the opposite function on the module.  For instance, if MT-Notifier is installed, you will see a link to uninstall MT-Notifier from that module.  If MT-Notifier is not installed, you will see a link to install it.<br /><br /></font>
+      <TMPL_LOOP NAME=MODULE_LOOP>
+        <font class="pagetitle"><TMPL_VAR NAME=MODULE_TITLE><br /></font>
+        <font class="instructional">MT-Notifier is <TMPL_IF NAME=MODULE_READY>Installed<br /><a class="instructional" href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=unmod&amp;_auth=<TMPL_VAR NAME=AUTHOR_ID>&amp;mod_id=<TMPL_VAR NAME=MODULE_ID>" style="text-decoration: none;">Uninstall</a> &middot; <TMPL_ELSE><TMPL_IF NAME=MODULE_ERROR>Unable to be Installed<br /><TMPL_ELSE>Not Installed<br /><a class="instructional" href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=mod&amp;_auth=<TMPL_VAR NAME=AUTHOR_ID>&amp;mod_id=<TMPL_VAR NAME=MODULE_ID>" style="text-decoration: none;">Install</a> &middot; </TMPL_IF></TMPL_IF>Backup: <TMPL_UNLESS NAME=MODULE_SAVED><a class="instructional" href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=addback&amp;_auth=<TMPL_VAR NAME=AUTHOR_ID>&amp;mod_id=<TMPL_VAR NAME=MODULE_ID>" style="text-decoration: none;">Create</a><TMPL_ELSE><a class="instructional" href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=delback&amp;_auth=<TMPL_VAR NAME=AUTHOR_ID>&amp;mod_id=<TMPL_VAR NAME=MODULE_ID>" style="text-decoration: none;">Delete</a> &middot; <a class="instructional" href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=resback&amp;_auth=<TMPL_VAR NAME=AUTHOR_ID>&amp;mod_id=<TMPL_VAR NAME=MODULE_ID>" style="text-decoration: none;">Restore</a></TMPL_UNLESS><br /><br /></font>
+      </TMPL_LOOP>
+      <font class="instructional">If the message under the module indicates that MT-Notifier cannot be installed, then the module as it exists on your system does not match the default layout expected by the updating routine.  In this case, you will need to perform the work manually in order to integrate MT-Notifier with your Movable Type installation.<br /></font>
+      </form>
+      </td>
+      </tr>
+
+	<tr>
+	<td width="39"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="39" height="1"></td>
+	<td valign="top" width="500" bgcolor="#CCCCCC"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="1" height="1"></td>
+	</tr>
+
+	<tr>
+	<td colspan="2"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="1" height="10"></td>
+	</tr>
+
+	<tr>
+	<td width="39"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="39" height="1"></td>
+	<td valign="top" width="380">
+	<form method="get" action="<TMPL_VAR NAME=SCRIPT_URL>">
+	<input type="hidden" name="__mode" value="purge">
+	<input type="hidden" name="__auth" value="<TMPL_VAR NAME=AUTHOR_ID>">
+      <font class="pagetitle">Purge MT-Notifier Records</font><br /><br />
+      <font class="instructional">
+      <input name="what" type="radio" value="all" /> <font class="pagetitle">All MT-Notifier Records</font><br />Removes all entries from the MT-Notifier database.<br /><br />
+      <input name="what" type="radio" value="allcfg" /> <font class="pagetitle">All MT-Notifier Address Records</font><br />Removes all default address records from the MT-Notifier database.<br /><br />
+      <input name="what" type="radio" value="allopt" /> <font class="pagetitle">All MT-Notifier Opt-Out Records</font><br />Removes all opt-out records from the MT-Notifier database.<br /><br />
+      <input name="what" type="radio" value="allsub" /> <font class="pagetitle">All MT-Notifier Subscription Records</font><br />Removes all subscription records from the MT-Notifier database.<br /><br />
+      <input name="what" type="radio" value="entinv" /> <font class="pagetitle">Records for Invalid Blogs or Entries</font><br />Removes records for blogs or entries that no longer exist.<br /><br />
+      <input name="what" type="radio" value="entopt" /> <font class="pagetitle">Subscription Records with Corresponding Opt-Out</font><br />Removes subscriptions if user has opted out of notifications.<br /><br /><br />
+      </font>
+      <input type="submit" class="button" value="Go">
+      </form>
+      </td>
+      </tr>
+
+	<tr>
+	<td width="39"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="39" height="1"></td>
+	<td valign="top" width="500" bgcolor="#CCCCCC"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="1" height="1"></td>
+	</tr>
+
+	<tr>
+	<td colspan="2"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="1" height="10"></td>
+	</tr>
+
+	<tr>
+      <a name="addsub"></a>
+	<td width="39"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="39" height="1"></td>
+	<td valign="top" width="500">
+	<form method="get" action="<TMPL_VAR NAME=SCRIPT_URL>">
+	<input type="hidden" name="__mode" value="sub">
+	<input type="hidden" name="__auth" value="<TMPL_VAR NAME=AUTHOR_ID>">
+      <font class="pagetitle">Subscribe an Address</font><br />
+      <font class="instructional">Enter a valid email address, then select an entry from the list and click the GO button to create a subscription to that entry.  <i>Caution</i>: The list of entries contains all entries in your Movable Type installation, so the list may be long.  The entries are sorted alphabetically by title.  Press a key on your keyboard to jump to entries that begin with that letter.<br /><br /></font>
+      <input name="email" />
+      <font class="instructional">to:</font><br /><br />
+      <select name="entry_id">
+        <TMPL_LOOP NAME=ENTRY_LOOP>
+        <option value="<TMPL_VAR NAME=ENTRY_ID>"><TMPL_VAR NAME=ENTRY_TITLE> (<TMPL_VAR NAME=ENTRY_ID>)</option>
+        </TMPL_LOOP>
+      </select><br /><br />
+      <input type="submit" class="button" value="Go">
+      </form>
+      </td>
+      </tr>
+
+	<tr>
+	<td width="39"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="39" height="1"></td>
+	<td valign="top" width="500" bgcolor="#CCCCCC"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="1" height="1"></td>
+	</tr>
+
+	<tr>
+	<td colspan="2"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="1" height="10"></td>
+	</tr>
+
+	<tr>
+      <a name="removesub"></a>
+	<td width="39"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="39" height="1"></td>
+	<td valign="top" width="500">
+	<form method="get" action="<TMPL_VAR NAME=SCRIPT_URL>">
+	<input type="hidden" name="__mode" value="unsub">
+	<input type="hidden" name="__auth" value="<TMPL_VAR NAME=AUTHOR_ID>">
+      <font class="pagetitle">Cancel a Subscription</font><br />
+      <font class="instructional">Select a subscription record from the list and click the GO button to remove that record from the MT-Notifier database.  <i>Caution</i>: There is no way to undo this action, so be sure you want to remove the entry before proceeding.  If you are not sure, it might be better in some cases to create an opt-out record instead.<br /><br /></font>
+      <select name="sub_id">
+        <TMPL_LOOP NAME=SUB_LOOP>
+        <option value="<TMPL_VAR NAME=SUB_BLOG>:<TMPL_VAR NAME=SUB_ENTRY>:<TMPL_VAR NAME=SUB_ADDRESS>:<TMPL_VAR NAME=SUB_KEY>"><TMPL_VAR NAME=SUB_ADDRESS> - <TMPL_VAR NAME=SUB_TITLE> (<TMPL_VAR NAME=SUB_ENTRY>)</option>
+        </TMPL_LOOP>
+      </select><br /><br />
+      <input type="submit" class="button" value="Go">
+      </form>
+      </td>
+      </tr>
+
+	<tr>
+	<td width="39"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="39" height="1"></td>
+	<td valign="top" width="500" bgcolor="#CCCCCC"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="1" height="1"></td>
+	</tr>
+
+	<tr>
+	<td colspan="2"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="1" height="10"></td>
+	</tr>
+
+	<tr>
+      <a name="addopt"></a>
+	<td width="39"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="39" height="1"></td>
+	<td valign="top" width="500">
+	<form method="get" action="<TMPL_VAR NAME=SCRIPT_URL>">
+	<input type="hidden" name="__mode" value="sub">
+	<input type="hidden" name="__auth" value="<TMPL_VAR NAME=AUTHOR_ID>">
+      <font class="pagetitle">Block All Notifications to an Address</font><br />
+      <font class="instructional">If you would like to block all notifications to a particular address, then enter that address, select the blog to block and click GO to create an opt-out record in the MT-Notifier database.  This setting will override all subscriptions.  That is, if you create an opt-out record, no subscriptions will be sent to that address while the opt-out record is in place.<br /><br /></font>
+      <input name="email" />
+      <font class="instructional">from:</font><br /><br />
+      <select name="blog_id">
+        <TMPL_LOOP NAME=BLOG_LOOP>
+        <option value="<TMPL_VAR NAME=BLOG_ID>"><TMPL_VAR NAME=BLOG_NAME></option>
+        </TMPL_LOOP>
+      </select><br /><br />
+      <input type="submit" class="button" value="Go">
+      </form>
+      </td>
+      </tr>
+
+	<tr>
+	<td width="39"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="39" height="1"></td>
+	<td valign="top" width="500" bgcolor="#CCCCCC"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="1" height="1"></td>
+	</tr>
+
+	<tr>
+	<td colspan="2"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="1" height="10"></td>
+	</tr>
+
+	<tr>
+      <a name="removeopt"></a>
+	<td width="39"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="39" height="1"></td>
+	<td valign="top" width="500">
+	<form method="get" action="<TMPL_VAR NAME=SCRIPT_URL>">
+	<input type="hidden" name="__mode" value="unsub">
+	<input type="hidden" name="__auth" value="<TMPL_VAR NAME=AUTHOR_ID>">
+      <font class="pagetitle">Remove Notification Block from an Address</font><br />
+      <font class="instructional">Select an opt-out record from the list and click the GO button to remove that record from the MT-Notifier database.  <i>Caution</i>: There is no way to undo this action, so be sure you want to remove the entry before proceeding.  If you remove a record in error, you will have to manually recreate it to put the block back in place.<br /><br /></font>
+      <select name="opt_id">
+        <TMPL_LOOP NAME=OPT_LOOP>
+        <option value="<TMPL_VAR NAME=SUB_BLOG>:<TMPL_VAR NAME=SUB_ENTRY>:<TMPL_VAR NAME=SUB_ADDRESS>:<TMPL_VAR NAME=SUB_KEY>"><TMPL_VAR NAME=SUB_ADDRESS> - <TMPL_VAR NAME=SUB_TITLE></option>
+        </TMPL_LOOP>
+      </select><br /><br />
+      <input type="submit" class="button" value="Go">
+      </form>
+      </td>
+      </tr>
+
+	<tr>
+	<td width="39"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="39" height="1"></td>
+	<td valign="top" width="500" bgcolor="#CCCCCC"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="1" height="1"></td>
+	</tr>
+
+	<tr>
+	<td colspan="2"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="1" height="10"></td>
+	</tr>
+
+	<tr>
+      <a name="addcfg"></a>
+	<td width="39"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="39" height="1"></td>
+	<td valign="top" width="500">
+	<form method="get" action="<TMPL_VAR NAME=SCRIPT_URL>">
+	<input type="hidden" name="__mode" value="cfg">
+	<input type="hidden" name="__auth" value="<TMPL_VAR NAME=AUTHOR_ID>">
+      <font class="pagetitle">Configure Default "From" Address</font><br />
+      <font class="instructional">MT-Notifier can be set to use a particular address when sending email notifications of updates.  Enter a valid email address, select a blog and click the GO button to create a default sender address.  When sending notifications, MT-Notifier will look for an address in this order: A default address for the blog, a default address for all blogs, and finally for an address for the author of the entry.<br /><br /></font>
+      <input name="email" />
+      <font class="instructional">from:</font><br /><br />
+      <select name="blog_id">
+        <option value="0">* All Blogs *</option>
+        <TMPL_LOOP NAME=BLOG_LOOP>
+        <option value="<TMPL_VAR NAME=BLOG_ID>"><TMPL_VAR NAME=BLOG_NAME></option>
+        </TMPL_LOOP>
+      </select><br /><br />
+      <input type="submit" class="button" value="Go">
+      </form>
+      </td>
+      </tr>
+
+	<tr>
+	<td width="39"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="39" height="1"></td>
+	<td valign="top" width="500" bgcolor="#CCCCCC"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="1" height="1"></td>
+	</tr>
+
+	<tr>
+	<td colspan="2"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="1" height="10"></td>
+	</tr>
+
+	<tr>
+      <a name="removecfg"></a>
+	<td width="39"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="39" height="1"></td>
+	<td valign="top" width="500">
+	<form method="get" action="<TMPL_VAR NAME=SCRIPT_URL>">
+	<input type="hidden" name="__mode" value="uncfg">
+	<input type="hidden" name="__auth" value="<TMPL_VAR NAME=AUTHOR_ID>">
+      <font class="pagetitle">Remove Default "From" Address</font><br />
+      <font class="instructional">If any default addresses have been configured, they will be listed in the drop-down list below.  Select an entry from the list and click the GO button to remove that default address from the MT-Notifier database.  <i>Caution</i>: This action cannot be undone.  If you remove an address in error, you will need to manually add that address back to the system.<br /><br /></font>
+      <select name="cfg_id">
+        <TMPL_LOOP NAME=CFG_LOOP>
+        <option value="<TMPL_VAR NAME=SUB_BLOG>:<TMPL_VAR NAME=SUB_ENTRY>:<TMPL_VAR NAME=SUB_ADDRESS>:<TMPL_VAR NAME=SUB_KEY>"><TMPL_VAR NAME=SUB_TITLE> (<TMPL_VAR NAME=SUB_ADDRESS>)</option>
+        </TMPL_LOOP>
+      </select><br /><br />
+      <input type="submit" class="button" value="Go">
+      </form>
+      </td>
+      </tr>
+
+	<tr>
+	<td width="39"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="39" height="1"></td>
+	<td valign="top" width="500" bgcolor="#CCCCCC"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="1" height="1"></td>
+	</tr>
+
+	<tr>
+	<td colspan="2"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="1" height="10"></td>
+	</tr>
+
+	<tr>
+	<td width="39"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="39" height="1"></td>
+	<td valign="top" width="500">
+	<font class="instructional">If you need assistance, try:</font>
+      </td>
+      </tr>
+	
+	<tr>
+	<td colspan="2"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="1" height="10"></td>
+	</tr>
+
+	<tr>
+	<td width="39"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="39" height="1"></td>
+	<td valign="top" width="500">
+	<font class="instructional"><a href="http://www.movabletype.org/support/index.php?act=SF&f=20">Movable Type Plugin Development Forum</a></font>
+      </td>
+      </tr>
+	
+	<tr>
+	<td colspan="2"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="1" height="20"></td>
+	</tr>
+	<TMPL_ELSE>
+      <TMPL_IF NAME=REDIRECT_URL>
+	<tr>
+	<td width="39"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="39" height="1"></td>
+	<td valign="top" width="500">
+	<font class="pagetitle">Return to <a href="<TMPL_VAR NAME=REDIRECT_URL>"><TMPL_VAR NAME=REDIRECT_TITLE></a>.</font>
+      </td>
+      </tr>
+	
+	<tr>
+	<td colspan="2"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="1" height="10"></td>
+	</tr>
+      </TMPL_IF>
+	</TMPL_IF>
+
+	<tr>
+	<td width="39"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="39" height="1"></td>
+	<td valign="top" width="500" bgcolor="#CCCCCC"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="1" height="1"></td>
+	</tr>
+
+	<tr>
+	<td width="39"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="39" height="1"></td>
+	<td valign="top" width="500">
+	<font class="instructional"><a class="instructional" href="http://www.cxliv.org/jayseae/notifier/" style="text-decoration: none;">MT-Notifier</a> <b>Version <TMPL_VAR NAME=APP_VERSION></b> Copyright &copy; 2003 Everitz Consulting. All Rights Reserved.</font>
+      </td>
+      </tr>
+
+	<tr>
+	<td colspan="2"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="1" height="4"></td>
+	</tr>
+
+	<tr>
+	<td width="39"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="39" height="1"></td>
+	<td valign="top" width="500" bgcolor="#CCCCCC"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="1" height="1"></td>
+	</tr>
+</table>
+<!-- End main content -->
+
+<!-- Begin copyright and version info -->
+<TMPL_INCLUDE NAME="copyright.tmpl">
+<!-- End copyright and version info -->
+
+</body>
+</html>
