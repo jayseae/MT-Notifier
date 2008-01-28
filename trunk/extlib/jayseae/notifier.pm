@@ -2,8 +2,8 @@
 # MT-Notifier: Configure subscriptions to your blog.
 # A Plugin for Movable Type
 #
-# Release 2.3.4
-# December 31, 2004
+# Release 2.3.5
+# January 3, 2005
 #
 # http://jayseae.cxliv.org/notifier/
 # http://www.amazon.com/o/registry/2Y29QET3Y472A/
@@ -12,7 +12,7 @@
 # is always appreciated.  A reference back to me is even nicer.  If you find
 # a way to make money from the software, do what you feel is right.
 #
-# Copyright 2003-2004, Chad Everett (software@jayseae.cxliv.org)
+# Copyright 2003-2005, Chad Everett (software@jayseae.cxliv.org)
 # Licensed under the Open Software License version 2.1
 # ===========================================================================
 
@@ -26,7 +26,7 @@ use MT::Util qw(archive_file_for format_ts);
 use vars qw(@ISA $FILESET $VERSION);
 @ISA = qw(MT::App::CMS);
 $FILESET = 'n2x';
-$VERSION = '2.3.4';
+$VERSION = '2.3.5';
 
 sub uri {
   $_[0]->path . ($_[0]->{author} ? MT::ConfigMgr->instance->AdminScript : $_[0]->script);
@@ -238,16 +238,18 @@ sub manager {
   if (my $email = $app->{query}->param('email')) {
     my $dkey = $app->{query}->param('dkey');
     my $type = $app->{query}->param('type') || 'sub';
-    $app->subs('add', $type, $dkey, $email);
+    $error = $app->subs('add', $type, $dkey, $email);
   }
-  if (my $method = $app->{query}->param('method')) {
-    return $app->manage_record if ($method eq 'blog');
-    return $app->manage_record if ($method eq 'category');
-    return $app->manage_record if ($method eq 'entry');
-    return $app->manage_address if ($method eq 'on');
-    $error = 7;
-  } else {
-    return $app->manage_address if (my $akey = $app->{query}->param('akey'));
+  unless ($error) {
+    if (my $method = $app->{query}->param('method')) {
+      return $app->manage_record if ($method eq 'blog');
+      return $app->manage_record if ($method eq 'category');
+      return $app->manage_record if ($method eq 'entry');
+      return $app->manage_address if ($method eq 'on');
+      $error = 7;
+    } else {
+      return $app->manage_address if (my $akey = $app->{query}->param('akey'));
+    }
   }
   $param{notifier_message} = status_message($app, $error);
   $app->build_page('notifier.tmpl', \%param);
@@ -530,6 +532,7 @@ sub count_subs {
 sub do_subs {
   my $app = shift;
   my ($action, $method, $key, $mail) = @_;
+  my ($name, $desc, $link) = $app->read_sub($key);
   my %actions = (
     add => 1,
     rmv => 1,
@@ -572,6 +575,7 @@ sub do_subs {
         return 9 if ($sub_methods{$method});
       } else {
         unless ($method eq 'opt') {
+          $method = 'sub' if ($desc eq 'entry');
           my $permit = $app->get_configuration_option($key, 'type');
           return 11 unless ($method eq $permit || $permit eq 'sub');
         }
@@ -633,6 +637,7 @@ sub get_configuration_option {
     my $entry_id = $1;
     my $data_rec = $app->read_record($FILESET, 'data', $data_key);
     $from = $data_rec->{from} if ($data_rec && $data_rec->{from});
+    $type = 'sub';
     require MT::Placement;
     my $placement = MT::Placement->load
       ({ entry_id => $entry_id, is_primary => 1 }, { limit => 1 });
@@ -649,7 +654,7 @@ sub get_configuration_option {
     my $data_rec = $app->read_record($FILESET, 'data', $data_key);
     $from = $data_rec->{from} if ($data_rec && $data_rec->{from} && !$from);
     $redo = $data_rec->{redo} if ($data_rec && $data_rec->{redo});
-    $type = $data_rec->{type} if ($data_rec && $data_rec->{type});
+    $type = $data_rec->{type} if ($data_rec && $data_rec->{type} && !$type);
     unless ($from && $redo && $type) {
       require MT::Category;
       my $category = MT::Category->load($category_id);

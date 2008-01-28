@@ -1,8 +1,8 @@
 MT-Notifier: Configure subscriptions to your blog.
 A Plugin for Movable Type
 
-Release 2.3.4
-December 31, 2004
+Release 2.3.5
+January 3, 2005
 
 http://jayseae.cxliv.org/notifier/
 http://www.amazon.com/o/registry/2Y29QET3Y472A/
@@ -11,7 +11,7 @@ If you find the software useful or even like it, then a simple 'thank you'
 is always appreciated.  A reference back to me is even nicer.  If you find
 a way to make money from the software, do what you feel is right.
 
-Copyright 2003-2004, Chad Everett (software@jayseae.cxliv.org)
+Copyright 2003-2005, Chad Everett (software@jayseae.cxliv.org)
 Licensed under the Open Software License version 2.1
 
 *** -------------------------------------------------------------------- ***
@@ -218,6 +218,9 @@ showing some love so that I don't have to make that decision.  Thanks.
 *** -------------------------------------------------------------------- ***
 
 Changelog:
+2.3.5
+  - Fixed a problem with entry subscription when subscription type set.
+  - January 3, 2005
 2.3.4
   - Added some log messages to subscription process.
   - December 31, 2004
