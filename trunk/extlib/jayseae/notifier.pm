@@ -2,8 +2,8 @@
 # MT-Notifier: Configure subscriptions to your blog.
 # A Plugin for Movable Type
 #
-# Release 2.3.5
-# January 3, 2005
+# Release 2.3.5.1
+# January 4, 2005
 #
 # http://jayseae.cxliv.org/notifier/
 # http://www.amazon.com/o/registry/2Y29QET3Y472A/
@@ -23,10 +23,11 @@ use strict;
 use MT::App::CMS;
 use MT::Util qw(archive_file_for format_ts);
 
-use vars qw(@ISA $FILESET $VERSION);
+use vars qw(@ISA $FILESET $FILEURL $VERSION);
 @ISA = qw(MT::App::CMS);
 $FILESET = 'n2x';
-$VERSION = '2.3.5';
+$FILEURL = 'mt-notifier.cgi';
+$VERSION = '2.3.6';
 
 sub uri {
   $_[0]->path . ($_[0]->{author} ? MT::ConfigMgr->instance->AdminScript : $_[0]->script);
@@ -1406,13 +1407,13 @@ sub write_log_entry {
   } else {
     $msg = $app->translate('Address ');
     my $user_key = $mail.':'.$app->build_key($mail);
-    $msg .= "<a href=\"".$app->script."?__mode=mgr&amp;akey=$user_key\">$mail</a> ";
+    $msg .= "<a href=\"$FILEURL?__mode=mgr&amp;akey=$user_key\">$mail</a> ";
     my $result = $app->translate('subscribed to');
     $result = $app->translate('opted out of') if ($method eq 'opt');
     $result = $app->translate('removed from') if ($action eq 'rmv');
     $msg .= $result.' ';
     my ($name, $desc, $link) = $app->read_sub($key);
-    $msg .= "<a href=\"".$app->script."?__mode=mgr&amp;method=$desc&amp;dkey=$key\">";
+    $msg .= "<a href=\"$FILEURL?__mode=mgr&amp;method=$desc&amp;dkey=$key\">";
     $msg .= $name.'</a>.';
   }
   $app->log($msg);
@@ -1492,11 +1493,11 @@ sub module_magic {
         if ($method eq 'update') {
           my $pre = '            ';
           my $tag = '# jayseae::notifier';
-          push @out, $pre.'                                          '.$tag."\r\n";
-          push @out, $pre.'if ($q->param(\'subscribe\')) {             '.$tag."\r\n";
-          push @out, $pre.'  require jayseae::notifier;              '.$tag."\r\n";
-          push @out, $pre.'  jayseae::notifier->subscribe($comment); '.$tag."\r\n";
-          push @out, $pre.'}                                         '.$tag."\r\n";
+          push @out, $pre."                                          $tag\r\n";
+          push @out, $pre."if ($q->param('subscribe')) {             $tag\r\n";
+          push @out, $pre."  require jayseae::notifier;              $tag\r\n";
+          push @out, $pre."  jayseae::notifier->subscribe($comment); $tag\r\n";
+          push @out, $pre."}                                         $tag\r\n";
         }
       }
     }
@@ -1589,3 +1590,4 @@ sub status_message {
 # - sub read_record (to read a single record)
 # - sub save_record (to save or delete a single record)
 # ===========================================================================
+
