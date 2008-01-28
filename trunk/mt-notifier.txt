@@ -1,8 +1,8 @@
 MT-Notifier: Configure subscriptions to your blog.
 A Plugin for Movable Type
 
-Release 2.3.2
-September 23, 2004
+Release 2.3.3
+November 8, 2004
 
 http://jayseae.cxliv.org/notifier/
 http://www.amazon.com/o/registry/2Y29QET3Y472A/
@@ -218,6 +218,10 @@ showing some love so that I don't have to make that decision.  Thanks.
 *** -------------------------------------------------------------------- ***
 
 Changelog:
+2.3.3
+  - Fixed problem with sending duplicate entry notifications.
+  - Created parameter to send all entries or only new ones.
+  - November 8, 2004
 2.3.2
   - Fixed problem with manual subscription process.
   - September 23, 2004

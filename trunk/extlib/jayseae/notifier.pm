@@ -2,8 +2,8 @@
 # MT-Notifier: Configure subscriptions to your blog.
 # A Plugin for Movable Type
 #
-# Release 2.3.2
-# September 23, 2004
+# Release 2.3.3
+# November 8, 2004
 #
 # http://jayseae.cxliv.org/notifier/
 # http://www.amazon.com/o/registry/2Y29QET3Y472A/
@@ -26,7 +26,7 @@ use MT::Util qw(archive_file_for format_ts);
 use vars qw(@ISA $FILESET $VERSION);
 @ISA = qw(MT::App::CMS);
 $FILESET = 'n2x';
-$VERSION = '2.3.2';
+$VERSION = '2.3.3';
 
 sub uri {
   $_[0]->path . ($_[0]->{author} ? MT::ConfigMgr->instance->AdminScript : $_[0]->script);
@@ -153,13 +153,15 @@ sub enabler {
   my $app = shift;
   my $auth = $app->{author};
   my $from = $app->{query}->param('from') || '';
+  my $redo = $app->{query}->param('redo') || '';
   my $type = $app->{query}->param('type') || '';
   my %param = (do_javascript => 1, func_enabler => 1);
   my $error = 0;
   my $data_rec = $app->read_record($FILESET, 'data', '0:0');
-  if ($from || $type) {
+  if ($from || $redo || $type) {
     $data_rec->{from} = $from if $from;
-    $data_rec->{type} = $type if $type;
+    $data_rec->{redo} = $redo if ($redo && $redo =~ /^(all|new)$/);
+    $data_rec->{type} = $type if ($type && $type =~ /^(sco|seo|sub)$/);
     $error = 1 unless $app->save_record('data', '0:0', $data_rec);
   }
   $param{notifier_message} = status_message($app, $error) if $error;
@@ -167,6 +169,9 @@ sub enabler {
   $param{cfg_type_sco} = $type eq 'sco' ? 1 : 0;
   $param{cfg_type_seo} = $type eq 'seo' ? 1 : 0;
   $param{cfg_type_sub} = $type eq 'sub' || !$type ? 1 : 0;
+  $redo = $app->get_configuration_option('0:0', 'redo');
+  $param{cfg_redo_all} = $redo eq 'all' ? 1 : 0;
+  $param{cfg_redo_new} = $redo eq 'new' ? 1 : 0;
   $param{cfg_from} = $app->get_configuration_option('0:0', 'from');
   $app->build_page('notifier.tmpl', \%param);
 }
@@ -309,6 +314,9 @@ sub notify_entry {
   my $blog_id = $entry->blog_id;
   require MT::Blog;
   my $blog = MT::Blog->load($blog_id) or return;
+  my $data_rec = $app->read_record($FILESET, 'data', '0:'.$entry->id);
+  my $redo = $app->get_configuration_option('0:'.$entry->id, 'redo');
+  return if ($data_rec->{redo} && $redo eq 'new');
   my $subs = $app->load_subs($blog_id, $entry->id, 'seo');
   return unless scalar @$subs;
   my $author = $entry->author;
@@ -340,6 +348,10 @@ sub notify_entry {
     my $body = MT->build_email('notification.tmpl', \%param);
     require MT::Mail;
     MT::Mail->send(\%head, $body);
+  }
+  unless ($data_rec->{redo}) {
+    $data_rec->{redo} = 'one';
+    $app->save_record('data', '0:'.$entry->id, $data_rec);
   }
 }
 
@@ -523,7 +535,7 @@ sub get_configuration_option {
   my $app = shift;
   my $data_key = shift;
   my $data_opt = shift;
-  my ($from, $type);
+  my ($from, $redo, $type);
   if ($data_key =~ /^0:([0-9]+)$/) {
     # (0:Z) Entry
     my $entry_id = $1;
@@ -544,8 +556,9 @@ sub get_configuration_option {
     my $category_id = $1;
     my $data_rec = $app->read_record($FILESET, 'data', $data_key);
     $from = $data_rec->{from} if ($data_rec && $data_rec->{from} && !$from);
+    $redo = $data_rec->{redo} if ($data_rec && $data_rec->{redo});
     $type = $data_rec->{type} if ($data_rec && $data_rec->{type});
-    unless ($from && $type) {
+    unless ($from && $redo && $type) {
       require MT::Category;
       my $category = MT::Category->load($category_id);
       $data_key = $category->blog_id.':0' if $category;
@@ -556,17 +569,21 @@ sub get_configuration_option {
     my $blog_id = $1;
     my $data_rec = $app->read_record($FILESET, 'data', $data_key);
     $from = $data_rec->{from} if ($data_rec && $data_rec->{from} && !$from);
+    $redo = $data_rec->{redo} if ($data_rec && $data_rec->{redo} && !$redo);
     $type = $data_rec->{type} if ($data_rec && $data_rec->{type} && !$type);
-    $data_key = '0:0' unless ($from && $type);
+    $data_key = '0:0' unless ($from && $redo && $type);
   }
   if ($data_key eq '0:0') {
     # (0:0) Site
     my $data_rec = $app->read_record($FILESET, 'data', $data_key);
     $from = $data_rec->{from} if ($data_rec && $data_rec->{from} && !$from);
+    $redo = $data_rec->{redo} if ($data_rec && $data_rec->{redo} && !$redo);
     $type = $data_rec->{type} if ($data_rec && $data_rec->{type} && !$type);
     $from = 'sender@domain.com' unless $from;
+    $redo = 'all' unless $redo;
     $type = 'sub' unless $type;
   }
+  return $redo if ($data_opt eq 'redo');
   return $from if ($data_opt eq 'from');
   return $type if ($data_opt eq 'type');
   0;
@@ -957,6 +974,9 @@ sub manage_record {
       if ($app->{query}->param('purge')) {
         $error = 99 if $app->purge_data($dkey);
         $data_rec = $app->read_record($FILESET, 'data', $dkey);
+      } elsif (my $redo = $app->{query}->param('redo')) {
+        $data_rec->{redo} = $redo if $redo =~ /^(all|new)$/;
+        $app->save_record('data', $dkey, $data_rec);
       } elsif (my $drop = $app->{query}->param('remove')) {
         $data_rec->{from} = '';
         $app->save_record('data', $dkey, $data_rec);
@@ -964,7 +984,7 @@ sub manage_record {
         $data_rec->{from} = $from;
         $app->save_record('data', $dkey, $data_rec);
       } elsif (my $type = $app->{query}->param('type')) {
-        $data_rec->{type} = $type;
+        $data_rec->{type} = $type if $type =~ /^(sco|seo|sub)$/;
         $app->save_record('data', $dkey, $data_rec);
       } elsif (my $off = $app->{query}->param('off')) {
         my ($key, $type) = split('~', $off);
@@ -979,6 +999,9 @@ sub manage_record {
       $param{cfg_type_sco} = $type eq 'sco' ? 1 : 0;
       $param{cfg_type_seo} = $type eq 'seo' ? 1 : 0;
       $param{cfg_type_sub} = $type eq 'sub' || !$type ? 1 : 0;
+      my $redo = $app->get_configuration_option($dkey, 'redo');
+      $param{cfg_redo_all} = $redo eq 'all' ? 1 : 0;
+      $param{cfg_redo_new} = $redo eq 'new' ? 1 : 0;
       if ($method eq 'blog') {
         $param{by_blog} = 1;
         require MT::Blog;
@@ -1109,6 +1132,7 @@ sub read_record {
     if ($data) {
       if ($type eq 'data') {
         $record{from} = $data->data->{'from'} if ($data->data->{'from'});
+        $record{redo} = $data->data->{'redo'} if ($data->data->{'redo'});
         $record{subs} = $data->data->{'subs'} if ($data->data->{'subs'});
         $record{type} = $data->data->{'type'} if ($data->data->{'type'});
       } elsif ($type eq 'user') {
@@ -1177,6 +1201,7 @@ sub save_record {
     if ($type eq 'data') {
       $content = 1 if (
         $record->{from} ||
+        $record->{redo} ||
         $record->{subs} ||
         $record->{type}
       );
@@ -1483,30 +1508,35 @@ sub status_message {
 # ---------------------------------------------------------------------------
 # Record Key:
 # ---------------------------------------------------------------------------
-# 0:0 is the system record.                        (v1.0)
-# x:0 for each blog.                               (v1.0)
-# x:y for the entry.                               (v1.0)
-#
 # x:0 for each blog.                               (v2.0)
 # y:C is a category.                               (v2.0)
 # 0:z for the entry.                               (v2.0)
+#
+# 0:0 is the system record.                        (v1.0)
+# x:0 for each blog.                               (v1.0)
+# x:y for the entry.                               (v1.0)
 # ---------------------------------------------------------------------------
 # Record Fields (name, layout, version):
 # ---------------------------------------------------------------------------
-# - subscriptions = name@domain.com:key;           (v1.0)
-#
-# - senderaddress = name@domain.com                (v1.2)
-# - subscriptions = name@domain.com:key;           (v1.2)
-#
-# - senderaddress = name@domain.com:key            (v1.4)
-# - subscriptions = name@domain.com:key;           (v1.4)
-#
-# - from = name@domain.com                         (v2.0)
-# - subs = name@domain.com:opt or sub;             (v2.0)
+# - from = name@domain.com                         (v2.3.3)
+# - redo = all or new                              (v2.3.3)
+# - subs = name@domain.com:opt|sco|seo|sub;        (v2.3.3)
+# - type = comments or entries (blank for both)    (v2.3.3)
 #
 # - from = name@domain.com                         (v2.3)
 # - subs = name@domain.com:opt|sco|seo|sub;        (v2.3)
 # - type = comments or entries (blank for both)    (v2.3)
+#
+# - from = name@domain.com                         (v2.0)
+# - subs = name@domain.com:opt or sub;             (v2.0)
+#
+# - senderaddress = name@domain.com:key            (v1.4)
+# - subscriptions = name@domain.com:key;           (v1.4)
+#
+# - senderaddress = name@domain.com                (v1.2)
+# - subscriptions = name@domain.com:key;           (v1.2)
+#
+# - subscriptions = name@domain.com:key;           (v1.0)
 # ===========================================================================
 
 # ===========================================================================

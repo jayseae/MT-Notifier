@@ -98,8 +98,9 @@
     <!--
       function hide_and_seek () {
         document.getElementById('from').disabled = !document.getElementById('update-sender-address').checked;
+        document.getElementById('redo').disabled = !document.getElementById('update-notification-redo').checked;
         document.getElementById('type').disabled = !document.getElementById('update-notification-type').checked;
-        document.getElementById('confirm-update').disabled = !document.getElementById('update-sender-address').checked && !document.getElementById('update-notification-type').checked;
+        document.getElementById('confirm-update').disabled = !document.getElementById('update-sender-address').checked && !document.getElementById('update-notification-redo').checked && !document.getElementById('update-notification-type').checked;
       }
     //-->
   </script>
@@ -109,7 +110,7 @@
   <p style="text-indent: 40px;"><input id="update-sender-address" onclick="hide_and_seek()" type="checkbox" /> <label for="from" style="font-weight: bold;"><MT_TRANS phrase="Update Sender Address"></label></p>
   <p style="text-indent: 40px;"><input id="from" name="from" size="50" type="text" value="<TMPL_VAR NAME=CFG_FROM>" /></p>
   <p><MT_TRANS phrase="The field above displays the current effective address for your installation.  You can also override this value on each blog, category and entry.">  <MT_TRANS phrase="To set these individual sender addresses, you should use the"> <a href="<TMPL_VAR NAME=NOTIFIER_SCRIPT_URL>?__mode=mgr" style="text-decoration: none;"><MT_TRANS phrase="Manage"></a> <MT_TRANS phrase="option instead."></p>
-  <p style="text-indent: 40px;"><input id="update-notification-type" onclick="hide_and_seek()" type="checkbox" /> <label for="type" style="font-weight: bold;"><MT_TRANS phrase="Update Notification Type"></label></p>
+  <p style="text-indent: 40px;"><input id="update-notification-type" onclick="hide_and_seek()" type="checkbox" /> <label for="update-notification-type" style="font-weight: bold;"><MT_TRANS phrase="Update Notification Type"></label></p>
   <p style="text-indent: 40px;">
     <select id="type" name="type">
       <option <TMPL_IF NAME=CFG_TYPE_SUB>selected="selected"</TMPL_IF> value="sub">Comments and Entries</option>
@@ -118,6 +119,14 @@
     </select>
   </p>
   <p><MT_TRANS phrase="Unless you tell it otherwise, MT-Notifier will send notification messages for both new entries and new comments.  This differs from the behavior of prior versions, which would send notifications for new comments only.  If you choose to select a value from the list above, you are setting a value for your entire installation.">  <MT_TRANS phrase="To set this value for individual blogs and categories, you should use the"> <a href="<TMPL_VAR NAME=NOTIFIER_SCRIPT_URL>?__mode=mgr" style="text-decoration: none;"><MT_TRANS phrase="Manage"></a> <MT_TRANS phrase="option instead."></p>
+  <p style="text-indent: 40px;"><input id="update-notification-redo" onclick="hide_and_seek()" type="checkbox" /> <label for="update-notification-redo" style="font-weight: bold;"><MT_TRANS phrase="Send Updated Entries"></label></p>
+  <p style="text-indent: 40px;">
+    <select id="redo" name="redo">
+      <option <TMPL_IF NAME=CFG_REDO_ALL>selected="selected"</TMPL_IF> value="all">Send Any Changed Entries</option>
+      <option <TMPL_IF NAME=CFG_REDO_NEW>selected="selected"</TMPL_IF> value="new">Only Send New Entries</option>
+    </select>
+  </p>
+  <p><MT_TRANS phrase="MT-Notifier attempts to send an entry notification anytime an entry is saved.  This is useful if, for instance, you make a change to an entry and want those subscribed to the entry to know about it.  By changing this option, you change this behavior.  Sending changed entries means that MT-Notifier continues to behave in the way that it always has.  Setting the value to send only new entries, however, means that only a single notification is ever sent for an entry, no matter how many times it is saved.">  <MT_TRANS phrase="To set this value for individual blogs and categories, you should use the"> <a href="<TMPL_VAR NAME=NOTIFIER_SCRIPT_URL>?__mode=mgr" style="text-decoration: none;"><MT_TRANS phrase="Manage"></a> <MT_TRANS phrase="option instead."></p>
   <p style="text-indent: 40px;"><input class="button" id="confirm-update" type="submit" value="Confirm Configuration Update" /></p>
   </form>
 </TMPL_IF>
@@ -223,6 +232,10 @@
               document.getElementById('from').disabled = !document.getElementById('update-sender-address').checked;
               document.getElementById('confirm-sender-address-update').disabled = !document.getElementById('update-sender-address').checked;
               document.getElementById('confirm-sender-address-remove').disabled = !document.getElementById('update-sender-address').checked;
+            }
+            if (document.getElementById('update-notification-redo') && document.getElementById('confirm-notification-redo-update')) {
+              document.getElementById('redo').disabled = !document.getElementById('update-notification-redo').checked;
+              document.getElementById('confirm-notification-redo-update').disabled = !document.getElementById('update-notification-redo').checked;
             }
             if (document.getElementById('update-notification-type') && document.getElementById('confirm-notification-type-update')) {
               document.getElementById('type').disabled = !document.getElementById('update-notification-type').checked;
@@ -369,7 +382,19 @@
             </select>
           </p>
           <p><MT_TRANS phrase="Unless you tell it otherwise, MT-Notifier will send notification messages for both new entries and new comments.  This differs from the behavior of prior versions, which would send notifications for new comments only.  If you choose to select a value from the list above, you are setting a value for this"> <TMPL_IF NAME=BY_BLOG><MT_TRANS phrase="blog"></TMPL_IF><TMPL_IF NAME=BY_CATEGORY><MT_TRANS phrase="category"></TMPL_IF><MT_TRANS phrase=".">  <MT_TRANS phrase="To set a default value for all blogs and categories in this site, you should use the"> <a href="<TMPL_VAR NAME=NOTIFIER_SCRIPT_URL>?__mode=cfg" style="text-decoration: none;"><MT_TRANS phrase="Configure"></a> <MT_TRANS phrase="option instead."></p>
-          <p style="text-indent: 40px;"><input class="button" id="confirm-notification-type-update" type="submit" value="Confirm Notification Type Update" /></p>
+          <p style="text-indent: 40px;"><input class="button" id="confirm-notification-type-update" type="submit" value="Confirm Notification Type" /></p>
+          <TMPL_UNLESS NAME=BY_ENTRY>
+            <hr style="background-color: #8FAEBE; color: #8FAEBE;" />
+            <p style="text-indent: 40px;"><input id="update-notification-redo" onclick="hide_and_seek()" type="checkbox" /> <label for="update-notification-redo" style="font-weight: bold;"><MT_TRANS phrase="Send Updated Entries"></label></p>
+            <p style="text-indent: 40px;">
+              <select id="redo" name="redo">
+                <option <TMPL_IF NAME=CFG_REDO_ALL>selected="selected"</TMPL_IF> value="all">Send Any Changed Entries</option>
+                <option <TMPL_IF NAME=CFG_REDO_NEW>selected="selected"</TMPL_IF> value="new">Only Send New Entries</option>
+              </select>
+            </p>
+            <p><MT_TRANS phrase="MT-Notifier attempts to send an entry notification anytime an entry is saved.  This is useful if, for instance, you make a change to an entry and want those subscribed to the entry to know about it.  By changing this option, you change this behavior.  Sending changed entries means that MT-Notifier continues to behave in the way that it always has.  Setting the value to send only new entries, however, means that only a single notification is ever sent for an entry, no matter how many times it is saved.">  <MT_TRANS phrase="To set this value for individual blogs and categories, you should use the"> <a href="<TMPL_VAR NAME=NOTIFIER_SCRIPT_URL>?__mode=mgr" style="text-decoration: none;"><MT_TRANS phrase="Manage"></a> <MT_TRANS phrase="option instead."></p>
+            <p style="text-indent: 40px;"><input class="button" id="confirm-notification-redo-update" type="submit" value="Confirm Updated Entries" /></p>
+          </TMPL_UNLESS>
         </TMPL_UNLESS>
         </form>
       </TMPL_UNLESS>
