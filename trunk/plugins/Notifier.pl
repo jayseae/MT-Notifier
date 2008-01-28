@@ -37,6 +37,25 @@ MT->add_plugin(new MT::Plugin($about));
 MT::Comment->add_callback('pre_save', 11, $about, \&Notify_Comment);
 MT::Entry->add_callback('post_save', 11, $about, \&Notify_Entry);
 
+use MT::Template::Context;
+MT::Template::Context->add_tag(NotifierCatID => \&NotifierCatID);
+
+sub NotifierCatID {
+  my ($ctx, $args) = @_;
+  my $cat_id = '';
+  if (my $cat = $ctx->stash('category') || $ctx->stash('archive_category')) {
+    $cat_id = $cat->id;
+  } elsif (my $entry = $ctx->stash('entry')) {
+    require MT::Placement;
+    my $placement = MT::Placement->load({
+      entry_id => $entry->id,
+      is_primary => 1
+    });
+    $cat_id = $placement->category_id if $placement;
+  }
+  $cat_id;
+}
+
 sub Notify_Comment {
   my ($err, $obj) = @_;
   my $notify = $obj->visible;
