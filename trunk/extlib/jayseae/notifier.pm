@@ -2,8 +2,8 @@
 # MT-Notifier: Configure subscriptions to your blog.
 # A Plugin for Movable Type
 #
-# Release 2.3.3
-# November 8, 2004
+# Release 2.3.4
+# December 31, 2004
 #
 # http://jayseae.cxliv.org/notifier/
 # http://www.amazon.com/o/registry/2Y29QET3Y472A/
@@ -26,7 +26,7 @@ use MT::Util qw(archive_file_for format_ts);
 use vars qw(@ISA $FILESET $VERSION);
 @ISA = qw(MT::App::CMS);
 $FILESET = 'n2x';
-$VERSION = '2.3.3';
+$VERSION = '2.3.4';
 
 sub uri {
   $_[0]->path . ($_[0]->{author} ? MT::ConfigMgr->instance->AdminScript : $_[0]->script);
@@ -237,12 +237,8 @@ sub manager {
   my $error;
   if (my $email = $app->{query}->param('email')) {
     my $dkey = $app->{query}->param('dkey');
-    if ($app->test_data_key($dkey)) {
-      my $type = $app->{query}->param('type') || 'sub';
-      $app->subs('add', $type, $dkey, $email);
-    } else {
-      $error = 4;
-    }
+    my $type = $app->{query}->param('type') || 'sub';
+    $app->subs('add', $type, $dkey, $email);
   }
   if (my $method = $app->{query}->param('method')) {
     return $app->manage_record if ($method eq 'blog');
@@ -528,6 +524,102 @@ sub count_subs {
     my @subs = split(';', $data_rec->{subs});
     return scalar @subs;
   }
+  0;
+}
+
+sub do_subs {
+  my $app = shift;
+  my ($action, $method, $key, $mail) = @_;
+  my %actions = (
+    add => 1,
+    rmv => 1,
+  );
+  my %opt_methods = (
+    opt => 1
+  );
+  my %sub_methods = (
+    sco => 1,
+    seo => 1,
+    sub => 1
+  );
+
+  return 7 unless ($actions{$action});
+  return 11 unless ($opt_methods{$method} || $sub_methods{$method});
+
+  if ($app->test_data_key($key)) {
+    require MT::Util;
+    if (my $fixed = MT::Util::is_valid_email($mail)) {
+      $mail = $fixed;
+    } else {
+      return 8;
+    }
+  } else {
+    return 4 unless ($action eq 'rmv');
+  }
+
+  my $data_rec = $app->read_record($FILESET, 'data', $key);
+  my $user_rec = $app->read_record($FILESET, 'user', $mail);
+  my $user_bak = $user_rec;
+  my @data_subs;
+  my @user_subs;
+  my $found = 1;
+
+  if ($data_rec->{subs}) {
+    my $subs = $data_rec->{subs};
+    if ($action eq 'add') {
+      return 0 if ($subs =~ /$mail:$method/);
+      if ($subs =~ /$mail:opt/) {
+        return 9 if ($sub_methods{$method});
+      } else {
+        unless ($method eq 'opt') {
+          my $permit = $app->get_configuration_option($key, 'type');
+          return 11 unless ($method eq $permit || $permit eq 'sub');
+        }
+      }
+    }
+    @data_subs = split(/;/, $subs);
+    if ($subs =~ /$mail/) {
+      $found = 0;
+      for (my $i = 0 ; $i < scalar @data_subs ; $i++) {
+        if ($data_subs[$i] =~ /^$mail:(opt|sco|seo|sub)$/) {
+          $found = 1 if ($method eq $1);
+          $found = 1 if ($action eq 'add');
+          if ($found) {
+            splice(@data_subs, $i, 1);
+            last;
+          }
+        }
+      }
+    }
+  } else {
+    return 0 unless ($action eq 'add');
+  }
+
+  if ($user_rec->{subs}) {
+    @user_subs = split(/;/, $user_rec->{subs});
+    if ($user_rec->{subs} =~ /$key/) {
+      for (my $i = 0 ; $i < scalar @user_subs; $i++) {
+        if ($user_subs[$i] =~ /$key/) {
+          splice(@user_subs, $i, 1) if $found;
+          last;
+        }
+      }
+    }
+  }
+
+  if ($action eq 'add') {
+    push @data_subs, $mail.':'.$method;
+    push @user_subs, $key;
+  }
+
+  $data_rec->{subs} = join ';', @data_subs;
+  $user_rec->{subs} = join ';', @user_subs;
+
+  my $status;
+  $status = $app->save_record('user', $mail, $user_rec) or return 1;
+  $status = $app->save_record('data', $key, $data_rec)
+    or $app->save_record('user', $mail, $user_bak);
+  return 2 unless $status;
   0;
 }
 
@@ -1238,98 +1330,9 @@ sub save_record {
 
 sub subs {
   my $app = shift;
-  my ($action, $method, $key, $mail) = @_;
-  my %actions = (
-    add => 1,
-    rmv => 1,
-  );
-  my %opt_methods = (
-    opt => 1
-  );
-  my %sub_methods = (
-    sco => 1,
-    seo => 1,
-    sub => 1
-  );
-
-  return 7 unless ($actions{$action});
-  return 11 unless ($opt_methods{$method} || $sub_methods{$method});
-
-  if ($app->test_data_key($key)) {
-    require MT::Util;
-    if (my $fixed = MT::Util::is_valid_email($mail)) {
-      $mail = $fixed;
-    } else {
-      return 8;
-    }
-  } else {
-    return 4 unless ($action eq 'rmv');
-  }
-
-  my $data_rec = $app->read_record($FILESET, 'data', $key);
-  my $user_rec = $app->read_record($FILESET, 'user', $mail);
-  my $user_bak = $user_rec;
-  my @data_subs;
-  my @user_subs;
-  my $found = 1;
-
-  if ($data_rec->{subs}) {
-    my $subs = $data_rec->{subs};
-    if ($action eq 'add') {
-      return 0 if ($subs =~ /$mail:$method/);
-      if ($subs =~ /$mail:opt/) {
-        return 9 if ($sub_methods{$method});
-      } else {
-        unless ($method eq 'opt') {
-          my $permit = $app->get_configuration_option($key, 'type');
-          return 11 unless ($method eq $permit || $permit eq 'sub');
-        }
-      }
-    }
-    @data_subs = split(/;/, $subs);
-    if ($subs =~ /$mail/) {
-      $found = 0;
-      for (my $i = 0 ; $i < scalar @data_subs ; $i++) {
-        if ($data_subs[$i] =~ /^$mail:(opt|sco|seo|sub)$/) {
-          $found = 1 if ($method eq $1);
-          $found = 1 if ($action eq 'add');
-          if ($found) {
-            splice(@data_subs, $i, 1);
-            last;
-          }
-        }
-      }
-    }
-  } else {
-    return 0 unless ($action eq 'add');
-  }
-
-  if ($user_rec->{subs}) {
-    @user_subs = split(/;/, $user_rec->{subs});
-    if ($user_rec->{subs} =~ /$key/) {
-      for (my $i = 0 ; $i < scalar @user_subs; $i++) {
-        if ($user_subs[$i] =~ /$key/) {
-          splice(@user_subs, $i, 1) if $found;
-          last;
-        }
-      }
-    }
-  }
-
-  if ($action eq 'add') {
-    push @data_subs, $mail.':'.$method;
-    push @user_subs, $key;
-  }
-
-  $data_rec->{subs} = join ';', @data_subs;
-  $user_rec->{subs} = join ';', @user_subs;
-
-  my $status;
-  $status = $app->save_record('user', $mail, $user_rec) or return 1;
-  $status = $app->save_record('data', $key, $data_rec)
-    or $app->save_record('user', $mail, $user_bak);
-  return 2 unless $status;
-  0;
+  my $status = $app->do_subs(@_);
+  $app->write_log_entry(@_, $status);
+  $status;
 }
 
 sub subscribe {
@@ -1385,6 +1388,29 @@ sub test_data_key {
       return 0 unless $perm;
     }
   }
+  1;
+}
+
+sub write_log_entry {
+  my $app = shift;
+  my ($action, $method, $key, $mail, $status) = @_;
+  my $msg;
+  if ($status) {
+    $msg = $app->translate('Unable to process request for ');
+    $msg .= "$mail ($key).<br /><em>".$app->status_message($status)."</em>";
+  } else {
+    $msg = $app->translate('Address ');
+    my $user_key = $mail.':'.$app->build_key($mail);
+    $msg .= "<a href=\"".$app->script."?__mode=mgr&amp;akey=$user_key\">$mail</a> ";
+    my $result = $app->translate('subscribed to');
+    $result = $app->translate('opted out of') if ($method eq 'opt');
+    $result = $app->translate('removed from') if ($action eq 'rmv');
+    $msg .= $result.' ';
+    my ($name, $desc, $link) = $app->read_sub($key);
+    $msg .= "<a href=\"".$app->script."?__mode=mgr&amp;method=$desc&amp;dkey=$key\">";
+    $msg .= $name.'</a>.';
+  }
+  $app->log($msg);
   1;
 }
 
