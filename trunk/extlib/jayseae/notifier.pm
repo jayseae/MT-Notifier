@@ -2,8 +2,8 @@
 # MT-Notifier: Configure subscriptions to your blog.
 # A Plugin for Movable Type
 #
-# Release '2.4.2'
-# January 12, 2005
+# Release '2.4.3'
+# January 21, 2005
 #
 # http://jayseae.cxliv.org/notifier/
 # http://www.amazon.com/o/registry/2Y29QET3Y472A/
@@ -27,7 +27,7 @@ use vars qw(@ISA $FILESET $FILEURL $VERSION);
 @ISA = qw(MT::App::CMS);
 $FILESET = 'n2x';
 $FILEURL = 'mt-notifier.cgi';
-$VERSION = '2.4.2';
+$VERSION = '2.4.3';
 
 sub uri {
   $_[0]->path . ($_[0]->{author} ? MT::ConfigMgr->instance->AdminScript : $_[0]->script);
@@ -238,7 +238,10 @@ sub manager {
   my $error;
   if (my $email = $app->{query}->param('email')) {
     my $dkey = $app->{query}->param('dkey');
-    my $type = $app->{query}->param('type') || 'sub';
+    my $type = 
+      $app->{query}->param('type') ||
+      $app->get_configuration_option($dkey, 'type') ||
+      'sub';
     $error = $app->subs('add', $type, $dkey, $email);
   }
   unless ($error) {

@@ -286,8 +286,6 @@
           </table>
         </div>
       </TMPL_IF>
-      <p><MT_TRANS phrase="Listed below are the opt-out records and subscription records that exist for the selected record."></p>
-      <hr style="background-color: #8FAEBE; color: #8FAEBE;" />
       <p style="font-weight: bold; text-indent: 40px;"><MT_TRANS phrase="Opt-Out Records"></p>
       <div class="list">
         <table border="1" cellspacing="0" cellpadding="5" style="margin-left: 40px; width: 88%;">
@@ -312,8 +310,7 @@
           </TMPL_IF>
         </table>
       </div>
-      <p><MT_TRANS phrase="Following each subscription record, you will find a link to remove that record from the database.  When a subscription is removed from the database, there is no backup of that subscription.  In order to receive notifications again, the address must be resubscribed."><TMPL_IF NAME=BY_ADDRESS>  <MT_TRANS phrase="In addition to the remove option, all valid records include a review option so that you may review the page and determine if you'd like to keep the subscription or not.  Review links will open in a new window."></TMPL_IF></p>
-      <hr style="background-color: #8FAEBE; color: #8FAEBE;" />
+      <p><MT_TRANS phrase="When an opt-out record is removed from the database, there is no backup kept.  In order to receive notifications again, the address must be resubscribed."><TMPL_IF NAME=BY_ADDRESS>  <MT_TRANS phrase="In addition to the remove option, all valid records include a review option so that you may review the page and determine if you'd like to keep the subscription or not.  Review links will open in a new window."></TMPL_IF></p>
       <p style="font-weight: bold; text-indent: 40px;"><MT_TRANS phrase="Subscription Records"></p>
       <div class="list">
         <table border="1" cellspacing="0" cellpadding="5" style="margin-left: 40px; width: 88%;">
@@ -359,8 +356,8 @@
           </TMPL_IF>
         </table>
       </div>
-      <p><MT_TRANS phrase="Following each subscription record, you will find links to available subscription types.  MT-Notifier allows subscriptions to comment and entry notifications, but this can be restricted on a site, blog or even category basis.  Within the restrictions, each user can specify their own subscription type request within their record.  Underlined options in black indicate the current selection.  Underlined text in blue indicate links that allow you to change your current selection within the available options."></p>
-      <p><MT_TRANS phrase="For subscription records, you will then have the option to create an 'opt-out' record, which means you will receive no more notifications from that entry, category or even blog.  After this section you will find a link to remove that record from the database.  When a subscription is removed from the database, there is no backup of that subscription.  In order to receive notifications again, the address must be resubscribed."><TMPL_IF NAME=BY_ADDRESS>  <MT_TRANS phrase="In addition to the remove option, all valid records include a review option so that you may review the page and determine if you'd like to keep the subscription or not.  Review links will open in a new window."></TMPL_IF></p>
+      <p><MT_TRANS phrase="Following each subscription record, you will find links to available subscription types.  MT-Notifier allows subscriptions to comment and entry notifications, but this can be restricted on a site, blog or even category basis.  Within the restrictions, each user can specify their own subscription type request within their record.  Underlined options in black indicate the current selection.  Text in blue indicate links that allow you to change your current selection within the available options."></p>
+      <p><MT_TRANS phrase="You will also have the option to create an 'opt-out' record, which means you will receive no more notifications from that entry, category or even blog.  After this section you will find a link to remove that record from the database.  When a subscription is removed from the database, there is no backup of that subscription.  In order to receive notifications again, the address must be resubscribed."><TMPL_IF NAME=BY_ADDRESS>  <MT_TRANS phrase="In addition to the remove option, all valid records include a review option so that you may review the page and determine if you'd like to keep the subscription or not.  Review links will open in a new window."></TMPL_IF></p>
       <TMPL_UNLESS NAME=BY_ADDRESS>
         <hr style="background-color: #8FAEBE; color: #8FAEBE;" />
         <form method="get" action="<TMPL_VAR NAME=NOTIFIER_SCRIPT_URL>">
