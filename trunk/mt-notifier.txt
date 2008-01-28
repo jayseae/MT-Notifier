@@ -1,8 +1,8 @@
 MT-Notifier: Configure subscriptions to your blog.
 A Plugin for Movable Type
 
-Release '2.4.1'
-January 5, 2005
+Release '2.4.2'
+January 12, 2005
 
 http://jayseae.cxliv.org/notifier/
 http://www.amazon.com/o/registry/2Y29QET3Y472A/
@@ -218,6 +218,9 @@ showing some love so that I don't have to make that decision.  Thanks.
 *** -------------------------------------------------------------------- ***
 
 Changelog:
+2.4.2
+  - Fixed display of site-wide configuration type.
+  - January 12, 2005
 2.4.1
   - Additional logging of the number of notification items sent.
   - Fixed user purge within management screen (to stay in management mode).
