@@ -1,8 +1,8 @@
 MT-Notifier: Configure subscriptions to your blog.
 A Plugin for Movable Type
 
-Release '2.4.5'
-March 1, 2005
+Release '2.4.6'
+March 10, 2005
 
 http://jayseae.cxliv.org/notifier/
 http://www.amazon.com/o/registry/2Y29QET3Y472A/
@@ -224,6 +224,9 @@ showing some love so that I don't have to make that decision.  Thanks.
 *** -------------------------------------------------------------------- ***
 
 Changelog:
+2.4.6
+  - Fixed regex for handling single-digit subscriptions.
+  - March 10, 2005
 2.4.5
   - Added ability to specify parameter "url" on subscription form.
   - March 1, 2005
@@ -329,3 +332,13 @@ Changelog:
 1.0.0
   - Initial release
   - November 19, 2003
+
+*** -------------------------------------------------------------------- ***
+
+Thanks To:
+
+David [1] for picking up on my regex error.
+
+[1] http://www.rayners.org/
+
+*** -------------------------------------------------------------------- ***
