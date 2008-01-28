@@ -2,7 +2,7 @@
 # MT-Notifier: Configure subscriptions to your blog.
 # A Plugin for Movable Type
 #
-# Release 2.3.5.1
+# Release 2.3.5.2
 # January 4, 2005
 #
 # http://jayseae.cxliv.org/notifier/
@@ -23,7 +23,7 @@ use MT;
 use MT::Plugin;
 
 use vars qw($VERSION);
-$VERSION = '2.3.5.1';
+$VERSION = '2.3.5.2';
 
 my $about = {
   name => 'MT-Notifier',

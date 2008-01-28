@@ -2,7 +2,7 @@
 # MT-Notifier: Configure subscriptions to your blog.
 # A Plugin for Movable Type
 #
-# Release 2.3.5.1
+# Release 2.3.5.2
 # January 4, 2005
 #
 # http://jayseae.cxliv.org/notifier/
@@ -27,7 +27,7 @@ use vars qw(@ISA $FILESET $FILEURL $VERSION);
 @ISA = qw(MT::App::CMS);
 $FILESET = 'n2x';
 $FILEURL = 'mt-notifier.cgi';
-$VERSION = '2.3.6';
+$VERSION = '2.3.5.2';
 
 sub uri {
   $_[0]->path . ($_[0]->{author} ? MT::ConfigMgr->instance->AdminScript : $_[0]->script);
@@ -1493,11 +1493,11 @@ sub module_magic {
         if ($method eq 'update') {
           my $pre = '            ';
           my $tag = '# jayseae::notifier';
-          push @out, $pre."                                          $tag\r\n";
-          push @out, $pre."if ($q->param('subscribe')) {             $tag\r\n";
-          push @out, $pre."  require jayseae::notifier;              $tag\r\n";
-          push @out, $pre."  jayseae::notifier->subscribe($comment); $tag\r\n";
-          push @out, $pre."}                                         $tag\r\n";
+          push @out, $pre.'                                          '."$tag\r\n";
+          push @out, $pre.'if ($q->param(\'subscribe\')) {             '."$tag\r\n";
+          push @out, $pre.'  require jayseae::notifier;              '."$tag\r\n";
+          push @out, $pre.'  jayseae::notifier->subscribe($comment); '."$tag\r\n";
+          push @out, $pre.'}                                         '."$tag\r\n";
         }
       }
     }

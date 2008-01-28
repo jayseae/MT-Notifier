@@ -4,7 +4,7 @@
 # MT-Notifier: Configure subscriptions to your blog.
 # A Plugin for Movable Type
 #
-# Release 2.3.5.1
+# Release 2.3.5.2
 # January 4, 2005
 #
 # http://jayseae.cxliv.org/notifier/
