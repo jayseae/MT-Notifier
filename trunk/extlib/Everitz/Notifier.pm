@@ -1,22 +1,25 @@
-# ===========================================================================
-# MT-Notifier: Configure subscriptions to your blog.
-# A Plugin for Movable Type
+# =======================================================================
+# Copyright 2003-2005, Everitz Consulting (mt@everitz.com)
 #
-# Release '2.4.6'
-# March 10, 2005
+# Non-commercial entities and non-profit organizations are granted a no-
+# charge license to use the software however they like, and modify it to
+# their needs, but redistribution of the software is not allowed under
+# any circumstances. No support is included with this no-charge license.
+# Contact us if you would like to purchase support for any product so
+# licensed.
 #
-# http://jayseae.cxliv.org/notifier/
-# http://www.amazon.com/o/registry/2Y29QET3Y472A/
+# Under no circumstances and under no legal theory, whether in tort
+# (including negligence), contract, or otherwise, shall Everitz
+# Consulting be liable to any person for any direct, indirect, special,
+# incidental, or consequential damages of any character arising as a
+# result of this License or the use of the Original Work including,
+# without limitation, damages for loss of goodwill, work stoppage,
+# computer failure or malfunction, or any and all other commercial
+# damages or losses.
 #
-# If you find the software useful or even like it, then a simple 'thank you'
-# is always appreciated.  A reference back to me is even nicer.  If you find
-# a way to make money from the software, do what you feel is right.
-#
-# Copyright 2003-2005, Chad Everett (software@jayseae.cxliv.org)
-# Licensed under the Open Software License version 2.1
-# ===========================================================================
-
-package jayseae::notifier;
+# Not to be redistributed without permssion of the copyright holder.
+# =======================================================================
+package Everitz::Notifier;
 
 use strict;
 
@@ -27,7 +30,7 @@ use vars qw(@ISA $FILESET $FILEURL $VERSION);
 @ISA = qw(MT::App::CMS);
 $FILESET = 'n2x';
 $FILEURL = 'mt-notifier.cgi';
-$VERSION = '2.4.6';
+$VERSION = '2.5.0';
 
 sub uri {
   $_[0]->path . ($_[0]->{author} ? MT::ConfigMgr->instance->AdminScript : $_[0]->script);
@@ -294,7 +297,7 @@ sub notify_comment {
     entry_link => $entry->permalink,
     entry_title => $entry->title,
     notifier_comment => 1,
-    notifier_home => 'http://jayseae.cxliv.org/notifier/',
+    notifier_home => 'http://www.everitz.com/movable_type.html',
     notifier_link => $cfg->CGIPath.'mt-notifier.cgi',
     notifier_version => $VERSION
   );
@@ -337,7 +340,7 @@ sub notify_entry {
     entry_link => $entry->permalink,
     entry_title => $entry->title,
     notifier_entry => 1,
-    notifier_home => 'http://jayseae.cxliv.org/notifier/',
+    notifier_home => 'http://www.everitz.com/movable_type.html',
     notifier_link => $cfg->CGIPath.'mt-notifier.cgi',
     notifier_version => $VERSION
   );
@@ -1527,20 +1530,20 @@ sub module_magic {
     @in = <ONE>;
     close (ONE);
     if ($method eq 'verify') {
-      my $count = grep { /jayseae::notifier/ } @in;
+      my $count = grep { /Everitz::Notifier/ } @in;
       return $count;
     }
     foreach my $line (@in) {
-      next if ($line =~ m|jayseae::notifier|);
+      next if ($line =~ m|Everitz::Notifier|);
       push @out, $line;
       if ($line =~ m|\$comment->save;|) {
         if ($method eq 'update') {
           my $pre = '            ';
-          my $tag = '# jayseae::notifier';
+          my $tag = '# Everitz::Notifier';
           push @out, $pre.'                                          '."$tag\r\n";
           push @out, $pre.'if ($q->param(\'subscribe\')) {             '."$tag\r\n";
-          push @out, $pre.'  require jayseae::notifier;              '."$tag\r\n";
-          push @out, $pre.'  jayseae::notifier->subscribe($comment); '."$tag\r\n";
+          push @out, $pre.'  require Everitz::Notifier;              '."$tag\r\n";
+          push @out, $pre.'  Everitz::Notifier->subscribe($comment); '."$tag\r\n";
           push @out, $pre.'}                                         '."$tag\r\n";
         }
       }

@@ -1,20 +1,24 @@
-# ===========================================================================
-# MT-Notifier: Configure subscriptions to your blog.
-# A Plugin for Movable Type
+# =======================================================================
+# Copyright 2003-2005, Everitz Consulting (mt@everitz.com)
 #
-# Release '2.4.6'
-# March 10, 2005
+# Non-commercial entities and non-profit organizations are granted a no-
+# charge license to use the software however they like, and modify it to
+# their needs, but redistribution of the software is not allowed under
+# any circumstances. No support is included with this no-charge license.
+# Contact us if you would like to purchase support for any product so
+# licensed.
 #
-# http://jayseae.cxliv.org/notifier/
-# http://www.amazon.com/o/registry/2Y29QET3Y472A/
+# Under no circumstances and under no legal theory, whether in tort
+# (including negligence), contract, or otherwise, shall Everitz
+# Consulting be liable to any person for any direct, indirect, special,
+# incidental, or consequential damages of any character arising as a
+# result of this License or the use of the Original Work including,
+# without limitation, damages for loss of goodwill, work stoppage,
+# computer failure or malfunction, or any and all other commercial
+# damages or losses.
 #
-# If you find the software useful or even like it, then a simple 'thank you'
-# is always appreciated.  A reference back to me is even nicer.  If you find
-# a way to make money from the software, do what you feel is right.
-#
-# Copyright 2003-2005, Chad Everett (software@jayseae.cxliv.org)
-# Licensed under the Open Software License version 2.1
-# ===========================================================================
+# Not to be redistributed without permssion of the copyright holder.
+# =======================================================================
 package MT::Plugin::Notifier;
 
 use strict;
@@ -23,13 +27,13 @@ use MT;
 use MT::Plugin;
 
 use vars qw($VERSION);
-$VERSION = '2.4.6';
+$VERSION = '2.5.0';
 
 my $about = {
   name => 'MT-Notifier',
   config_link => '../mt-notifier.cgi?__mode=mnu',
   description => 'Subscription options for your installation.',
-  doc_link => 'http://jayseae.cxliv.org/notifier/'
+  doc_link => 'http://www.everitz.com/movable_type.html'
 }; 
 
 MT->add_plugin(new MT::Plugin($about));
@@ -70,8 +74,8 @@ sub Notify_Comment {
     require MT::Blog;
     my $blog = MT::Blog->load($obj->blog_id);
     if ($blog->email_new_comments) {
-      require jayseae::notifier;
-      jayseae::notifier->notify_comment($err, $obj);
+      require Everitz::Notifier;
+      Everitz::Notifier->notify_comment($err, $obj);
     }
   }
 }
@@ -82,8 +86,8 @@ sub Notify_Entry {
     require MT::Blog;
     my $blog = MT::Blog->load($obj->blog_id);
     if ($blog->email_new_comments) {
-      require jayseae::notifier;
-      jayseae::notifier->notify_entry($err, $obj);
+      require Everitz::Notifier;
+      Everitz::Notifier->notify_entry($err, $obj);
     }
   }
 }

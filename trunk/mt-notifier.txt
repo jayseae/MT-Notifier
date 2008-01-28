@@ -1,18 +1,14 @@
 MT-Notifier: Configure subscriptions to your blog.
 A Plugin for Movable Type
 
-Release '2.4.6'
-March 10, 2005
+Release '2.5.0'
+May 18, 2005
 
-http://jayseae.cxliv.org/notifier/
-http://www.amazon.com/o/registry/2Y29QET3Y472A/
+http://www.everitz.com/movable_type.html
 
-If you find the software useful or even like it, then a simple 'thank you'
-is always appreciated.  A reference back to me is even nicer.  If you find
-a way to make money from the software, do what you feel is right.
+Copyright 2003-2005, Everitz Consulting (mt@everitz.com)
 
-Copyright 2003-2005, Chad Everett (software@jayseae.cxliv.org)
-Licensed under the Open Software License version 2.1
+Not to be redistributed without permssion of the copyright holder.
 
 *** -------------------------------------------------------------------- ***
 
@@ -39,7 +35,7 @@ Installation:
 
   mt-notifier.cgi to your main MT directory (chmod to 755)
 
-  notifier.pm to extlib/jayseae/notifier.pm under your main MT directory
+  notifier.pm to extlib/Everitz/Notifier.pm under your main MT directory
 
   Notifier.pl to plugins/Notifier.pl under your main MT directory
 
@@ -50,7 +46,7 @@ Installation:
 - Installation should look like this:
 
   MT_DIR/mt-notifier.cgi
-  MT_DIR/extlib/jayseae/notifier.pm
+  MT_DIR/extlib/Everitz/Notifier.pm
   MT_DIR/plugins/Notifier.pl
   MT_DIR/tmpl/cms/notifier.tmpl
   MT_DIR/tmpl/email/notification.tmpl
@@ -224,6 +220,9 @@ showing some love so that I don't have to make that decision.  Thanks.
 *** -------------------------------------------------------------------- ***
 
 Changelog:
+2.5.0
+  - Updated copyright info to reflect acquisition by Everitz Consulting.
+  - May 18, 2005
 2.4.6
   - Fixed regex for handling single-digit subscriptions.
   - March 10, 2005
