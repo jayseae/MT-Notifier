@@ -2,8 +2,8 @@
 # MT-Notifier: Configure subscriptions to your blog.
 # A Plugin for Movable Type
 #
-# Release 2.2.4
-# September 6, 2004
+# Release 2.3
+# September 15, 2004
 #
 # http://jayseae.cxliv.org/notifier/
 # http://www.amazon.com/o/registry/2Y29QET3Y472A/
@@ -26,7 +26,7 @@ use MT::Util qw(archive_file_for format_ts);
 use vars qw(@ISA $FILESET $VERSION);
 @ISA = qw(MT::App::CMS);
 $FILESET = 'n2x';
-$VERSION = '2.2.4';
+$VERSION = '2.3';
 
 sub uri {
   $_[0]->path . ($_[0]->{author} ? MT::ConfigMgr->instance->AdminScript : $_[0]->script);
@@ -41,6 +41,7 @@ sub init {
     del => \&deleter,
     mgr => \&manager,
     mnu => \&menu,
+    set => \&install,
     xfr => \&transfer
   );
   $app->{default_mode} = 'default';
@@ -50,6 +51,7 @@ sub init {
     $mode eq 'del' ||
     $mode eq 'mgr' ||
     $mode eq 'mnu' ||
+    $mode eq 'set' ||
     $mode eq 'xfr' ||
     $mode eq 'redir' ?
     1 : 0;
@@ -150,10 +152,31 @@ sub deleter {
 sub enabler {
   my $app = shift;
   my $auth = $app->{author};
-  my $case = $app->{query}->param('case') || '';
   my $from = $app->{query}->param('from') || '';
-  my $module = $app->{query}->param('module') || '';
+  my $type = $app->{query}->param('type') || '';
   my %param = (do_javascript => 1, func_enabler => 1);
+  my $error = 0;
+  my $data_rec = $app->read_record($FILESET, 'data', '0:0');
+  if ($from || $type) {
+    $data_rec->{from} = $from if $from;
+    $data_rec->{type} = $type if $type;
+    $error = 1 unless $app->save_record('data', '0:0', $data_rec);
+  }
+  $param{notifier_message} = status_message($app, $error) if $error;
+  my $type = $app->get_configuration_option('0:0', 'type');
+  $param{cfg_type_sco} = $type eq 'sco' ? 1 : 0;
+  $param{cfg_type_seo} = $type eq 'seo' ? 1 : 0;
+  $param{cfg_type_sub} = $type eq 'sub' || !$type ? 1 : 0;
+  $param{cfg_from} = $app->get_configuration_option('0:0', 'from');
+  $app->build_page('notifier.tmpl', \%param);
+}
+
+sub install {
+  my $app = shift;
+  my $auth = $app->{author};
+  my $case = $app->{query}->param('case') || '';
+  my $module = $app->{query}->param('module') || '';
+  my %param = (do_javascript => 1, func_install => 1);
   my $error = 0;
   my $file = "$ENV{SCRIPT_FILENAME}~";
   $file =~ s/\/([^\/]|\n)*\~//;
@@ -191,10 +214,6 @@ sub enabler {
       $error = 6 unless ($mode && $error);   # no mode
     }
     $param{notifier_message} = $app->translate($msg) unless $error;
-  } elsif ($from) {
-    my $data_rec = $app->read_record($FILESET, 'data', '0:0');
-    $data_rec->{from} = $from;
-    $error = 1 unless $app->save_record('data', '0:0', $data_rec);
   } elsif ($module) {
     $param{module_status} = module_magic($file, $module);
     my $status = 'added to';
@@ -204,31 +223,30 @@ sub enabler {
   }
   $param{module_status} = module_magic($file, 'verify');
   $param{notifier_message} = status_message($app, $error) if $error;
-  $param{sender_address} = $app->get_sender_address('0:0');
   $app->build_page('notifier.tmpl', \%param);
 }
 
 sub manager {
   my $app = shift;
-  my $method = $app->{query}->param('method') || '';
   my %param = (do_javascript => 1, func_manager => 1);
   my $error;
-  if ($method) {
-    return $app->manage_address if ($method eq 'bya');
-    if (my $email = $app->{query}->param('email')) {
-      my $dkey = $app->{query}->param('dkey') || '';
-      if ($app->test_data_key($dkey)) {
-        $app->subs('add', 'sub', $dkey, $email);
-      } else {
-        $error = 4;
-      }
+  if (my $email = $app->{query}->param('email')) {
+    my $dkey = $app->{query}->param('dkey');
+    if ($app->test_data_key($dkey)) {
+      my $type = $app->{query}->param('type') || 'sub';
+      $app->subs('add', $type, $dkey, $email);
+    } else {
+      $error = 4;
     }
-    unless ($error) {
-      return $app->manage_record if ($method eq 'byb');
-      return $app->manage_record if ($method eq 'byc');
-      return $app->manage_record if ($method eq 'bye');
-      $error = 7;
-    }
+  }
+  if (my $method = $app->{query}->param('method')) {
+    return $app->manage_record if ($method eq 'blog');
+    return $app->manage_record if ($method eq 'category');
+    return $app->manage_record if ($method eq 'entry');
+    return $app->manage_address if ($method eq 'on');
+    $error = 7;
+  } else {
+    return $app->manage_address if (my $akey = $app->{query}->param('akey'));
   }
   $param{notifier_message} = status_message($app, $error);
   $app->build_page('notifier.tmpl', \%param);
@@ -240,7 +258,7 @@ sub menu {
   $app->build_page('notifier.tmpl', \%param);
 }
 
-sub notify {
+sub notify_comment {
   my $app = shift;
   my ($err, $comment) = @_;
   my $blog_id = $comment->blog_id;
@@ -249,7 +267,7 @@ sub notify {
   my $entry_id = $comment->entry_id;
   require MT::Entry;
   my $entry = MT::Entry->load($entry_id) or return;
-  my $subs = $app->load_subs($blog_id, $entry_id);
+  my $subs = $app->load_subs($blog_id, $entry_id, 'sco');
   return unless scalar @$subs;
   my $author = $entry->author;
   $app->set_language($author->preferred_language)
@@ -257,7 +275,7 @@ sub notify {
   require MT::ConfigMgr;
   my $cfg = MT::ConfigMgr->instance;
   my $charset = $cfg->PublishCharset || 'iso-8859-1';
-  my %head = (From => $app->get_sender_address('0:'.$entry_id));
+  my %head = (From => $app->get_configuration_option('0:'.$entry_id, 'from'));
   $head{'Content-Type'} = qq(text/plain; charset="$charset");
   $head{Subject} = '['.$blog->name.'] '.
     $app->translate('New Comment from \'[_1]\' ', $comment->author).
@@ -270,6 +288,47 @@ sub notify {
     entry_id => $entry->id,
     entry_link => $entry->permalink,
     entry_title => $entry->title,
+    notifier_comment => 1,
+    notifier_home => 'http://jayseae.cxliv.org/notifier/',
+    notifier_link => $cfg->CGIPath.'mt-notifier.cgi',
+    notifier_version => $VERSION
+  );
+  foreach my $sub (@$subs) {
+    $head{To} = $sub;
+    my $user_rec = $app->read_record($FILESET, 'user', $sub);
+    $param{notifier_key} = $sub.':'.$user_rec->{code} if $user_rec;
+    my $body = MT->build_email('notification.tmpl', \%param);
+    require MT::Mail;
+    MT::Mail->send(\%head, $body);
+  }
+}
+
+sub notify_entry {
+  my $app = shift;
+  my ($err, $entry) = @_;
+  my $blog_id = $entry->blog_id;
+  require MT::Blog;
+  my $blog = MT::Blog->load($blog_id) or return;
+  my $subs = $app->load_subs($blog_id, $entry->id, 'seo');
+  return unless scalar @$subs;
+  my $author = $entry->author;
+  $app->set_language($author->preferred_language)
+    if ($author && $author->preferred_language);
+  require MT::ConfigMgr;
+  my $cfg = MT::ConfigMgr->instance;
+  my $charset = $cfg->PublishCharset || 'iso-8859-1';
+  my %head = (From => $app->get_configuration_option('0:'.$entry->id, 'from'));
+  $head{'Content-Type'} = qq(text/plain; charset="$charset");
+  $head{Subject} = '['.$blog->name.'] '.
+    $app->translate('New Entry \'[_1]\' ', $entry->title).
+    $app->translate('from \'[_1]\'', $author->name);
+  my %param = (
+    blog_name => $blog->name,
+    entry_id => $entry->id,
+    entry_excerpt => $entry->get_excerpt,
+    entry_link => $entry->permalink,
+    entry_title => $entry->title,
+    notifier_entry => 1,
     notifier_home => 'http://jayseae.cxliv.org/notifier/',
     notifier_link => $cfg->CGIPath.'mt-notifier.cgi',
     notifier_version => $VERSION
@@ -299,19 +358,12 @@ sub transfer {
       foreach my $data (MT::PluginData->load({ plugin => 'Notifier' })) {
         my $data_key = $data->key;
         my $n1x_rec = $app->read_record('n1x', 'data', $data_key);
-        if ($data_key eq '0:0') {
-          # (0:0) Site
-          if ($n1x_rec->{from}) {
-            my $data_rec = $app->read_record($FILESET, 'sys', $data_key);
-            ($data_rec->{from}) = split(':', $n1x_rec->{from});
-            $app->save_record('sys', $data_key, $data_rec);
-          }
-        } elsif ($data_key =~ /^([0-9]+):0$/) {
+        if ($data_key =~ /^([0-9]+):0$/) {
           if ($app->test_data_key($data_key)) {
-            # (X:0) Blog
+            # (0:0) Site or (X:0) Blog
             if ($n1x_rec->{from}) {
               my $data_rec = $app->read_record($FILESET, 'data', $data_key);
-              ($data_rec->{from}) = split(':', $n1x_rec->{from});
+              $data_rec->{from} = $n1x_rec->{from};
               $app->save_record('data', $data_key, $data_rec);
             }
             if ($n1x_rec->{subs}) {
@@ -467,39 +519,57 @@ sub count_subs {
   0;
 }
 
-sub get_sender_address {
+sub get_configuration_option {
   my $app = shift;
   my $data_key = shift;
-  my $sender = 'sender@domain.com';
-  my $data_rec = $app->read_record($FILESET, 'data', '0:0');
-  $sender = $data_rec->{from} if $data_rec && $data_rec->{from}; 
-  return $sender if ($data_key eq '0:0');
+  my $data_opt = shift;
+  my ($from, $type);
   if ($data_key =~ /^0:([0-9]+)$/) {
     # (0:Z) Entry
     my $entry_id = $1;
     my $data_rec = $app->read_record($FILESET, 'data', $data_key);
-    return $data_rec->{from} if $data_rec && $data_rec->{from};
+    $from = $data_rec->{from} if ($data_rec && $data_rec->{from});
     require MT::Placement;
     my $placement = MT::Placement->load
-     ({ entry_id => $entry_id, is_primary => 1 }, { limit => 1 });
+      ({ entry_id => $entry_id, is_primary => 1 }, { limit => 1 });
     $data_key = $placement->category_id.':C' if $placement;
+    unless ($placement) {
+      require MT::Entry;
+      my $entry = MT::Entry->load($entry_id);
+      $data_key = $entry->blog_id.':0' if $entry;
+    }
   }
   if ($data_key =~ /^([0-9]+):C$/) {
     # (Y:C) Category
     my $category_id = $1;
     my $data_rec = $app->read_record($FILESET, 'data', $data_key);
-    return $data_rec->{from} if $data_rec && $data_rec->{from};
-    require MT::Category;
-    my $category = MT::Category->load($category_id);
-    $data_key = $category->blog_id.':0' if $category;
+    $from = $data_rec->{from} if ($data_rec && $data_rec->{from} && !$from);
+    $type = $data_rec->{type} if ($data_rec && $data_rec->{type});
+    unless ($from && $type) {
+      require MT::Category;
+      my $category = MT::Category->load($category_id);
+      $data_key = $category->blog_id.':0' if $category;
+    }
   }
   if ($data_key =~ /^([0-9]+):0$/) {
     # (X:0) Blog
     my $blog_id = $1;
     my $data_rec = $app->read_record($FILESET, 'data', $data_key);
-    return $data_rec->{from} if $data_rec && $data_rec->{from};
+    $from = $data_rec->{from} if ($data_rec && $data_rec->{from} && !$from);
+    $type = $data_rec->{type} if ($data_rec && $data_rec->{type} && !$type);
+    $data_key = '0:0' unless ($from && $type);
   }
-  $sender;
+  if ($data_key eq '0:0') {
+    # (0:0) Site
+    my $data_rec = $app->read_record($FILESET, 'data', $data_key);
+    $from = $data_rec->{from} if ($data_rec && $data_rec->{from} && !$from);
+    $type = $data_rec->{type} if ($data_rec && $data_rec->{type} && !$type);
+    $from = 'sender@domain.com' unless $from;
+    $type = 'sub' unless $type;
+  }
+  return $from if ($data_opt eq 'from');
+  return $type if ($data_opt eq 'type');
+  0;
 }
 
 sub load_data_set {
@@ -585,18 +655,21 @@ sub load_data_set {
 
 sub load_subs {
   my $app = shift;
-  my ($blog_id, $entry_id) = @_;
+  my ($blog_id, $entry_id, $rec_type) = @_;
   my $blog_key = $blog_id.':0';
   my $entry_key = '0:'.$entry_id;
   my @work_opts;
   my @work_subs;
   my $data_rec = $app->read_record($FILESET, 'data', $entry_key);
+  my $sub_pass = $app->get_configuration_option($entry_key, 'type');
+  return \@work_subs if ($rec_type eq 'sco' && $sub_pass eq 'seo');
+  return \@work_subs if ($rec_type eq 'seo' && $sub_pass eq 'sco');
   if ($data_rec) {
     if (my $sub_list = $data_rec->{subs}) {
       foreach my $sub (split(';', $sub_list)) {
         my ($sub_mail, $sub_type) = split(':', $sub);
-        push @work_opts, $sub_mail if ($sub_type eq 'opt');
-        push @work_subs, $sub_mail unless ($sub_type eq 'opt');
+        push @work_opts, $sub if ($sub_type eq 'opt');
+        push @work_subs, $sub unless ($sub_type eq 'opt');
       }
     }
   }
@@ -608,8 +681,8 @@ sub load_subs {
       if (my $sub_list = $data_rec->{subs}) {
         foreach my $sub (split(';', $sub_list)) {
           my ($sub_mail, $sub_type) = split(':', $sub);
-          push @work_opts, $sub_mail if ($sub_type eq 'opt');
-          push @work_subs, $sub_mail unless ($sub_type eq 'opt');
+          push @work_opts, $sub if ($sub_type eq 'opt');
+          push @work_subs, $sub unless ($sub_type eq 'opt');
         }
       }
     }
@@ -619,8 +692,8 @@ sub load_subs {
     if (my $sub_list = $data_rec->{subs}) {
       foreach my $sub (split(';', $sub_list)) {
         my ($sub_mail, $sub_type) = split(':', $sub);
-        push @work_opts, $sub_mail if ($sub_type eq 'opt');
-        push @work_subs, $sub_mail unless ($sub_type eq 'opt');
+        push @work_opts, $sub if ($sub_type eq 'opt');
+        push @work_subs, $sub unless ($sub_type eq 'opt');
       }
     }
   }
@@ -629,7 +702,17 @@ sub load_subs {
   my @opts = sort grep(!$opts{$_}++, @work_opts);
   my @subs = sort grep(!$subs{$_}++, @work_subs);
   for (my $i = 0 ; $i < scalar @subs ; $i++) {
-    splice(@subs, $i, 1) if (grep(/$subs[$i]/, @opts));
+    my $found = 0;
+    my ($sub_mail, $sub_type) = split(':', $subs[$i]);
+    $found = 1 if (grep(/$sub_mail:opt/, @opts));
+    $found = 1 if ($rec_type eq 'sco' && $sub_type eq 'seo');
+    $found = 1 if ($rec_type eq 'seo' && $sub_type eq 'sco');
+    if ($found) {
+      splice(@subs, $i, 1);
+      $i--;
+    } else {
+      $subs[$i] = $sub_mail;
+    }
   }
   \@subs;
 }
@@ -642,6 +725,7 @@ sub loop_addresses {
     my $user_rec = $app->read_record($FILESET, 'user', $data_key);
     push @subs, {
       sub_email => $data_key,
+      sub_style => $user_rec->{type},
       sub_valid => $user_rec->{code}
     };
   }
@@ -729,7 +813,7 @@ sub loop_entries {
       };
     }
   }
-  @entries = sort {
+  @entries = sort {	
     $b->{entry_subs} <=> $a->{entry_subs} ||
     $a->{entry_title} cmp $b->{entry_title}
   } @entries;
@@ -739,55 +823,69 @@ sub loop_entries {
 
 sub loop_subs {
   my $app = shift;
-  my ($sub_mode, $sub_list, $mail_key) = @_;
-  my ($name, $type, $link);
+  my ($sub_list, $mail_key) = @_;
+  my @opts;
   my @subs;
   if ($sub_list) {
-    my $method = 'bya';
     foreach my $data_key (split(/;/, $sub_list)) {
+      my $data;
       if ($mail_key) {
-        ($name, $type, $link) = $app->read_sub($data_key);
         my $data_rec = $app->read_record($FILESET, 'data', $data_key);
-        $method = 'byb' if ($type eq 'Blog');
-        $method = 'byc' if ($type eq 'Category');
-        $method = 'bye' if ($type eq 'Entry');
-        push @subs, {
-          sub_name   => $name,
-          sub_type   => $type,
-          sub_link   => $link,
-          sub_key    => $data_key,
-          sub_method => $method
-        } if ($data_rec->{subs} =~ /$mail_key:$sub_mode/);
+        next unless ($data_rec->{subs} =~ /$mail_key:(opt|sco|seo|sub)/);
+        my $sub_type = $1;
+        my ($name, $desc, $link) = $app->read_sub($data_key);
+        my $sub_pass = $app->get_configuration_option($data_key, 'type');
+        $data = {
+          sub_name     => $name,
+          sub_desc     => $desc,
+          sub_key      => $data_key,
+          sub_link     => $link,
+          sub_method   => $desc,
+          sub_pass_sco => $sub_pass eq 'sco' ? 1 : 0,
+          sub_pass_seo => $sub_pass eq 'seo' ? 1 : 0,
+          sub_pass_sub => $sub_pass eq 'sub' ? 1 : 0,
+          sub_type     => $sub_type
+        };
       } else {
-        ($name, $type) = split(/:/, $data_key);
-        if ($type eq $sub_mode) {
-          my $user_rec = $app->read_record($FILESET, 'user', $name);
-          push @subs, {
-            sub_name   => $name,
-            sub_type   => '',
-            sub_key    => $name.':'.$user_rec->{code},
-            sub_method => $method
-          };
-        }
+        my ($name, $type) = split(/:/, $data_key);
+        next unless ($type =~ /(opt|sco|seo|sub)/);
+        my $user_rec = $app->read_record($FILESET, 'user', $name);
+        $data = {
+          sub_name   => $name,
+          sub_desc   => '',
+          sub_key    => $name.':'.$user_rec->{code},
+          sub_link   => '',
+          sub_method => '',
+          sub_type   => $type
+        };
       }
+      $data->{sub_entry} = $data->{sub_desc} eq 'entry' ? 1 : 0;
+      $data->{sub_type_sco} = $data->{sub_type} eq 'sco' ? 1 : 0;
+      $data->{sub_type_seo} = $data->{sub_type} eq 'seo' ? 1 : 0;
+      $data->{sub_type_sub} = $data->{sub_type} eq 'sub' ? 1 : 0;
+      push @subs, $data unless ($data->{sub_type} eq 'opt');
+      push @opts, $data if ($data->{sub_type} eq 'opt');
     }
   }
+  @opts = sort {
+    $a->{sub_desc} cmp $b->{sub_desc} ||
+    $a->{sub_name} cmp $b->{sub_name}
+  } @opts;
   @subs = sort {
-    $a->{sub_type} cmp $b->{sub_type} ||
+    $a->{sub_desc} cmp $b->{sub_desc} ||
     $a->{sub_name} cmp $b->{sub_name}
   } @subs;
-  \@subs;
+  (\@opts, \@subs);
 }
 
 sub manage_address {
   my $app = shift;
   my $akey = $app->{query}->param('akey');
   my $mode = $app->{query}->param('__mode');
-  my $method = $app->{query}->param('method') if $mode;
   my ($mail, $code) = split(':', $akey) if $akey;
-  $code = $app->{query}->param('code') unless $code;
   $mail = $app->{query}->param('mail') unless $mail;
-  my %param = (by_address => 1, do_javascript => 1, manage_items => 1, query => $method);
+  $code = $app->{query}->param('code') unless $code;
+  my %param = (by_address => 1, do_javascript => 1, manage_items => 1);
   my $error;
   if ($mail && $code) {
     $param{akey} = $akey;
@@ -803,14 +901,14 @@ sub manage_address {
         $error = $app->subs('rmv', $type, $key, $mail);
         $user_rec = $app->read_record($FILESET, 'user', $mail);
       } elsif (my $set = $app->{query}->param('set')) {
-        $error = $app->subs('add', 'opt', $set, $mail);
+        my ($key, $type) = split('~', $set);
+        $error = $app->subs('add', $type, $key, $mail);
         $user_rec = $app->read_record($FILESET, 'user', $mail);
       }
       my $sub_list = $user_rec->{subs};
-      my $opts = $app->loop_subs('opt', $sub_list, $mail);
+      my ($opts, $subs) = $app->loop_subs($sub_list, $mail);
       $param{opt_foot} = scalar @$opts;
       $param{opt_loop} = \@$opts;
-      my $subs = $app->loop_subs('sub', $sub_list, $mail);
       $param{sub_foot} = scalar @$subs;
       $param{sub_loop} = \@$subs;
       $param{valid} = 1;
@@ -821,10 +919,10 @@ sub manage_address {
     $mail = $app->{query}->param('mail');
     $error = $app->subs('add', 'sub', $param{dkey}, $mail);
     unless ($error) {
-      my ($name, $type, $link) = $app->read_sub($param{dkey});
-      $param{sub_link} = $link;
+      my ($name, $desc, $link) = $app->read_sub($param{dkey});
       $param{sub_name} = $name;
-      $param{sub_type} = $type;
+      $param{sub_desc} = $desc;
+      $param{sub_link} = $link;
     } else {
       $param{error} = 1;
     }
@@ -840,13 +938,13 @@ sub manage_record {
   my $akey = $app->{query}->param('akey');
   my $dkey = $app->{query}->param('dkey');
   my $mode = $app->{query}->param('__mode');
-  my $method = $app->{query}->param('method') if $mode;
-  my %param = (do_javascript => 1, manage_items => 1, query => $method);
+  my $method = $app->{query}->param('method');
+  my %param = (do_javascript => 1, manage_items => 1, method => $method);
   $dkey = $app->{query}->param('off') unless $dkey;
   $dkey = $app->{query}->param('set') unless $dkey;
   my $error;
   if ($dkey) {
-    $dkey =~ s/~(opt|sub)//;
+    $dkey =~ s/~(.)*$//;
     if ($app->test_data_key($dkey)) {
       my ($mail, $code) = split(':', $akey) if $akey;
       my ($blog_id, $entry_id) = split(':', $dkey);
@@ -860,15 +958,23 @@ sub manage_record {
       } elsif (my $from = $app->{query}->param('from')) {
         $data_rec->{from} = $from;
         $app->save_record('data', $dkey, $data_rec);
+      } elsif (my $type = $app->{query}->param('type')) {
+        $data_rec->{type} = $type;
+        $app->save_record('data', $dkey, $data_rec);
       } elsif (my $off = $app->{query}->param('off')) {
         my ($key, $type) = split('~', $off);
         $error = $app->subs('rmv', $type, $key, $mail);
         $data_rec = $app->read_record($FILESET, 'data', $dkey);
       } elsif (my $set = $app->{query}->param('set')) {
-        $error = $app->subs('add', 'opt', $set, $mail);
+        my ($key, $type) = split('~', $set);
+        $error = $app->subs('add', $type, $key, $mail);
         $data_rec = $app->read_record($FILESET, 'data', $dkey);
       }
-      if ($method eq 'byb') {
+      my $type = $app->get_configuration_option($dkey, 'type');
+      $param{cfg_type_sco} = $type eq 'sco' ? 1 : 0;
+      $param{cfg_type_seo} = $type eq 'seo' ? 1 : 0;
+      $param{cfg_type_sub} = $type eq 'sub' || !$type ? 1 : 0;
+      if ($method eq 'blog') {
         $param{by_blog} = 1;
         require MT::Blog;
         if (my $blog = MT::Blog->load($blog_id)) {
@@ -879,7 +985,7 @@ sub manage_record {
           $param{blog_name} = 'Unknown Blog';
           $param{blog_description} = 'Description Unavailable';
         }
-      } elsif ($method eq 'byc') {
+      } elsif ($method eq 'category') {
         $param{by_category} = 1;
         require MT::Category;
         if (my $category = MT::Category->load($blog_id)) {
@@ -890,14 +996,14 @@ sub manage_record {
           } else {
             $param{category_blog_name} = 'Unknown Blog';
           }
-          my ($name, $type, $link) = $app->read_sub($dkey);
+          my ($name, $desc, $link) = $app->read_sub($dkey);
           $param{category_description} = $category->description || 'No Description';
           $param{category_link} = $link;
           $param{category_label} = $category->label;
         } else {
           $param{category_label} = 'Unknown Category';
         }
-      } elsif ($method eq 'bye') {
+      } elsif ($method eq 'entry') {
         $param{by_entry} = 1;
         require MT::Entry;
         if (my $entry = MT::Entry->load($entry_id)) {
@@ -916,12 +1022,11 @@ sub manage_record {
           $param{entry_title} = 'Unknown Entry';
         }
       }
-      $param{sender_address} = $app->get_sender_address($dkey);
+      $param{cfg_from} = $app->get_configuration_option($dkey, 'from');
       my $sub_list = $data_rec->{subs};
-      my $opts = $app->loop_subs('opt', $sub_list);
+      my ($opts, $subs) = $app->loop_subs($sub_list);
       $param{opt_foot} = scalar @$opts;
       $param{opt_loop} = \@$opts;
-      my $subs = $app->loop_subs('sub', $sub_list);
       $param{sub_foot} = scalar @$subs;
       $param{sub_loop} = \@$subs;
       $param{valid} = 1;
@@ -1000,11 +1105,10 @@ sub read_record {
       if ($type eq 'data') {
         $record{from} = $data->data->{'from'} if ($data->data->{'from'});
         $record{subs} = $data->data->{'subs'} if ($data->data->{'subs'});
+        $record{type} = $data->data->{'type'} if ($data->data->{'type'});
       } elsif ($type eq 'user') {
         $record{code} = $data->data->{'code'} if ($data->data->{'code'});
         $record{subs} = $data->data->{'subs'} if ($data->data->{'subs'});
-      } elsif ($type eq 'sys') {
-        $record{from} = $data->data->{'from'} if ($data->data->{'from'});
       }
     }
     if ($type eq 'user') {
@@ -1017,13 +1121,13 @@ sub read_record {
 sub read_sub {
   my $app = shift;
   my $skey = shift;
-  my ($link, $name, $type);
+  my ($desc, $link, $name);
   my @subs;
   if ($app->test_data_key($skey)) {
     if ($skey =~ /^([0-9]+):0$/) {
       # (X:0) Blog
       my $blog_id = $1;
-      $type = 'Blog';
+      $desc = 'Blog';
       require MT::Blog;
       if (my $blog = MT::Blog->load($blog_id)) {
         $link = $blog->site_url;
@@ -1032,7 +1136,7 @@ sub read_sub {
     } elsif ($skey =~ /^([0-9]+):C$/) {
       # (Y:C) Category
       my $cat_id = $1;
-      $type = 'Category';
+      $desc = 'Category';
       require MT::Category;
       if (my $cat = MT::Category->load($cat_id)) {
         $name = $cat->label;
@@ -1040,13 +1144,13 @@ sub read_sub {
         if (my $blog = MT::Blog->load($cat->blog_id)) {
           $link = $blog->archive_url;
           $link .= '/' unless $link =~ m/\/$/;
-          $link .= archive_file_for ('',  $blog, $type, $cat);
+          $link .= archive_file_for ('',  $blog, $desc, $cat);
         }
       }
     } elsif ($skey =~ /^0:([0-9]+)$/) {
       # (0:Z) Entry
       my $ent_id = $1;
-      $type = 'Entry';
+      $desc = 'Entry';
       require MT::Entry;
       if (my $ent = MT::Entry->load
         ({ id => $ent_id, status => MT::Entry::RELEASE() })) {
@@ -1055,7 +1159,7 @@ sub read_sub {
       }
     }
   }
-  ($name, $type, $link);
+  ($name, lc($desc), $link);
 }
 
 sub save_record {
@@ -1068,16 +1172,13 @@ sub save_record {
     if ($type eq 'data') {
       $content = 1 if (
         $record->{from} ||
-        $record->{subs}
-     );
+        $record->{subs} ||
+        $record->{type}
+      );
     } elsif ($type eq 'user') {
       $content = 1 if (
         $record->{subs}
-     );
-    } elsif ($type eq 'sys') {
-      $content = 1 if (
-        $record->{from}
-     );
+      );
     }
   }
   if ($FILESET eq 'n2x') {
@@ -1087,7 +1188,7 @@ sub save_record {
         key => $key });
     if ($data) {
       if ($content) {
-        $data->data ($record);
+        $data->data($record);
         $data->save or return 0;
       } else {
         $data->remove or return 0;
@@ -1097,7 +1198,7 @@ sub save_record {
         $data = MT::PluginData->new;
         $data->key($key);
         $data->plugin('Notifier (n2x)');
-        $data->data ($record);
+        $data->data($record);
         $data->save or return 0;
       }
     }
@@ -1108,14 +1209,21 @@ sub save_record {
 sub subs {
   my $app = shift;
   my ($action, $method, $key, $mail) = @_;
-  my %modes = (
-    addopt => 1,
-    addsub => 1,
-    rmvopt => 1,
-    rmvsub => 1
+  my %actions = (
+    add => 1,
+    rmv => 1,
+  );
+  my %opt_methods = (
+    opt => 1
+  );
+  my %sub_methods = (
+    sco => 1,
+    seo => 1,
+    sub => 1
   );
 
-  return 6 unless ($modes{$action.$method});
+  return 7 unless ($actions{$action});
+  return 11 unless ($opt_methods{$method} || $sub_methods{$method});
 
   if ($app->test_data_key($key)) {
     require MT::Util;
@@ -1137,21 +1245,28 @@ sub subs {
 
   if ($data_rec->{subs}) {
     my $subs = $data_rec->{subs};
-    if ($action eq 'add' && $method eq 'sub') {
-      return 9 if ($subs =~ /$mail:opt/);
+    if ($action eq 'add') {
+      return 0 if ($subs =~ /$mail:$method/);
+      if ($subs =~ /$mail:opt/) {
+        return 9 if ($sub_methods{$method});
+      } else {
+        unless ($method eq 'opt') {
+          my $permit = $app->get_configuration_option($key, 'type');
+          return 11 unless ($method eq $permit || $permit eq 'sub');
+        }
+      }
     }
     @data_subs = split(/;/, $subs);
     if ($subs =~ /$mail/) {
       $found = 0;
       for (my $i = 0 ; $i < scalar @data_subs ; $i++) {
-        if ($data_subs[$i] =~ /^$mail:$method$/) {
-          splice(@data_subs, $i, 1);
-          $found = 1;
-          last;
-        } elsif ($data_subs[$i] =~ /$mail:sub/) {
-          splice(@data_subs, $i, 1) if ($method eq 'opt');
-          $found = 1;
-          last;          
+        if ($data_subs[$i] =~ /^$mail:(opt|sco|seo|sub)$/) {
+          $found = 1 if ($method eq $1);
+          $found = 1 if ($action eq 'add');
+          if ($found) {
+            splice(@data_subs, $i, 1);
+            last;
+          }
         }
       }
     }
@@ -1261,10 +1376,11 @@ sub build_page {
       $app->add_breadcrumb('By Category') if $param->{by_category};
       $app->add_breadcrumb('By Entry') if $param->{by_entry};
     } elsif ($param->{func_enabler}) {
+      $app->add_breadcrumb('Configure MT-Notifier');
+    } elsif ($param->{func_install}) {
       my $blogs = $app->loop_blogs;
       $param->{blog_loop} = \@$blogs;
-      $param->{blog_count} = scalar @$blogs;
-      $app->add_breadcrumb('Configure MT-Notifier');
+      $app->add_breadcrumb('Install MT-Notifier');
     } elsif ($param->{func_transfer}) {
       $app->add_breadcrumb('Transfer to MT-Notifier');
     } elsif (!$param->{func_default}) {
@@ -1346,6 +1462,7 @@ sub status_message {
   $msg = 'You specified an invalid email address.'          if ($error == 8);
   $msg = 'An opt-out record exists for the specified key.'  if ($error == 9);
   $msg = 'You entered an incorrect address and/or code.'    if ($error == 10);
+  $msg = 'You requested an invalid subscription type.'      if ($error == 11);
   $msg .= '  Please correct the error and try again.';
   $msg = 'No file was found at the specified location.'     if ($error == 96);
   $msg = 'No records were found to match your request.'     if ($error == 97);
@@ -1361,6 +1478,7 @@ sub status_message {
 # ---------------------------------------------------------------------------
 # Record Key:
 # ---------------------------------------------------------------------------
+# 0:0 is the system record.                        (v1.0)
 # x:0 for each blog.                               (v1.0)
 # x:y for the entry.                               (v1.0)
 #
@@ -1380,18 +1498,10 @@ sub status_message {
 #
 # - from = name@domain.com                         (v2.0)
 # - subs = name@domain.com:opt or sub;             (v2.0)
-# ===========================================================================
-
-# ===========================================================================
-# System Record
-# ---------------------------------------------------------------------------
-# Record Key:
-# ---------------------------------------------------------------------------
-# 0:0.
-# ---------------------------------------------------------------------------
-# Record Fields (name, layout, version):
-# ---------------------------------------------------------------------------
-# - from = name@domain.com                         (v2.0)
+#
+# - from = name@domain.com                         (v2.3)
+# - subs = name@domain.com:opt|sco|seo|sub;        (v2.3)
+# - type = comments or entries (blank for both)    (v2.3)
 # ===========================================================================
 
 # ===========================================================================

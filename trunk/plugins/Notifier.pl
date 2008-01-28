@@ -2,8 +2,8 @@
 # MT-Notifier: Configure subscriptions to your blog.
 # A Plugin for Movable Type
 #
-# Release 2.2.4
-# September 6, 2004
+# Release 2.3
+# September 15, 2004
 #
 # http://jayseae.cxliv.org/notifier/
 # http://www.amazon.com/o/registry/2Y29QET3Y472A/
@@ -23,7 +23,7 @@ use MT;
 use MT::Plugin;
 
 use vars qw($VERSION);
-$VERSION = '2.2.4';
+$VERSION = '2.3';
 
 my $about = {
   name => 'MT-Notifier',
@@ -34,9 +34,10 @@ my $about = {
 
 MT->add_plugin(new MT::Plugin($about));
 
-MT::Comment->add_callback('pre_save', 11, $about, \&Notify);
+MT::Comment->add_callback('pre_save', 11, $about, \&Notify_Comment);
+MT::Entry->add_callback('post_save', 11, $about, \&Notify_Entry);
 
-sub Notify {
+sub Notify_Comment {
   my ($err, $obj) = @_;
   my $notify = $obj->visible;
   if ($obj->id) {
@@ -51,7 +52,19 @@ sub Notify {
     my $blog = MT::Blog->load($obj->blog_id);
     if ($blog->email_new_comments) {
       require jayseae::notifier;
-      jayseae::notifier->notify($err, $obj);
+      jayseae::notifier->notify_comment($err, $obj);
+    }
+  }
+}
+
+sub Notify_Entry {
+  my ($err, $obj) = @_;
+  if ($obj->id && $obj->status == MT::Entry::RELEASE()) {
+    require MT::Blog;
+    my $blog = MT::Blog->load($obj->blog_id);
+    if ($blog->email_new_comments) {
+      require jayseae::notifier;
+      jayseae::notifier->notify_entry($err, $obj);
     }
   }
 }

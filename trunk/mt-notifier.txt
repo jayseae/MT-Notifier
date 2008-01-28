@@ -1,8 +1,8 @@
 MT-Notifier: Configure subscriptions to your blog.
 A Plugin for Movable Type
 
-Release 2.2.4
-September 6, 2004
+Release 2.3
+September 15, 2004
 
 http://jayseae.cxliv.org/notifier/
 http://www.amazon.com/o/registry/2Y29QET3Y472A/
@@ -28,7 +28,8 @@ code for each user to modify their subscriptions.
 MT-Notifier currently requires the use of the PluginData table, and in turn,
 this requires the Storable Perl module to be installed on your system.  Version
 2.0 of MT-Notifier also requires certain features found in MT 3.0D, and should
-not be used with a prior version of Movable Type.
+not be used with a prior version of Movable Type.  Use with version 3.1 (and
+3.11) is tested and should function as expected.
 
 *** -------------------------------------------------------------------- ***
 
@@ -65,11 +66,16 @@ presented with a menu of choices.
 - Configure
 
 The configuration option allows you to define a default sender address for
-your notifications, install MT-Notifier to (and remove from, if you should so
-desire) your Movable Type installation and also configure email notifications
-for each blog on your system.  Email notifications do not need to be enabled
-in order to configure MT-Notifier, but they must be on in order for your
-system to actually send notifications.
+your notifications and restrict the type of notifications that can be sent
+from your installation.
+
+- Install
+
+The install option allows you to install MT-Notifier to (and remove from, if
+you should so desire) your Movable Type installation and also configure email
+notifications for each blog on your system.  Email notifications do not need
+to be enabled in order to configure MT-Notifier, but they must be on in order
+for your system to actually send notifications (even entry notifications).
 
 - Manage
 
@@ -88,7 +94,8 @@ you may lose data!
 
 The transfer option allows you to import subscription records from other comment
 notification systems into MT-Notifier.  MT-Notifier version 1 subscriptions, EZ
-Subscribe to Comments subscriptions and Scripty Goddess subscriptions are currently supported.
+Subscribe to Comments subscriptions and Scripty Goddess subscriptions are currently
+supported.
 
 *** -------------------------------------------------------------------- ***
 
@@ -149,23 +156,23 @@ will need to send a string directly to MT-Notifier with the appropriate
 information.  To subscribe, include the email address (mail) and the key (dkey)
 to which you'd like to subscribe:
 
- http://www.example.com/cgi-bin/mt/mt-notifier.cgi?mail=user@domain.com&dkey=1:0
+ http://www.example.com/cgi-bin/mt/mt-notifier.cgi?mail=user@domain.com&dkey=2:0
 
 If you want to create a subscription to a blog, include the blog id, followed by
-a colon and a zero.  For instance, to create a subscription to blog 7, your link
+a colon and a zero.  For instance, to create a subscription to blog 6, your link
 would look like this:
 
- http://www.example.com/cgi-bin/mt/mt-notifier.cgi?mail=user@domain.com&dkey=7:0
+ http://www.example.com/cgi-bin/mt/mt-notifier.cgi?mail=user@domain.com&dkey=6:0
 
 For a category, you include the category ID, followed by a colon and a capital C.
-To subscribe to category 16, your subscription link would look like this:
+To subscribe to category 12, your subscription link would look like this:
 
- http://www.example.com/cgi-bin/mt/mt-notifier.cgi?mail=user@domain.com&dkey=16:C
+ http://www.example.com/cgi-bin/mt/mt-notifier.cgi?mail=user@domain.com&dkey=12:C
 
 For an entry, you start the key with a 0, follow it with a colon, and end with the
-entry id.  For example, with entry 274, the link would look like this:
+entry id.  For example, with entry 273, the link would look like this:
 
- http://www.example.com/cgi-bin/mt/mt-notifier.cgi?mail=user@domain.com&dkey=0:274
+ http://www.example.com/cgi-bin/mt/mt-notifier.cgi?mail=user@domain.com&dkey=0:273
 
 This makes it very easy to create a form that will allow you to subscribe to that
 entry, that category, or even that entire blog.  Just use code similar to the
@@ -191,18 +198,15 @@ alone forms will probably need to be changed so that they will still work.
 
 Using Notifications:
 
-Once installed, Notifier will send a brief email describing the comment and
-a link to the entry where the comment was left.  Also included are a link that
-allows managing user subscriptions.  These methods do not require the user
-to login to the MT system.
+Once installed, Notifier will send a brief email describing the comment or entry
+and a link to the entry itself (the entry containing the comment in the case of
+a comment notification).  Also included is a link that allows managing user
+subscriptions.  These methods do not require the user to login to the MT system,
+but they do require a code unique to each email address, which adds a small
+level of security to the user management system and helps prevent unauthorized
+access.
 
 *** -------------------------------------------------------------------- ***
-
-Still to Come:
-
-The new architecture of MT-Notifier will allow for adding additional storage
-methods with relative ease.  Also on the list are a number of requested changes -
-just be patient.  They'll be along shortly.
 
 If you have requested a feature, or have a feature that you'd like to request, 
 please keep in mind that I don't receive compensation for MT-Notifier.  I built
@@ -214,6 +218,10 @@ showing some love so that I don't have to make that decision.  Thanks.
 *** -------------------------------------------------------------------- ***
 
 Changelog:
+2.3
+  - Added entry notifications, including configuration options.
+  - Cleaned up code, fixed some minor bugs.
+  - September 15, 2004
 2.2.4
   - Updated manage_address login to handle $mail/$code as well as $akey.
   - September 6, 2004
