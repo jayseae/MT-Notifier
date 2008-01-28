@@ -2,8 +2,8 @@
 # MT-Notifier: Configure subscriptions to your blog.
 # A Plugin for Movable Type
 #
-# Release 2.2.2
-# September 3, 2004
+# Release 2.2.3
+# September 4, 2004
 #
 # http://jayseae.cxliv.org/notifier/
 # http://www.amazon.com/o/registry/2Y29QET3Y472A/
@@ -26,7 +26,7 @@ use MT::Util qw(archive_file_for format_ts);
 use vars qw(@ISA $FILESET $VERSION);
 @ISA = qw(MT::App::CMS);
 $FILESET = 'n2x';
-$VERSION = '2.2.2';
+$VERSION = '2.2.3';
 
 sub uri {
   $_[0]->path . ($_[0]->{author} ? MT::ConfigMgr->instance->AdminScript : $_[0]->script);
@@ -1311,12 +1311,13 @@ sub module_magic {
       push @out, $line;
       if ($line =~ m|\$comment->save;|) {
         if ($method eq 'update') {
-          my $tag = "\t".'# jayseae::notifier';
-          push @out, '                                                  '.$tag."\r\n";
-          push @out, '        if ($q->param(\'subscribe\')) {           '.$tag."\r\n";
-          push @out, '          require jayseae::notifier;              '.$tag."\r\n";
-          push @out, '          jayseae::notifier->subscribe($comment); '.$tag."\r\n";
-          push @out, '        }                                         '.$tag."\r\n";
+          my $pre = '            ';
+          my $tag = '# jayseae::notifier';
+          push @out, $pre.'                                          '.$tag."\r\n";
+          push @out, $pre.'if ($q->param(\'subscribe\')) {             '.$tag."\r\n";
+          push @out, $pre.'  require jayseae::notifier;              '.$tag."\r\n";
+          push @out, $pre.'  jayseae::notifier->subscribe($comment); '.$tag."\r\n";
+          push @out, $pre.'}                                         '.$tag."\r\n";
         }
       }
     }
