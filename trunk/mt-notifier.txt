@@ -1,14 +1,15 @@
-MT-Notifier: Configure subscriptions to your blog.
+MT-Notifier: Provide subscriptions to your site.
 A Plugin for Movable Type
 
-Release '2.5.0'
-May 18, 2005
+Release '2.5.1'
+June 28, 2005
 
-http://www.everitz.com/movable_type.html
+http://www.everitz.com/movable_type_solutions.html
 
 Copyright 2003-2005, Everitz Consulting (mt@everitz.com)
 
-Not to be redistributed without permssion of the copyright holder.
+Licensed under the Open Software License v2.1
+http://opensource.org/licenses/osl-2.1.php
 
 *** -------------------------------------------------------------------- ***
 
@@ -29,24 +30,24 @@ not be used with a prior version of Movable Type.  Use with version 3.1 (and
 
 *** -------------------------------------------------------------------- ***
 
+Upgrading:
+
+If you are upgrading from a version of MT-Notifier prior to 2.5.0, you need
+to re-run the installation routine so that it looks at the correct location
+for the MT-Notifier functions.
+
+Once this is complete, you may remove the files that are no longer in use.
+
+*** -------------------------------------------------------------------- ***
+
 Installation:
 
-- Install the necessary files to your web server:
-
-  mt-notifier.cgi to your main MT directory (chmod to 755)
-
-  notifier.pm to extlib/Everitz/Notifier.pm under your main MT directory
-
-  Notifier.pl to plugins/Notifier.pl under your main MT directory
-
-  notifier.tmpl to tmpl/cms/notifier.tmpl under your main MT directory
-
-  notification.tmpl to tmpl/email/notification.tmpl under your main MT directory
-
-- Installation should look like this:
+- Install the necessary files to your web server.  MT_DIR is the location of
+  your primary Movable Type installation (mt.cgi can be found here).
 
   MT_DIR/mt-notifier.cgi
   MT_DIR/extlib/Everitz/Notifier.pm
+  MT_DIR/php/plugins/function.MTNotifierCatID.php
   MT_DIR/plugins/Notifier.pl
   MT_DIR/tmpl/cms/notifier.tmpl
   MT_DIR/tmpl/email/notification.tmpl
@@ -220,6 +221,13 @@ showing some love so that I don't have to make that decision.  Thanks.
 *** -------------------------------------------------------------------- ***
 
 Changelog:
+2.5.1
+  - Fixed module installation routine to remove old references.
+  - Fixed OSL license information.
+  - Included PHP version of MTNotifierCatID tag.
+  - Moved marking of entries as sent to facilitate processing.
+  - Enhanced logging information with start and end of notifications.
+  - June 28, 2005
 2.5.0
   - Updated copyright info to reflect acquisition by Everitz Consulting.
   - May 18, 2005
@@ -336,8 +344,10 @@ Changelog:
 
 Thanks To:
 
-David [1] for picking up on my regex error.
+David [1] for picking up on my regex error and Kate [2] for alerting me to
+the need for the "magic token gizmo" in the view_log.tmpl template.
 
 [1] http://www.rayners.org/
+[2] http://geekmum.com/
 
 *** -------------------------------------------------------------------- ***

@@ -1,24 +1,8 @@
-# =======================================================================
+# ===========================================================================
 # Copyright 2003-2005, Everitz Consulting (mt@everitz.com)
 #
-# Non-commercial entities and non-profit organizations are granted a no-
-# charge license to use the software however they like, and modify it to
-# their needs, but redistribution of the software is not allowed under
-# any circumstances. No support is included with this no-charge license.
-# Contact us if you would like to purchase support for any product so
-# licensed.
-#
-# Under no circumstances and under no legal theory, whether in tort
-# (including negligence), contract, or otherwise, shall Everitz
-# Consulting be liable to any person for any direct, indirect, special,
-# incidental, or consequential damages of any character arising as a
-# result of this License or the use of the Original Work including,
-# without limitation, damages for loss of goodwill, work stoppage,
-# computer failure or malfunction, or any and all other commercial
-# damages or losses.
-#
-# Not to be redistributed without permssion of the copyright holder.
-# =======================================================================
+# Licensed under the Open Software License version 2.1
+# ===========================================================================
 package Everitz::Notifier;
 
 use strict;
@@ -30,7 +14,7 @@ use vars qw(@ISA $FILESET $FILEURL $VERSION);
 @ISA = qw(MT::App::CMS);
 $FILESET = 'n2x';
 $FILEURL = 'mt-notifier.cgi';
-$VERSION = '2.5.0';
+$VERSION = '2.5.1';
 
 sub uri {
   $_[0]->path . ($_[0]->{author} ? MT::ConfigMgr->instance->AdminScript : $_[0]->script);
@@ -277,6 +261,7 @@ sub notify_comment {
   my $entry = MT::Entry->load($comment->entry_id) or return;
   my $subs = $app->load_subs($comment->blog_id, $comment->entry_id, 'sco');
   return unless scalar @$subs;
+  $app->write_log_notify($entry->id, scalar @$subs, 1);
   my $author = $entry->author;
   $app->set_language($author->preferred_language)
     if ($author && $author->preferred_language);
@@ -288,14 +273,15 @@ sub notify_comment {
   $head{Subject} = '['.$blog->name.'] '.
     $app->translate('New Comment from \'[_1]\' ', $comment->author).
     $app->translate('on \'[_1]\' ', $entry->title);
+  require MT::Util;
   my %param = (
-    blog_name => $blog->name,
+    blog_name => MT::Util::remove_html($blog->name),
     comment_name => $comment->name,
     comment_url => $comment->url,
     comment_text => $comment->text,
     entry_id => $entry->id,
     entry_link => $entry->permalink,
-    entry_title => $entry->title,
+    entry_title => MT::Util::remove_html($entry->title),
     notifier_comment => 1,
     notifier_home => 'http://www.everitz.com/movable_type.html',
     notifier_link => $cfg->CGIPath.'mt-notifier.cgi',
@@ -309,7 +295,7 @@ sub notify_comment {
     require MT::Mail;
     MT::Mail->send(\%head, $body);
   }
-  $app->write_log_notify($comment->entry_id, scalar @$subs);
+  $app->write_log_notify($comment->entry_id, scalar @$subs, 2);
 }
 
 sub notify_entry {
@@ -322,6 +308,9 @@ sub notify_entry {
   return if ($data_rec->{redo} && $redo eq 'new');
   my $subs = $app->load_subs($entry->blog_id, $entry->id, 'seo');
   return unless scalar @$subs;
+  $app->write_log_notify($entry->id, scalar @$subs, 1);
+  $data_rec->{redo} = 'one';
+  $app->save_record('data', '0:'.$entry->id, $data_rec);
   my $author = $entry->author;
   $app->set_language($author->preferred_language)
     if ($author && $author->preferred_language);
@@ -333,12 +322,13 @@ sub notify_entry {
   $head{Subject} = '['.$blog->name.'] '.
     $app->translate('New Entry \'[_1]\' ', $entry->title).
     $app->translate('from \'[_1]\'', $author->name);
+  require MT::Util;
   my %param = (
-    blog_name => $blog->name,
+    blog_name => MT::Util::remove_html($blog->name),
     entry_id => $entry->id,
     entry_excerpt => $entry->get_excerpt,
     entry_link => $entry->permalink,
-    entry_title => $entry->title,
+    entry_title => MT::Util::remove_html($entry->title),
     notifier_entry => 1,
     notifier_home => 'http://www.everitz.com/movable_type.html',
     notifier_link => $cfg->CGIPath.'mt-notifier.cgi',
@@ -352,11 +342,7 @@ sub notify_entry {
     require MT::Mail;
     MT::Mail->send(\%head, $body);
   }
-  unless ($data_rec->{redo}) {
-    $data_rec->{redo} = 'one';
-    $app->save_record('data', '0:'.$entry->id, $data_rec);
-  }
-  $app->write_log_notify($entry->id, scalar @$subs);
+  $app->write_log_notify($entry->id, scalar @$subs, 2);
 }
 
 sub transfer {
@@ -1434,9 +1420,15 @@ sub test_data_key {
 
 sub write_log_notify {
   my $app = shift;
-  my ($entry, $users) = @_;
+  my ($entry, $users, $step) = @_;
+  my $msg;
   my $s = $users != 1 ? 's' : '';
-  my $msg = $app->translate("$users notification$s sent for ");
+  if ($step == 1) {
+    $msg = "<strong>".$app->translate("Began")."</strong>";
+  } elsif ($step == 2) {
+    $msg = "<strong>".$app->translate("Ended")."</strong>";
+  }
+  $msg .= $app->translate(": $users notification$s for ");
   my ($name, $desc, $link) = $app->read_sub('0:'.$entry);
   $msg .= "<a href=\"$FILEURL?__mode=mgr&amp;method=$desc&amp;dkey=0:$entry\">";
   $msg .= "$name</a>.";
@@ -1478,37 +1470,39 @@ sub build_page {
   $param->{notifier_script_version} = $VERSION;
   if (my $auth = $app->{author}) {
     $app->{breadcrumbs} = [ { bc_name => 'MT-Notifier', bc_uri => '?__mode=mnu' } ];
-    if ($param->{manage_items}) {
-      $app->add_breadcrumb('Manage', '?__mode=mgr');
-      $app->add_breadcrumb('By Address') if $param->{by_address};
-      $app->add_breadcrumb('By Blog') if $param->{by_blog};
-      $app->add_breadcrumb('By Category') if $param->{by_category};
-      $app->add_breadcrumb('By Entry') if $param->{by_entry};
-    } elsif ($param->{func_enabler}) {
-      $app->add_breadcrumb('Configure');
-    } elsif ($param->{func_install}) {
-      my $blogs = $app->loop_blogs;
-      $param->{blog_loop} = \@$blogs;
-      $app->add_breadcrumb('Install');
-    } elsif ($param->{func_transfer}) {
-      $app->add_breadcrumb('Transfer');
-    } elsif (!$param->{func_default}) {
-      my $blogs = $app->loop_blogs('subs');
-      $param->{blog_loop} = \@$blogs;
-      $param->{blog_count} = scalar @$blogs;
-      my $categories = $app->loop_categories;
-      $param->{category_loop} = \@$categories;
-      $param->{category_count} = scalar @$categories;
-      my $entries = $app->loop_entries;
-      $param->{entry_loop} = \@$entries;
-      $param->{entry_count} = scalar @$entries;
-      if ($param->{func_deleter}) {
-        $app->add_breadcrumb('Purge');
-      } elsif ($param->{func_manager}) {
-        my $addresses = $app->loop_addresses;
-        $param->{address_loop} = \@$addresses;
-        $param->{address_count} = scalar @$addresses;
-        $app->add_breadcrumb('Manage');
+    unless ($param->{func_default}) {
+      if ($param->{manage_items}) {
+        $app->add_breadcrumb('Manage', '?__mode=mgr');
+        $app->add_breadcrumb('By Address') if $param->{by_address};
+        $app->add_breadcrumb('By Blog') if $param->{by_blog};
+        $app->add_breadcrumb('By Category') if $param->{by_category};
+        $app->add_breadcrumb('By Entry') if $param->{by_entry};
+      } elsif ($param->{func_enabler}) {
+        $app->add_breadcrumb('Configure');
+      } elsif ($param->{func_install}) {
+        my $blogs = $app->loop_blogs;
+        $param->{blog_loop} = \@$blogs;
+        $app->add_breadcrumb('Install');
+      } elsif ($param->{func_transfer}) {
+        $app->add_breadcrumb('Transfer');
+      } else {
+        my $blogs = $app->loop_blogs('subs');
+        $param->{blog_loop} = \@$blogs;
+        $param->{blog_count} = scalar @$blogs;
+        my $categories = $app->loop_categories;
+        $param->{category_loop} = \@$categories;
+        $param->{category_count} = scalar @$categories;
+        my $entries = $app->loop_entries;
+        $param->{entry_loop} = \@$entries;
+        $param->{entry_count} = scalar @$entries;
+        if ($param->{func_deleter}) {
+          $app->add_breadcrumb('Purge');
+        } elsif ($param->{func_manager}) {
+          my $addresses = $app->loop_addresses;
+          $param->{address_loop} = \@$addresses;
+          $param->{address_count} = scalar @$addresses;
+          $app->add_breadcrumb('Manage');
+        }
       }
     }
   } else {
@@ -1535,6 +1529,7 @@ sub module_magic {
     }
     foreach my $line (@in) {
       next if ($line =~ m|Everitz::Notifier|);
+      next if ($line =~ m|jayseae::notifier|);
       push @out, $line;
       if ($line =~ m|\$comment->save;|) {
         if ($method eq 'update') {
