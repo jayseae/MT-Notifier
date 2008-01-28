@@ -1,461 +1,388 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
-<html>
-<head>
-
-<meta name="description" content="MOVABLE TYPE: Personal Publishing System" />
-<meta http-equiv="Content-Type" content="text/html; charset=<TMPL_VAR NAME=LANGUAGE_ENCODING>" />
-
-<title>Notifier | MOVABLE TYPE</title>
-
-<link rel="stylesheet" href="<TMPL_VAR NAME=STATIC_URI>styles.css" type="text/css">
-
-<script language="JavaScript">
-<!--
-
-if ((!(navigator.appVersion.indexOf('MSIE') != -1) &&
-      (parseInt(navigator.appVersion)==4))) {
-    document.write("<STYLE TYPE=\"text/css\">");
-    document.write("BODY { margin-top: -8px; margin-left: -8px; }"); 
-    document.write("</style>");
-}
-
-var origWidth, origHeight;
-if ((navigator.appName == 'Netscape') &&
-    (parseInt(navigator.appVersion) == 4)) {
-    origWidth = innerWidth;
-    origHeight = innerHeight;
-    window.onresize = restore;
-}
-
-function restore () {
-    if (innerWidth != origWidth || innerHeight != origHeight)
-        location.reload();
-}
-
-//-->
-</script>
-
-</head>
-
-<body>
-
-<!-- Logo and top nav -->
-
-<table border="0" cellspacing="0" cellpadding="0" width="100%">
-
-<tr>
-<td width="188" valign="top"><a href="http://www.movabletype.org/" target="_blank"><img src="<TMPL_VAR NAME=STATIC_URI>images/mt-logo.gif" align="top" width="233" height="68" border="0"></a></td>
-<td width="100%" valign="top">
-
-<TMPL_IF NAME=AUTHOR_NAME>
-
-	<table border="0" cellspacing="0" cellpadding="0">
-
-	<tr>
-	<td valign="top">
-
-		<table border="0" cellspacing="0" cellpadding="0">
-		<tr>
-		<td><a href="<TMPL_VAR NAME=MT_SCRIPT_URL>"><img src="<TMPL_VAR NAME=STATIC_URI>images/lang-<TMPL_VAR NAME=LANGUAGE_TAG>/topnav-menu.gif" width="42" height="27" border="0"></a></td>
-		<td><a target="manual" href="<TMPL_VAR NAME=STATIC_URI>docs/mtmanual.html"><img src="<TMPL_VAR NAME=STATIC_URI>images/lang-<TMPL_VAR NAME=LANGUAGE_TAG>/topnav-help.gif" width="40" height="27" border="0"></a></td>
-		<td><a href="<TMPL_VAR NAME=MT_SCRIPT_URL>?__mode=logout"><img src="<TMPL_VAR NAME=STATIC_URI>images/lang-<TMPL_VAR NAME=LANGUAGE_TAG>/topnav-logout.gif" width="48" height="27" border="0"></a></td>
-		<td><TMPL_IF NAME=BLOG_NAME><a target="_blank" href="<TMPL_VAR NAME=BLOG_URL>"><img src="<TMPL_VAR NAME=STATIC_URI>images/lang-<TMPL_VAR NAME=LANGUAGE_TAG>/topnav-view-site.gif" width="54" height="27" border="0"></a></TMPL_IF></td>
-		</tr>
-		</table>
-
-	</td>
-	<td valign="top">
-
-	<TMPL_IF NAME=BLOG_NAME>
-
-		<table border="0" cellspacing="0" cellpadding="0">
-		<tr>
-		<td valign="top"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="1" height="8"></td>
-		</tr>
-		
-		<tr>
-		<form method="get" action="<TMPL_VAR NAME=MT_SCRIPT_URL>">
-		<input type="hidden" name="__mode" value="search_replace">
-		<input type="hidden" name="blog_id" value="<TMPL_VAR NAME=BLOG_ID>">
-		<input type="hidden" name="search_cols" value="title,text,text_more">
-		<td>&nbsp;</td>
-		<td valign="top"><input class="search" name="search" size="15"></td>
-		<td>&nbsp;</td>
-		<td valign="top"><input class="button-search" type="submit" name="search" value="<MT_TRANS phrase="Search">"></td>
-		</form>
-		</tr>
-		</table>
-
-	</TMPL_IF>
-
-	</td>
-	</tr>
-	
-	<tr>
-	<form method="get" action="<TMPL_VAR NAME=MT_SCRIPT_URL>">
-	<input type="hidden" name="__mode" value="menu">
-	<td valign="top">
-	
-		<table border="0" cellspacing="0" cellpadding="1">
-		<tr>
-		<td>&nbsp;</td>
-		<td valign="middle"><select class="blog" name="blog_id">
-		<TMPL_LOOP NAME=TOP_BLOG_LOOP>
-		<option value="<TMPL_VAR NAME=TOP_BLOG_ID>"<TMPL_IF NAME=TOP_BLOG_SELECTED> selected</TMPL_IF>><TMPL_VAR NAME=TOP_BLOG_NAME>
-		</TMPL_LOOP>
-		</select></td>
-		<td><input type="image" src="<TMPL_VAR NAME=STATIC_URI>images/lang-<TMPL_VAR NAME=LANGUAGE_TAG>/topnav-go-button.gif" width="35" height="28" border="0"></td>
-		<td align="right"><font class="title">&nbsp;<MT_TRANS phrase="User:"> <a href="<TMPL_VAR NAME=MT_SCRIPT_URL>?__mode=view&_type=author&id=<TMPL_VAR NAME=AUTHOR_ID>"><TMPL_VAR NAME=AUTHOR_NAME></a></font></td>
-		</tr>
-		</table>
-	</td>
-	</form>
-	</tr>
-	</table>
-
-</TMPL_IF>
-
-</td>
-</tr>
-
-</table>
-
-<!-- End logo and top nav -->
+<TMPL_INCLUDE NAME="header.tmpl">
 
 <!-- Begin main content -->
 
-<table border="0" cellspacing="0" cellpadding="0">
+<TMPL_IF NAME=NOTIFIER_MESSAGE>
+  <h4 class="message"><TMPL_VAR NAME=NOTIFIER_MESSAGE></h4>
+</TMPL_IF>
 
-	<tr>
-	<td width="39"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="39" height="1"></td>
-	<td valign="top" width="500"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="500" height="1"></td>
-	</tr>
+<TMPL_IF NAME=FUNC_DEFAULT>
+  <p><MT_TRANS phrase="Welcome!  MT-Notifier gives you the ability to send incredibly powerful email notifications from your Movable Type-powered site."></p>
+  <p><MT_TRANS phrase="Your readers can subscribe to individual entries, categories, an entire blog or even a complete installation.  For those who are concerned about sending out unwanted messages, each option also has an opt-out function that will prevent messages from being sent to those who are not interested."></p>
+  <p><MT_TRANS phrase="With MT-Notifier installed, your readers will not notice long delays, 'processing' pages, need to learn anything new or even be required to have Javascript enabled.  MT-Notifier integrates directly with your Movable Type installation, and because of this, leverages the power of your web host.  It is not dependent on the power of - nor will it suffer due to a lack of power from - your reader's computers."></p>
+  <ul>
+    <li><p><a href="<TMPL_VAR NAME=NOTIFIER_SCRIPT_URL>?__mode=cfg" style="text-decoration: none;"><MT_TRANS phrase="Configure"></a><br /><MT_TRANS phrase="Set email notifications.  To send notifications for a blog, notifications must be enabled.  Also set default sender address."></p></li>
+    <li><p><a href="<TMPL_VAR NAME=NOTIFIER_SCRIPT_URL>?__mode=mgr" style="text-decoration: none;"><MT_TRANS phrase="Manage"></a><br /><MT_TRANS phrase="Use the manager to review settings, subscriptions and opt-out records for all entries, categories and blogs."></p></li>
+    <li><p><a href="<TMPL_VAR NAME=NOTIFIER_SCRIPT_URL>?__mode=del" style="text-decoration: none;"><MT_TRANS phrase="Purge"></a><br /><MT_TRANS phrase="Remove records from your MT-Notifier installation.  Clean up old records, remove subscriptions or wipe it all out."></p></li>
+    <li><p><a href="<TMPL_VAR NAME=NOTIFIER_SCRIPT_URL>?__mode=xfr" style="text-decoration: none;"><MT_TRANS phrase="Transfer"></a><br /><MT_TRANS phrase="Convert subscriptions from other notification packages to the current version of MT-Notifier."></p></li>
+  </ul>
+  <p><MT_TRANS phrase="Enjoy your experience with MT-Notifier!"></p>
+</TMPL_IF>
 
-	<tr>
-	<td><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="1" height="30"></td>
-	</tr>
+<TMPL_IF NAME=FUNC_ENABLER>
+  <script language="JavaScript">
+    <!--
+      function hide_and_seek () {
+        document.getElementById('from').disabled = !document.getElementById('update').checked;
+        document.getElementById('confirm-update').disabled = !document.getElementById('update').checked;
+      }
+    //-->
+  </script>
+  <p><MT_TRANS phrase="Without any configuration, MT-Notifier will use 'sender@domain.com' as a default sender address on all notifications that it sends from your system.  Unless you would like to use this value on your notifications, check the box below, enter a different address to use, and then click the button to confirm your change."></p>
+  <form method="get" action="<TMPL_VAR NAME=NOTIFIER_SCRIPT_URL>">
+  <input type="hidden" name="__mode" value="cfg">
+  <p style="text-indent: 40px;"><input id="update" onclick="hide_and_seek()" type="checkbox" /> <label for="from" style="font-weight: bold;"><MT_TRANS phrase="Update Sender Address"></label></p>
+  <p style="text-indent: 40px;"><input id="from" name="from" size="50" type="text" value="<TMPL_VAR NAME=SENDER_ADDRESS>" /></p>
+  <p><MT_TRANS phrase="The field above displays the current effective address for your installation.  You can also override this value on each blog, category and entry.">  <MT_TRANS phrase="To set these individual sender addresses, you should use the "><a href="<TMPL_VAR NAME=NOTIFIER_SCRIPT_URL>?__mode=mgr" style="text-decoration: none;"><MT_TRANS phrase="Manage"></a><MT_TRANS phrase=" option instead."></p>
+  <p style="text-indent: 40px;"><input class="button" id="confirm-update" type="submit" value="Confirm Address Update" /></p>
+  </form>
+  <hr style="background-color: #8FAEBE; color: #8FAEBE;" />
+  <p><MT_TRANS phrase="MT-Notifier is currently "><TMPL_UNLESS NAME=MODULE_STATUS><strong><MT_TRANS phrase="not"></strong> </TMPL_UNLESS><MT_TRANS phrase="integrated into your Movable Type installation.">  <TMPL_IF NAME=MODULE_STATUS><a href="<TMPL_VAR NAME=NOTIFIER_SCRIPT_URL>?__mode=cfg&amp;module=remove" style="text-decoration: none;"><MT_TRANS phrase="Remove"></a><TMPL_ELSE><a href="<TMPL_VAR NAME=NOTIFIER_SCRIPT_URL>?__mode=cfg&amp;module=update" style="text-decoration: none;"><MT_TRANS phrase="Install"></a></TMPL_IF> now.</p>
+  <p><MT_TRANS phrase="In order to add a subscribe checkbox to your standard comment form and have the comment submission subscribe the commentor to the entry, MT-Notifier must be integrated with your Movable Type installation.  It is possible to use MT-Notifier without this integration, but it will require a separate form for subscriptions."></p>
+  <hr style="background-color: #8FAEBE; color: #8FAEBE;" />
+  <p><MT_TRANS phrase="Listed below are each of the blogs that you have installed on your system.  Following the blog name is the status of comment notifications for that blog.  After the status of the blog is a link that will perform the opposite function for you.  For instance, if comment notification is disabled, you will see a link that will enable it for you.  Likewise, if comment notification is enabled, you will instead see the option to disable it."></p>
+  <ul style="list-style-type: none;">
+  <TMPL_LOOP NAME=BLOG_LOOP>
+    <TMPL_IF NAME=BLOG_ID>
+      <li><p><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=menu&blog_id=<TMPL_VAR NAME=BLOG_ID>" style="text-decoration: none;"><TMPL_VAR NAME=BLOG_NAME></a><br /><MT_TRANS phrase="Comment notification is"> <TMPL_IF NAME=BLOG_EMAIL_NEW_COMMENTS><MT_TRANS phrase="Enabled:"> <a href="<TMPL_VAR NAME=NOTIFIER_SCRIPT_URL>?__mode=cfg&amp;case=<TMPL_VAR NAME=BLOG_ID>:disabled" style="text-decoration: none;"><MT_TRANS phrase="Disable"></a><TMPL_ELSE><MT_TRANS phrase="Disabled:"> <a href="<TMPL_VAR NAME=NOTIFIER_SCRIPT_URL>?__mode=cfg&amp;case=<TMPL_VAR NAME=BLOG_ID>:enabled" style="text-decoration: none;"><MT_TRANS phrase="Enable"></a></TMPL_IF></p></li>
+    </TMPL_IF>
+  </TMPL_LOOP>
+  </ul>
+  <p><MT_TRANS phrase="If comment notification is disabled for a blog, then that blog will not send comment notifications using MT-Notifier (or any other comment notifications, for that matter).  This allows you to install MT-Notifier, but keep it from running while you configure the plugin.  When your configuration is complete, simply enable comment notifications and you will be ready to keep everyone notified!"></p>
+</TMPL_IF>
 
-	<tr>
-	<td width="39"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="39" height="1"></td>
-	<td valign="top" width="500"><TMPL_IF NAME=AUTHOR_ID><a class="title" href="<TMPL_VAR NAME=MT_SCRIPT_URL>">Main Menu &gt;</a> </TMPL_IF><font class="pagetitle">Notifier</font></td>
-	</tr>
+<TMPL_IF NAME=FUNC_DELETER>
+  <TMPL_UNLESS NAME=XTRA_DELETER>
+    <p><MT_TRANS phrase="For more control over your purge, as well as increased options for selecting which records you would like to purge and the ability to consider only specific data for your purge, use the"> <a href="<TMPL_VAR NAME=NOTIFIER_SCRIPT_URL>?__mode=del&amp;advanced=1" style="text-decoration: none;"><MT_TRANS phrase="Advanced Purge"></a> <MT_TRANS phrase="instead."></p>
+    <p style="text-indent: 40px;"><a href="<TMPL_VAR NAME=NOTIFIER_SCRIPT_URL>?__mode=del&amp;thekey=0:0&amp;method=inv" style="text-decoration: none;"><MT_TRANS phrase="Purge All Invalid Records from the Database"></a></p>
+    <p style="text-indent: 40px;"><a href="<TMPL_VAR NAME=NOTIFIER_SCRIPT_URL>?__mode=del&amp;thekey=0:0&amp;method=cor" style="text-decoration: none;"><MT_TRANS phrase="Purge All Subscriptions that have Opted Out"></a></p>
+    <p><MT_TRANS phrase="These purges do not offer any confirmation screens and the action cannot be reversed once executed.  Please be sure that you have chosen the right selection before selecting any of the purge options."></p>
+  <TMPL_ELSE>
+    <script language="JavaScript">
+      <!--
+        function hide_and_seek () {
+          document.getElementById('bkey').disabled = !document.getElementById('selectbkey').checked;
+          document.getElementById('ckey').disabled = !document.getElementById('selectckey').checked;
+          document.getElementById('ekey').disabled = !document.getElementById('selectekey').checked;
+          document.getElementById('confirm-purge').disabled = !document.getElementById('purge').checked;
+        }
+      //-->
+    </script>
+    <p><MT_TRANS phrase="Using the radio buttons below, select the type of records you would like to remove from the database.  Each option offers an explanation for the types of records that will be removed during a purge that runs with that option selected."></p>
+    <form method="get" action="<TMPL_VAR NAME=NOTIFIER_SCRIPT_URL>">
+      <input type="hidden" name="__mode" value="del">
+      <input type="hidden" name="advanced" value="1">
+      <p style="text-indent: 40px;"><input id="methodall" name="method" style="vertical-align: -10%;" type="radio" value="all" /> <label for="methodall" style="font-weight: bold;"><MT_TRANS phrase="Any MT-Notifier Records"></label></p>
+      <p><MT_TRANS phrase="Removes any MT-Notifier records, including configuration information, opt-out records and subscriptions.  Be very sure that this is the option you want before selecting it."></p></li>
+      <p style="text-indent: 40px;"><input id="methoddfa" name="method" style="vertical-align: -10%;" type="radio" value="dfa" /> <label for="methoddfa" style="font-weight: bold;"><MT_TRANS phrase="Default Address Records"></label></p>
+      <p><MT_TRANS phrase="Removes default address records.  These address records are used as the 'from' address on notification emails sent through MT-Notifier.  If you choose to specify a text string below, then only default address records matching that address will be removed when your purge is run."></p></li>
+      <p style="text-indent: 40px;"><input id="methodopt" name="method" style="vertical-align: -10%;" type="radio" value="opt" /> <label for="methodopt" style="font-weight: bold;"><MT_TRANS phrase="Opt-Out Records"></label></p>
+      <p><MT_TRANS phrase="Removes opt-out records.  Opt-out records prevent notifications from being sent to an address, and can exist for a blog, a category, or even just one entry.  If you choose to specify a text string below, then only opt-out records matching that address will be removed."></p></li>
+      <p style="text-indent: 40px;"><input id="methodsub" name="method" style="vertical-align: -10%;" type="radio" value="sub" /> <label for="methodsub" style="font-weight: bold;"><MT_TRANS phrase="Subscription Records"></label></p>
+      <p><MT_TRANS phrase="Removes subscription records.  These records allow your readers to subscribe to a blog, category or even an individual entry.  If you choose to specify a text string below, then only subscriptions matching that address will be removed."></p></li>
+      <p style="text-indent: 40px;"><input id="methodcor" name="method" style="vertical-align: -10%;" type="radio" value="cor" /> <label for="methodcor" style="font-weight: bold;"><MT_TRANS phrase="Subscription Records with Corresponding Opt-Out"></label></p>
+      <p><MT_TRANS phrase="Removes individual subscriptions if that address has opted out of receiving notifications.  If someone opts-out of receiving notifications, you may want to clean up your database by removing any subscription records they may have, as those subscriptions will not be used as long as the opt-out record is in effect."></p></li>
+      <hr style="background-color: #8FAEBE; color: #8FAEBE;" />
+      <p><MT_TRANS phrase="The second step in purging MT-Notifier records is to select the range of data to purge.  Use the options below to limit your purge to a particular area of the database.  Naturally, this selection works in conjunction with the text selection, so you can easily remove all subscriptions for a particular address, but only if it falls into a particular category.  The power of the purge is limited only by your imagination."></p></li>
+      <p style="text-indent: 40px;"><input id="selectakey" name="select" onclick="hide_and_seek()" style="vertical-align: -10%;" type="radio" value="akey" /> <label for="selectakey" style="font-weight: bold;"><MT_TRANS phrase="Purge from the Entire Database"></label></p>
+      <p><MT_TRANS phrase="Selects the entire database.  Records you select will be removed from the entire MT-Notifier installation.  Using this option, especially in conjunction with a purge selection of something like the 'any' option above, can be dangerous, so please be sure you know what you are doing prior to selecting this option."></p></li>
+      <p style="text-indent: 40px;"><input id="selectbkey" name="select" onclick="hide_and_seek()" style="vertical-align: -10%;" type="radio" value="bkey" /> <label for="selectbkey" style="font-weight: bold;"><MT_TRANS phrase="Purge from a Single Blog"></label></p>
+      <p style="text-indent: 40px;">
+        <select id="bkey" name="bkey">
+          <TMPL_LOOP NAME=BLOG_LOOP>
+            <option value="<TMPL_VAR NAME=BLOG_ID>:0"><TMPL_VAR NAME=BLOG_NAME> <TMPL_IF NAME=BLOG_SUBS>(<TMPL_VAR NAME=BLOG_SUBS>)</TMPL_IF></option>
+          </TMPL_LOOP>
+        </select>
+      </p>
+      <p><MT_TRANS phrase="Selects a single blog.  Records you select will be removed from the selected blog only.">  <MT_TRANS phrase="This option may prove useful as it can reset a single blog in case problems are encountered and you'd like a clean start.  When selecting to purge by blog, all categories and entries under that blog will also be cleared.">  <MT_TRANS phrase="To reset only this record, use the "><a href="<TMPL_VAR NAME=NOTIFIER_SCRIPT_URL>?__mode=mgr" style="text-decoration: none;"><MT_TRANS phrase="Manage"></a><MT_TRANS phrase=" option instead."></p></li>
+      <p style="text-indent: 40px;"><input id="selectckey" name="select" onclick="hide_and_seek()" style="vertical-align: -10%;" type="radio" value="ckey" /> <label for="selectckey" style="font-weight: bold;"><MT_TRANS phrase="Purge from a Single Category"></label></p>
+      <p style="text-indent: 40px;">
+        <select id="ckey" name="ckey">
+          <TMPL_LOOP NAME=CATEGORY_LOOP>
+            <option value="<TMPL_VAR NAME=CATEGORY_ID>:C"><TMPL_VAR NAME=CATEGORY_LABEL> <TMPL_IF NAME=CATEGORY_SUBS>(<TMPL_VAR NAME=CATEGORY_SUBS>)</TMPL_IF></option>
+          </TMPL_LOOP>
+        </select>
+      </p>
+      <p><MT_TRANS phrase="Selects a single category.  Records you select will be removed from the selected category only.">  <MT_TRANS phrase="As with the single blog option above, data under this category - namely entries - will be cleared as well.">  <MT_TRANS phrase="To reset only this record, use the "><a href="<TMPL_VAR NAME=NOTIFIER_SCRIPT_URL>?__mode=mgr" style="text-decoration: none;"><MT_TRANS phrase="Manage"></a><MT_TRANS phrase=" option instead."></p></li>
+      <p style="text-indent: 40px;"><input id="selectekey" name="select" onclick="hide_and_seek()" style="vertical-align: -10%;" type="radio" value="ekey" /> <label for="selectekey" style="font-weight: bold;"><MT_TRANS phrase="Purge from a Single Entry"></label></p>
+      <p style="text-indent: 40px;">
+        <select id="ekey" name="ekey">
+          <TMPL_LOOP NAME=ENTRY_LOOP>
+            <option value="0:<TMPL_VAR NAME=ENTRY_ID>"><TMPL_VAR NAME=ENTRY_TITLE> <TMPL_IF NAME=ENTRY_SUBS>(<TMPL_VAR NAME=ENTRY_SUBS>)</TMPL_IF></option>
+          </TMPL_LOOP>
+        </select>
+      </p>
+      <p><MT_TRANS phrase="Selects a single entry.  Records you select will be removed from the selected entry only.">  <MT_TRANS phrase="This is equivalent to using the "><a href="<TMPL_VAR NAME=NOTIFIER_SCRIPT_URL>?__mode=mgr" style="text-decoration: none;"><MT_TRANS phrase="Manage"></a><MT_TRANS phrase=" option, but you gain more control over your purge."></p></li>
+      <hr style="background-color: #8FAEBE; color: #8FAEBE;" />
+      <p style="text-indent: 40px;"><label for="string" style="font-weight: bold;"><MT_TRANS phrase="Email Address to Match"></label></p>
+      <p style="text-indent: 40px;"><input id="string" name="string" style="vertical-align: -10%;" /></p>
+      <p><MT_TRANS phrase="By specifying an email address in the box above, you are telling the purge to only remove records matching this address.  This option can be used in conjunction with every other method of record selection.">  <MT_TRANS phrase="To purge a single user record, you should use the "><a href="<TMPL_VAR NAME=NOTIFIER_SCRIPT_URL>?__mode=mgr" style="text-decoration: none;"><MT_TRANS phrase="Manage"></a><MT_TRANS phrase=" option instead."></p></li>
+      <hr style="background-color: #8FAEBE; color: #8FAEBE;" />
+      <p><MT_TRANS phrase="These purge options do not offer any confirmation screens and the actions they perform cannot be reversed once executed.  Please be sure that you have chosen the right selection before selecting any of the purge options.  Click the box below to indicate that you have read this disclaimer and understand what can happen if you submit a purge."></p>
+      <p style="text-indent: 40px;"><input id="purge" name="purge" onclick="hide_and_seek()" type="checkbox" /> <label for="purge" style="font-weight: bold;"><MT_TRANS phrase="I understand and would like to continue."></label><input id="confirm-purge" class="button" style="margin-left: 40px;" type="submit" value="Go"></p>
+    </form>
+  </TMPL_UNLESS>
+</TMPL_IF>
 
-	<tr>
-	<td width="39"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="39" height="1"></td>
-	<td valign="top" width="500" bgcolor="#CCCCCC"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="1" height="1"></td>
-	</tr>
-
-	<TMPL_IF NAME=NOTIFIER_MESSAGE>
-	<tr>
-	<td colspan="2"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="1" height="10"></td>
-	</tr>
-
-	<tr>
-	<td width="39"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="39" height="1"></td>
-	<td valign="top" width="500">
-      <p class="message"><TMPL_VAR NAME=NOTIFIER_MESSAGE></p>
-      </td>
-      </tr>
-	</TMPL_IF>
-
-	<tr>
-	<td colspan="2"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="1" height="10"></td>
-	</tr>
-
-	<TMPL_IF NAME=AUTHOR_NAME>
-	<tr>
-      <a name="modstat"></a>
-	<td width="39"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="39" height="1"></td>
-	<td valign="top" width="500">
-	<form method="get" action="<TMPL_VAR NAME=SCRIPT_URL>">
-	<input type="hidden" name="__mode" value="mod">
-	<input type="hidden" name="__auth" value="<TMPL_VAR NAME=AUTHOR_ID>">
-      <font class="pagetitle">Movable Type Module Status</font><br />
-      <font class="instructional">These are the modules that you have installed on your system that may require updating by MT-Notifier before you will be able to make use of notifications. Each module is listed, along with the status of that module and perhaps an option to perform the opposite function on the module.  For instance, if MT-Notifier is installed, you will see a link to uninstall MT-Notifier from that module.  If MT-Notifier is not installed, you will see a link to install it.<br /><br /></font>
-      <TMPL_LOOP NAME=MODULE_LOOP>
-        <font class="pagetitle"><TMPL_VAR NAME=MODULE_TITLE><br /></font>
-        <font class="instructional">MT-Notifier is <TMPL_IF NAME=MODULE_READY>Installed<br /><a class="instructional" href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=unmod&amp;_auth=<TMPL_VAR NAME=AUTHOR_ID>&amp;mod_id=<TMPL_VAR NAME=MODULE_ID>" style="text-decoration: none;">Uninstall</a> &middot; <TMPL_ELSE><TMPL_IF NAME=MODULE_ERROR>Unable to be Installed<br /><TMPL_ELSE>Not Installed<br /><a class="instructional" href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=mod&amp;_auth=<TMPL_VAR NAME=AUTHOR_ID>&amp;mod_id=<TMPL_VAR NAME=MODULE_ID>" style="text-decoration: none;">Install</a> &middot; </TMPL_IF></TMPL_IF>Backup: <TMPL_UNLESS NAME=MODULE_SAVED><a class="instructional" href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=addback&amp;_auth=<TMPL_VAR NAME=AUTHOR_ID>&amp;mod_id=<TMPL_VAR NAME=MODULE_ID>" style="text-decoration: none;">Create</a><TMPL_ELSE><a class="instructional" href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=delback&amp;_auth=<TMPL_VAR NAME=AUTHOR_ID>&amp;mod_id=<TMPL_VAR NAME=MODULE_ID>" style="text-decoration: none;">Delete</a> &middot; <a class="instructional" href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=resback&amp;_auth=<TMPL_VAR NAME=AUTHOR_ID>&amp;mod_id=<TMPL_VAR NAME=MODULE_ID>" style="text-decoration: none;">Restore</a></TMPL_UNLESS><br /><br /></font>
-      </TMPL_LOOP>
-      <font class="instructional">If the message under the module indicates that MT-Notifier cannot be installed, then the module as it exists on your system does not match the default layout expected by the updating routine.  In this case, you will need to perform the work manually in order to integrate MT-Notifier with your Movable Type installation.<br /></font>
-      </form>
-      </td>
-      </tr>
-
-	<tr>
-	<td width="39"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="39" height="1"></td>
-	<td valign="top" width="500" bgcolor="#CCCCCC"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="1" height="1"></td>
-	</tr>
-
-	<tr>
-	<td colspan="2"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="1" height="10"></td>
-	</tr>
-
-	<tr>
-	<td width="39"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="39" height="1"></td>
-	<td valign="top" width="380">
-	<form method="get" action="<TMPL_VAR NAME=SCRIPT_URL>">
-	<input type="hidden" name="__mode" value="purge">
-	<input type="hidden" name="__auth" value="<TMPL_VAR NAME=AUTHOR_ID>">
-      <font class="pagetitle">Purge MT-Notifier Records</font><br /><br />
-      <font class="instructional">
-      <input name="what" type="radio" value="all" /> <font class="pagetitle">All MT-Notifier Records</font><br />Removes all entries from the MT-Notifier database.<br /><br />
-      <input name="what" type="radio" value="allcfg" /> <font class="pagetitle">All MT-Notifier Address Records</font><br />Removes all default address records from the MT-Notifier database.<br /><br />
-      <input name="what" type="radio" value="allopt" /> <font class="pagetitle">All MT-Notifier Opt-Out Records</font><br />Removes all opt-out records from the MT-Notifier database.<br /><br />
-      <input name="what" type="radio" value="allsub" /> <font class="pagetitle">All MT-Notifier Subscription Records</font><br />Removes all subscription records from the MT-Notifier database.<br /><br />
-      <input name="what" type="radio" value="entinv" /> <font class="pagetitle">Records for Invalid Blogs or Entries</font><br />Removes records for blogs or entries that no longer exist.<br /><br />
-      <input name="what" type="radio" value="entopt" /> <font class="pagetitle">Subscription Records with Corresponding Opt-Out</font><br />Removes subscriptions if user has opted out of notifications.<br /><br /><br />
-      </font>
-      <input type="submit" class="button" value="Go">
-      </form>
-      </td>
-      </tr>
-
-	<tr>
-	<td width="39"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="39" height="1"></td>
-	<td valign="top" width="500" bgcolor="#CCCCCC"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="1" height="1"></td>
-	</tr>
-
-	<tr>
-	<td colspan="2"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="1" height="10"></td>
-	</tr>
-
-	<tr>
-      <a name="addsub"></a>
-	<td width="39"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="39" height="1"></td>
-	<td valign="top" width="500">
-	<form method="get" action="<TMPL_VAR NAME=SCRIPT_URL>">
-	<input type="hidden" name="__mode" value="sub">
-	<input type="hidden" name="__auth" value="<TMPL_VAR NAME=AUTHOR_ID>">
-      <font class="pagetitle">Subscribe an Address</font><br />
-      <font class="instructional">Enter a valid email address, then select an entry from the list and click the GO button to create a subscription to that entry.  <i>Caution</i>: The list of entries contains all entries in your Movable Type installation, so the list may be long.  The entries are sorted alphabetically by title.  Press a key on your keyboard to jump to entries that begin with that letter.<br /><br /></font>
-      <input name="email" />
-      <font class="instructional">to:</font><br /><br />
-      <select name="entry_id">
+<TMPL_IF NAME=FUNC_MANAGER>
+  <script language="JavaScript">
+    <!--
+      function hide_and_seek () {
+        if (document.getElementById('akey') && document.getElementById('methodbya')) {
+          document.getElementById('akey').disabled = !document.getElementById('methodbya').checked;
+          document.getElementById('methodbya').disabled = document.getElementById('subscribe').checked;
+          document.getElementById('subscribe').disabled = document.getElementById('methodbya').checked;
+        }
+        if (document.getElementById('bkey') && document.getElementById('methodbyb')) {
+          document.getElementById('bkey').disabled = !document.getElementById('methodbyb').checked;
+        }
+        if (document.getElementById('ckey') && document.getElementById('methodbyc')) {
+          document.getElementById('ckey').disabled = !document.getElementById('methodbyc').checked;
+        }
+        if (document.getElementById('ekey') && document.getElementById('methodbye')) {
+          document.getElementById('ekey').disabled = !document.getElementById('methodbye').checked;
+        }
+        document.getElementById('email').disabled = !document.getElementById('subscribe').checked;
+      }
+    //-->
+  </script>
+  <form method="get" action="<TMPL_VAR NAME=NOTIFIER_SCRIPT_URL>">
+  <input type="hidden" name="__mode" value="mgr">
+  <TMPL_IF NAME=ADDRESS_COUNT>
+    <p><MT_TRANS phrase="In order to manage subscriptions by email address, simply click the radio button below and select the address from the drop-down list that will be enabled after clicking.  Selecting an entry from the list will automatically take you to the next screen, where you can manage subscriptions for that address.  If you choose the wrong item, simply use your browser's back function to return to this screen and select a different user."></p>
+    <p style="text-indent: 40px;"><input id="methodbya" name="method" onclick="hide_and_seek()" style="vertical-align: -10%;" type="radio" value="bya" /> <label for="methodbya" style="font-weight: bold;"><MT_TRANS phrase="Addresses"></label></p>
+    <p style="text-indent: 40px;">
+      <select id="akey" name="akey" onchange="this.form.submit()">
+        <TMPL_LOOP NAME=ADDRESS_LOOP>
+          <option value="<TMPL_VAR NAME=SUB_EMAIL>:<TMPL_VAR NAME=SUB_VALID>"><TMPL_VAR NAME=SUB_EMAIL></option>
+        </TMPL_LOOP>
+      </select>
+    </p>
+    <p><MT_TRANS phrase="Because this option is not compatible with creating a new subscription, the subscription option below will be disabled once you select this option.  The reverse is also true - when the checkbox is selected to enter an email address, you are not able to manage by email address.  In order to enable the items again, just change your current selection."></p>
+  <TMPL_ELSE>
+    <h4 class="message"><MT_TRANS phrase="There are currently no subscriptions on this system."></h4>
+  </TMPL_IF>
+  <p><MT_TRANS phrase="In order to add a new subscription, check the box below.  This will enable the text box, where you can specify the email address you would like to subscribe.  Once you have entered an email address, use the radio buttons in the next section to select the type of subscription you would like to create."></p>
+  <p style="text-indent: 40px;"><input id="subscribe" onclick="hide_and_seek()" type="checkbox" /> <label for="subscribe" style="font-weight: bold;"><MT_TRANS phrase="Subscribe Email Address"></label></p>
+  <p style="text-indent: 40px;"><input id="email" name="email" size="50" type="text" /></p>
+  <p><MT_TRANS phrase="If you don't want to create new subscriptions, and are just interested in managing existing subscriptions, leave the checkbox above unchecked and select your preference from the radio buttons below.  If an option is not listed, it means that no records of that type exist in the system."></p>
+  <TMPL_IF NAME=BLOG_COUNT>
+    <p style="text-indent: 40px;"><input id="methodbyb" name="method" onclick="hide_and_seek()" style="vertical-align: -10%;" type="radio" value="byb" /> <label for="methodbyb" style="font-weight: bold;"><MT_TRANS phrase="Blogs"></label></p>
+    <p style="text-indent: 40px;">
+      <select id="bkey" name="dkey" onchange="this.form.submit()">
+        <TMPL_LOOP NAME=BLOG_LOOP>
+          <option value="<TMPL_VAR NAME=BLOG_ID>:0"><TMPL_VAR NAME=BLOG_NAME> <TMPL_IF NAME=BLOG_SUBS>(<TMPL_VAR NAME=BLOG_SUBS>)</TMPL_IF></option>
+        </TMPL_LOOP>
+      </select>
+  </TMPL_IF>
+  <TMPL_IF NAME=CATEGORY_COUNT>
+    <p style="text-indent: 40px;"><input id="methodbyc" name="method" onclick="hide_and_seek()" style="vertical-align: -10%;" type="radio" value="byc" /> <label for="methodbyc" style="font-weight: bold;"><MT_TRANS phrase="Categories"></label></p>
+    <p style="text-indent: 40px;">
+      <select id="ckey" name="dkey" onchange="this.form.submit()">
+        <TMPL_LOOP NAME=CATEGORY_LOOP>
+          <option value="<TMPL_VAR NAME=CATEGORY_ID>:C"><TMPL_VAR NAME=CATEGORY_LABEL> <TMPL_IF NAME=CATEGORY_SUBS>(<TMPL_VAR NAME=CATEGORY_SUBS>)</TMPL_IF></option>
+        </TMPL_LOOP>
+      </select>
+  </TMPL_IF>
+  <TMPL_IF NAME=ENTRY_COUNT>
+    <p style="text-indent: 40px;"><input id="methodbye" name="method" onclick="hide_and_seek()" style="vertical-align: -10%;" type="radio" value="bye" /> <label for="methodbye" style="font-weight: bold;"><MT_TRANS phrase="Entries"></label></p>
+    <p style="text-indent: 40px;">
+      <select id="ekey" name="dkey" onchange="this.form.submit()">
         <TMPL_LOOP NAME=ENTRY_LOOP>
-        <option value="<TMPL_VAR NAME=ENTRY_ID>"><TMPL_VAR NAME=ENTRY_TITLE> (<TMPL_VAR NAME=ENTRY_ID>)</option>
+          <option value="0:<TMPL_VAR NAME=ENTRY_ID>"><TMPL_VAR NAME=ENTRY_TITLE> <TMPL_IF NAME=ENTRY_SUBS>(<TMPL_VAR NAME=ENTRY_SUBS>)</TMPL_IF></option>
         </TMPL_LOOP>
-      </select><br /><br />
-      <input type="submit" class="button" value="Go">
-      </form>
-      </td>
-      </tr>
+      </select>
+  </TMPL_IF>
+  <p><MT_TRANS phrase="Select the appropriate radio button to indicate what you'd like to manage.  The corresponding drop-down list will be enabled and you can make your selection from that list as to what you would like to manage.  Simply choose the item from the list and you will be taken to another screen to manage your selection.  If you choose the wrong management option, you can select another one instead, and the drop-down lists will react accordingly.  If you make the wrong selection from the drop-down list, you will need to use your browser's back function to return to this page and choose again."></p>
+  </form>
+</TMPL_IF>
 
-	<tr>
-	<td width="39"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="39" height="1"></td>
-	<td valign="top" width="500" bgcolor="#CCCCCC"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="1" height="1"></td>
-	</tr>
-
-	<tr>
-	<td colspan="2"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="1" height="10"></td>
-	</tr>
-
-	<tr>
-      <a name="removesub"></a>
-	<td width="39"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="39" height="1"></td>
-	<td valign="top" width="500">
-	<form method="get" action="<TMPL_VAR NAME=SCRIPT_URL>">
-	<input type="hidden" name="__mode" value="unsub">
-	<input type="hidden" name="__auth" value="<TMPL_VAR NAME=AUTHOR_ID>">
-      <font class="pagetitle">Cancel a Subscription</font><br />
-      <font class="instructional">Select a subscription record from the list and click the GO button to remove that record from the MT-Notifier database.  <i>Caution</i>: There is no way to undo this action, so be sure you want to remove the entry before proceeding.  If you are not sure, it might be better in some cases to create an opt-out record instead.<br /><br /></font>
-      <select name="sub_id">
-        <TMPL_LOOP NAME=SUB_LOOP>
-        <option value="<TMPL_VAR NAME=SUB_BLOG>:<TMPL_VAR NAME=SUB_ENTRY>:<TMPL_VAR NAME=SUB_ADDRESS>:<TMPL_VAR NAME=SUB_KEY>"><TMPL_VAR NAME=SUB_ADDRESS> - <TMPL_VAR NAME=SUB_TITLE> (<TMPL_VAR NAME=SUB_ENTRY>)</option>
-        </TMPL_LOOP>
-      </select><br /><br />
-      <input type="submit" class="button" value="Go">
-      </form>
-      </td>
-      </tr>
-
-	<tr>
-	<td width="39"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="39" height="1"></td>
-	<td valign="top" width="500" bgcolor="#CCCCCC"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="1" height="1"></td>
-	</tr>
-
-	<tr>
-	<td colspan="2"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="1" height="10"></td>
-	</tr>
-
-	<tr>
-      <a name="addopt"></a>
-	<td width="39"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="39" height="1"></td>
-	<td valign="top" width="500">
-	<form method="get" action="<TMPL_VAR NAME=SCRIPT_URL>">
-	<input type="hidden" name="__mode" value="sub">
-	<input type="hidden" name="__auth" value="<TMPL_VAR NAME=AUTHOR_ID>">
-      <font class="pagetitle">Block All Notifications to an Address</font><br />
-      <font class="instructional">If you would like to block all notifications to a particular address, then enter that address, select the blog to block and click GO to create an opt-out record in the MT-Notifier database.  This setting will override all subscriptions.  That is, if you create an opt-out record, no subscriptions will be sent to that address while the opt-out record is in place.<br /><br /></font>
-      <input name="email" />
-      <font class="instructional">from:</font><br /><br />
-      <select name="blog_id">
-        <TMPL_LOOP NAME=BLOG_LOOP>
-        <option value="<TMPL_VAR NAME=BLOG_ID>"><TMPL_VAR NAME=BLOG_NAME></option>
-        </TMPL_LOOP>
-      </select><br /><br />
-      <input type="submit" class="button" value="Go">
-      </form>
-      </td>
-      </tr>
-
-	<tr>
-	<td width="39"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="39" height="1"></td>
-	<td valign="top" width="500" bgcolor="#CCCCCC"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="1" height="1"></td>
-	</tr>
-
-	<tr>
-	<td colspan="2"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="1" height="10"></td>
-	</tr>
-
-	<tr>
-      <a name="removeopt"></a>
-	<td width="39"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="39" height="1"></td>
-	<td valign="top" width="500">
-	<form method="get" action="<TMPL_VAR NAME=SCRIPT_URL>">
-	<input type="hidden" name="__mode" value="unsub">
-	<input type="hidden" name="__auth" value="<TMPL_VAR NAME=AUTHOR_ID>">
-      <font class="pagetitle">Remove Notification Block from an Address</font><br />
-      <font class="instructional">Select an opt-out record from the list and click the GO button to remove that record from the MT-Notifier database.  <i>Caution</i>: There is no way to undo this action, so be sure you want to remove the entry before proceeding.  If you remove a record in error, you will have to manually recreate it to put the block back in place.<br /><br /></font>
-      <select name="opt_id">
-        <TMPL_LOOP NAME=OPT_LOOP>
-        <option value="<TMPL_VAR NAME=SUB_BLOG>:<TMPL_VAR NAME=SUB_ENTRY>:<TMPL_VAR NAME=SUB_ADDRESS>:<TMPL_VAR NAME=SUB_KEY>"><TMPL_VAR NAME=SUB_ADDRESS> - <TMPL_VAR NAME=SUB_TITLE></option>
-        </TMPL_LOOP>
-      </select><br /><br />
-      <input type="submit" class="button" value="Go">
-      </form>
-      </td>
-      </tr>
-
-	<tr>
-	<td width="39"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="39" height="1"></td>
-	<td valign="top" width="500" bgcolor="#CCCCCC"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="1" height="1"></td>
-	</tr>
-
-	<tr>
-	<td colspan="2"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="1" height="10"></td>
-	</tr>
-
-	<tr>
-      <a name="addcfg"></a>
-	<td width="39"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="39" height="1"></td>
-	<td valign="top" width="500">
-	<form method="get" action="<TMPL_VAR NAME=SCRIPT_URL>">
-	<input type="hidden" name="__mode" value="cfg">
-	<input type="hidden" name="__auth" value="<TMPL_VAR NAME=AUTHOR_ID>">
-      <font class="pagetitle">Configure Default "From" Address</font><br />
-      <font class="instructional">MT-Notifier can be set to use a particular address when sending email notifications of updates.  Enter a valid email address, select a blog and click the GO button to create a default sender address.  When sending notifications, MT-Notifier will look for an address in this order: A default address for the blog, a default address for all blogs, and finally for an address for the author of the entry.<br /><br /></font>
-      <input name="email" />
-      <font class="instructional">from:</font><br /><br />
-      <select name="blog_id">
-        <option value="0">* All Blogs *</option>
-        <TMPL_LOOP NAME=BLOG_LOOP>
-        <option value="<TMPL_VAR NAME=BLOG_ID>"><TMPL_VAR NAME=BLOG_NAME></option>
-        </TMPL_LOOP>
-      </select><br /><br />
-      <input type="submit" class="button" value="Go">
-      </form>
-      </td>
-      </tr>
-
-	<tr>
-	<td width="39"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="39" height="1"></td>
-	<td valign="top" width="500" bgcolor="#CCCCCC"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="1" height="1"></td>
-	</tr>
-
-	<tr>
-	<td colspan="2"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="1" height="10"></td>
-	</tr>
-
-	<tr>
-      <a name="removecfg"></a>
-	<td width="39"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="39" height="1"></td>
-	<td valign="top" width="500">
-	<form method="get" action="<TMPL_VAR NAME=SCRIPT_URL>">
-	<input type="hidden" name="__mode" value="uncfg">
-	<input type="hidden" name="__auth" value="<TMPL_VAR NAME=AUTHOR_ID>">
-      <font class="pagetitle">Remove Default "From" Address</font><br />
-      <font class="instructional">If any default addresses have been configured, they will be listed in the drop-down list below.  Select an entry from the list and click the GO button to remove that default address from the MT-Notifier database.  <i>Caution</i>: This action cannot be undone.  If you remove an address in error, you will need to manually add that address back to the system.<br /><br /></font>
-      <select name="cfg_id">
-        <TMPL_LOOP NAME=CFG_LOOP>
-        <option value="<TMPL_VAR NAME=SUB_BLOG>:<TMPL_VAR NAME=SUB_ENTRY>:<TMPL_VAR NAME=SUB_ADDRESS>:<TMPL_VAR NAME=SUB_KEY>"><TMPL_VAR NAME=SUB_TITLE> (<TMPL_VAR NAME=SUB_ADDRESS>)</option>
-        </TMPL_LOOP>
-      </select><br /><br />
-      <input type="submit" class="button" value="Go">
-      </form>
-      </td>
-      </tr>
-
-	<tr>
-	<td width="39"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="39" height="1"></td>
-	<td valign="top" width="500" bgcolor="#CCCCCC"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="1" height="1"></td>
-	</tr>
-
-	<tr>
-	<td colspan="2"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="1" height="10"></td>
-	</tr>
-
-	<tr>
-	<td width="39"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="39" height="1"></td>
-	<td valign="top" width="500">
-	<font class="instructional">If you need assistance, try:</font>
-      </td>
-      </tr>
-	
-	<tr>
-	<td colspan="2"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="1" height="10"></td>
-	</tr>
-
-	<tr>
-	<td width="39"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="39" height="1"></td>
-	<td valign="top" width="500">
-	<font class="instructional"><a href="http://www.movabletype.org/support/index.php?act=SF&f=20">Movable Type Plugin Development Forum</a></font>
-      </td>
-      </tr>
-	
-	<tr>
-	<td colspan="2"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="1" height="20"></td>
-	</tr>
-	<TMPL_ELSE>
-      <TMPL_IF NAME=REDIRECT_URL>
-	<tr>
-	<td width="39"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="39" height="1"></td>
-	<td valign="top" width="500">
-	<font class="pagetitle">Return to <a href="<TMPL_VAR NAME=REDIRECT_URL>"><TMPL_VAR NAME=REDIRECT_TITLE></a>.</font>
-      </td>
-      </tr>
-	
-	<tr>
-	<td colspan="2"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="1" height="10"></td>
-	</tr>
+<TMPL_IF NAME=MANAGE_ITEMS>
+  <TMPL_IF NAME=MANAGE_USER>
+    <TMPL_UNLESS NAME=ERROR><p style="text-indent: 40px;">E-mail address <strong><TMPL_VAR NAME=MAIL></strong><MT_TRANS phrase=" is subscribed to "><TMPL_VAR NAME=SUB_NAME>.  <a href="<TMPL_VAR NAME=SUB_LINK>" onClick="window.open('<TMPL_VAR NAME=SUB_LINK>');return false" style="text-decoration: none;" title="<MT_TRANS phrase="View this "><TMPL_VAR NAME=SUB_TYPE>">Return</a>.</p></TMPL_UNLESS>
+  <TMPL_ELSE>
+    <TMPL_IF NAME=VALID>
+      <script language="JavaScript">
+        <!--
+          function hide_and_seek () {
+            document.getElementById('confirm-purge').disabled = !document.getElementById('purge').checked;
+            if (document.getElementById('from') && document.getElementById('update') && document.getElementById('confirm-update') && document.getElementById('confirm-remove')) {
+              document.getElementById('from').disabled = !document.getElementById('update').checked;
+              document.getElementById('confirm-update').disabled = !document.getElementById('update').checked;
+              document.getElementById('confirm-remove').disabled = !document.getElementById('update').checked;
+            }
+          }
+        //-->
+      </script>
+      <TMPL_IF NAME=BY_ADDRESS>
+        <p style="font-weight: bold; text-indent: 40px;"><MT_TRANS phrase="Email Address"></p>
+        <div class="list">
+          <table border="1" cellspacing="0" cellpadding="5" style="margin-left: 40px; width: 88%;">
+            <tr>
+              <td><TMPL_VAR NAME=MAIL></td>
+            </tr>
+          </table>
+        </div>
       </TMPL_IF>
-	</TMPL_IF>
+      <TMPL_IF NAME=BY_BLOG>
+        <p style="font-weight: bold; text-indent: 40px;"><TMPL_IF NAME=BLOG_URL><a href="<TMPL_VAR NAME=BLOG_URL>" style="text-decoration: none;"></TMPL_IF><TMPL_VAR NAME=BLOG_NAME><TMPL_IF NAME=BLOG_URL></a></TMPL_IF></p>
+        <div class="list">
+          <table border="1" cellspacing="0" cellpadding="5" style="margin-left: 40px; width: 88%;">
+            <tr>
+              <td><TMPL_VAR NAME=BLOG_DESCRIPTION></td>
+            </tr>
+          </table>
+        </div>
+      </TMPL_IF>
+      <TMPL_IF NAME=BY_CATEGORY>
+        <p style="font-weight: bold; text-indent: 40px;"><TMPL_IF NAME=CATEGORY_LINK><a href="<TMPL_VAR NAME=CATEGORY_LINK>" style="text-decoration: none;"></TMPL_IF><TMPL_VAR NAME=CATEGORY_LABEL><TMPL_IF NAME=CATEGORY_LINK></a></TMPL_IF> <span style="font-weight: normal;">(<MT_TRANS phrase="From"> <TMPL_IF NAME=CATEGORY_BLOG_URL><a href="<TMPL_VAR NAME=CATEGORY_BLOG_URL>" style="text-decoration: none;"></TMPL_IF><TMPL_VAR NAME=CATEGORY_BLOG_NAME><TMPL_IF NAME=CATEGORY_BLOG_URL></a></TMPL_IF>)</span></p>
+        <div class="list">
+          <table border="1" cellspacing="0" cellpadding="5" style="margin-left: 40px; width: 88%;">
+            <tr>
+              <td><TMPL_VAR NAME=CATEGORY_DESCRIPTION></td>
+            </tr>
+          </table>
+        </div>
+      </TMPL_IF>
+      <TMPL_IF NAME=BY_ENTRY>
+        <p style="font-weight: bold; text-indent: 40px;"><TMPL_VAR NAME=ENTRY_TITLE> <span style="font-weight: normal;">(<MT_TRANS phrase="Posted to"> <TMPL_IF NAME=ENTRY_BLOG_URL><a href="<TMPL_VAR NAME=ENTRY_BLOG_URL>" style="text-decoration: none;"></TMPL_IF><TMPL_VAR NAME=ENTRY_BLOG_NAME><TMPL_IF NAME=ENTRY_BLOG_URL></a></TMPL_IF><TMPL_IF NAME=ENTRY_DATE> <MT_TRANS phrase="on"> <TMPL_VAR NAME=ENTRY_DATE></TMPL_IF>)</span></p>
+        <div class="list">
+          <table border="1" cellspacing="0" cellpadding="5" style="margin-left: 40px; width: 88%;">
+            <TMPL_IF NAME=ENTRY_EXCERPT>
+              <tr>
+                <td><TMPL_VAR NAME=ENTRY_EXCERPT> <TMPL_IF NAME=ENTRY_PERMALINK>(<a href="<TMPL_VAR NAME=ENTRY_PERMALINK>" style="text-decoration: none;"><MT_TRANS phrase="More"></a>)</TMPL_IF></td>
+              </tr>
+            </TMPL_IF>
+          </table>
+        </div>
+      </TMPL_IF>
+      <p><MT_TRANS phrase="Listed below are the opt-out records and the subscription records that exist for the selected record."></p>
+      <hr style="background-color: #8FAEBE; color: #8FAEBE;" />
+      <p style="font-weight: bold; text-indent: 40px;"><MT_TRANS phrase="Opt-Out Records"></p>
+      <div class="list">
+        <table border="1" cellspacing="0" cellpadding="5" style="margin-left: 40px; width: 88%;">
+          <TMPL_IF NAME=OPT_FOOT>
+            <TMPL_LOOP NAME=OPT_LOOP>
+              <tr>
+                <td><TMPL_IF NAME=QUERY><a href="<TMPL_VAR NAME=NOTIFIER_SCRIPT_URL>?__mode=mgr&amp;method=<TMPL_VAR NAME=SUB_METHOD>&amp;<TMPL_IF NAME=BY_ADDRESS>dkey<TMPL_ELSE>akey</TMPL_IF>=<TMPL_VAR NAME=SUB_KEY>" style="text-decoration: none;" title="<MT_TRANS phrase="Manage Subscriptions for This Address">"><TMPL_VAR NAME=SUB_NAME></a><TMPL_ELSE><TMPL_VAR NAME=SUB_NAME></TMPL_IF></td>
+                <TMPL_IF NAME=SUB_TYPE><td><TMPL_VAR NAME=SUB_TYPE></td></TMPL_IF>
+                <TMPL_IF NAME=BY_ADDRESS><td align="center"><a href="<TMPL_VAR NAME=NOTIFIER_SCRIPT_URL>?<TMPL_IF NAME=QUERY>__mode=mgr&amp;method=<TMPL_VAR NAME=QUERY>&amp;</TMPL_IF>akey=<TMPL_VAR NAME=MAIL>:<TMPL_VAR NAME=CODE>&amp;off=<TMPL_VAR NAME=SUB_KEY>~opt" style="text-decoration: none;" title="<MT_TRANS phrase="Remove the subscription record for this "><TMPL_VAR NAME=SUB_TYPE>"><MT_TRANS phrase="Remove"></a></td>
+                <TMPL_ELSE><td align="center"><a href="<TMPL_VAR NAME=NOTIFIER_SCRIPT_URL>?__mode=mgr&amp;method=<TMPL_VAR NAME=QUERY>&amp;akey=<TMPL_VAR NAME=SUB_KEY>&amp;off=<TMPL_VAR NAME=DKEY>~opt" style="text-decoration: none;" title="<MT_TRANS phrase="Remove the subscription record for this "><TMPL_VAR NAME=SUB_TYPE>"><MT_TRANS phrase="Remove"></a></td></TMPL_IF>
+                <TMPL_IF NAME=SUB_LINK><td align="center"><a href="<TMPL_VAR NAME=SUB_LINK>" onClick="window.open('<TMPL_VAR NAME=SUB_LINK>');return false" style="text-decoration: none;" title="<MT_TRANS phrase="View this "><TMPL_VAR NAME=SUB_TYPE>"><MT_TRANS phrase="Review"></a></td></TMPL_IF>
+              </tr>
+            </TMPL_LOOP>
+          <TMPL_ELSE>
+            <tr>
+              <td><MT_TRANS phrase="There are currently no opt-out records on file."></td>
+            </tr>
+          </TMPL_IF>
+        </table>
+      </div>
+      <p><MT_TRANS phrase="Following each record, you will find a link to remove that record from the database.  Please remember that if you remove an opt-out record from an email address, that address is actually opting back in (to receive notifications), so they may receive notifications again."><TMPL_IF NAME=BY_ADDRESS>  <MT_TRANS phrase="In addition to the remove option, all valid records include a review option so that you may review the page and determine if you'd like to keep the subscription or not.  Review links will open in a new window."></TMPL_IF></p>
+      <hr style="background-color: #8FAEBE; color: #8FAEBE;" />
+      <p style="font-weight: bold; text-indent: 40px;"><MT_TRANS phrase="Subscription Records"></p>
+      <div class="list">
+        <table border="1" cellspacing="0" cellpadding="5" style="margin-left: 40px; width: 88%;">
+          <TMPL_IF NAME=SUB_FOOT>
+            <TMPL_LOOP NAME=SUB_LOOP>
+              <tr>
+                <td><TMPL_IF NAME=QUERY><a href="<TMPL_VAR NAME=NOTIFIER_SCRIPT_URL>?__mode=mgr&amp;method=<TMPL_VAR NAME=SUB_METHOD>&amp;<TMPL_IF NAME=BY_ADDRESS>dkey<TMPL_ELSE>akey</TMPL_IF>=<TMPL_VAR NAME=SUB_KEY>" style="text-decoration: none;" title="<MT_TRANS phrase="Manage Subscriptions for This Address">"><TMPL_VAR NAME=SUB_NAME></a><TMPL_ELSE><TMPL_VAR NAME=SUB_NAME></TMPL_IF></td>
+                <TMPL_IF NAME=SUB_TYPE><td><TMPL_VAR NAME=SUB_TYPE></td></TMPL_IF>
+                <TMPL_IF NAME=BY_ADDRESS><td align="center"><a href="<TMPL_VAR NAME=NOTIFIER_SCRIPT_URL>?<TMPL_IF NAME=QUERY>__mode=mgr&amp;method=<TMPL_VAR NAME=QUERY>&amp;</TMPL_IF>akey=<TMPL_VAR NAME=MAIL>:<TMPL_VAR NAME=CODE>&amp;set=<TMPL_VAR NAME=SUB_KEY>" style="text-decoration: none;" title="<MT_TRANS phrase="<MT_TRANS phrase="Create an opt-out record for this "><TMPL_VAR NAME=SUB_TYPE>"><MT_TRANS phrase="Opt-Out"></a></td>
+                <TMPL_ELSE><td align="center"><a href="<TMPL_VAR NAME=NOTIFIER_SCRIPT_URL>?__mode=mgr&amp;method=<TMPL_VAR NAME=QUERY>&amp;akey=<TMPL_VAR NAME=SUB_KEY>&amp;set=<TMPL_VAR NAME=DKEY>" style="text-decoration: none;" title="<MT_TRANS phrase="<MT_TRANS phrase="Create an opt-out record for this "><TMPL_VAR NAME=SUB_TYPE>"><MT_TRANS phrase="Opt-Out"></a></td></TMPL_IF>
+                <TMPL_IF NAME=BY_ADDRESS><td align="center"><a href="<TMPL_VAR NAME=NOTIFIER_SCRIPT_URL>?<TMPL_IF NAME=QUERY>__mode=mgr&amp;method=<TMPL_VAR NAME=QUERY>&amp;</TMPL_IF>akey=<TMPL_VAR NAME=MAIL>:<TMPL_VAR NAME=CODE>&amp;off=<TMPL_VAR NAME=SUB_KEY>~sub" style="text-decoration: none;" title="<MT_TRANS phrase="Remove the subscription record for this "><TMPL_VAR NAME=SUB_TYPE>"><MT_TRANS phrase="Remove"></a></td>
+                <TMPL_ELSE><td align="center"><a href="<TMPL_VAR NAME=NOTIFIER_SCRIPT_URL>?__mode=mgr&amp;method=<TMPL_VAR NAME=QUERY>&amp;akey=<TMPL_VAR NAME=SUB_KEY>&amp;off=<TMPL_VAR NAME=DKEY>~sub" style="text-decoration: none;" title="<MT_TRANS phrase="Remove the subscription record for this "><TMPL_VAR NAME=SUB_TYPE>"><MT_TRANS phrase="Remove"></a></td></TMPL_IF>
+                <TMPL_IF NAME=SUB_LINK><td align="center"><a href="<TMPL_VAR NAME=SUB_LINK>" onClick="window.open('<TMPL_VAR NAME=SUB_LINK>');return false" style="text-decoration: none;" title="<MT_TRANS phrase="View this "><TMPL_VAR NAME=SUB_TYPE>"><MT_TRANS phrase="Review"></a></td></TMPL_IF>
+              </tr>
+            </TMPL_LOOP>
+          <TMPL_ELSE>
+            <tr>
+              <td><MT_TRANS phrase="There are currently no subscription records on file."></td>
+            </tr>
+          </TMPL_IF>
+        </table>
+      </div>
+      <p><MT_TRANS phrase="Following each subscription record, you will find a link to remove that record from the database.  When a subscription is removed from the database, there is no backup of that subscription.  In order to receive notifications again, the address must be resubscribed."><TMPL_IF NAME=BY_ADDRESS>  <MT_TRANS phrase="In addition to the remove option, all valid records include a review option so that you may review the page and determine if you'd like to keep the subscription or not.  Review links will open in a new window."></TMPL_IF></p>
+      <TMPL_UNLESS NAME=BY_ADDRESS>
+        <hr style="background-color: #8FAEBE; color: #8FAEBE;" />
+        <form method="get" action="<TMPL_VAR NAME=NOTIFIER_SCRIPT_URL>">
+        <input type="hidden" name="__mode" value="mgr">
+        <input type="hidden" name="method" value="<TMPL_VAR NAME=QUERY>">
+        <input type="hidden" name="dkey" value="<TMPL_VAR NAME=DKEY>">
+        <p style="text-indent: 40px;"><input id="update" onclick="hide_and_seek()" type="checkbox" /> <label for="from" style="font-weight: bold;"><MT_TRANS phrase="Update Sender Address"></label></p>
+        <p style="text-indent: 40px;"><input id="from" name="from" size="50" type="text" value="<TMPL_VAR NAME=SENDER_ADDRESS>" /></p>
+        <p><MT_TRANS phrase="MT-Notifier allows you to specify a different 'from' address for each Blog, Category or even each Entry.  When a notification is sent from a record that specifies a 'from' address, this address will be used.  The field above displays the current effective address for this record.  If you would like to use a different address, check the box above the field, specify the new address, then confirm with the left button below.  To remove this sender address, check the box and click the right button below."></p>
+        <p style="text-indent: 40px;"><input class="button" id="confirm-update" type="submit" value="Confirm Address Update" /> <input class="button" id="confirm-remove" name="remove" type="submit" value="Remove Sender Address" /></p>
+        </form>
+      </TMPL_UNLESS>
+      <hr style="background-color: #8FAEBE; color: #8FAEBE;" />
+      <form method="get" action="<TMPL_VAR NAME=NOTIFIER_SCRIPT_URL>">
+      <TMPL_IF NAME=QUERY>
+        <input type="hidden" name="__mode" value="mgr">
+        <input type="hidden" name="method" value="<TMPL_VAR NAME=QUERY>">
+      </TMPL_IF>
+      <TMPL_IF NAME=BY_ADDRESS>
+        <input type="hidden" name="akey" value="<TMPL_VAR NAME=AKEY>">
+      <TMPL_ELSE>
+        <input type="hidden" name="dkey" value="<TMPL_VAR NAME=DKEY>">
+      </TMPL_IF>
+      <p style="font-weight: bold; text-indent: 40px;"><input id="purge" name="purge" onclick="hide_and_seek()" type="checkbox" /> <label for="purge"><MT_TRANS phrase="Purge This Record"> (<TMPL_VAR NAME=BLOG_NAME><TMPL_VAR NAME=CATEGORY_LABEL><TMPL_VAR NAME=ENTRY_TITLE><TMPL_VAR NAME=MAIL>)</label></p>
+      <p><MT_TRANS phrase="There is no confirmation screen and there is no undo functionality.  Once a record is purged, all opt-out and subscription records associated with that record are removed from the system.  To add a level of security to this process, you must check the box (above) and then confirm the purge (below).  That is the last chance you will have to confirm the action.  Please be sure that you want to take this action prior to purging this record."></p>
+      <p style="text-indent: 40px;"><input class="button" id="confirm-purge" type="submit" value="Confirm Record Purge" /></p>
+      </form>
+    <TMPL_ELSE>
+      <p><MT_TRANS phrase="This form is used to access the MT-Notifier user management system.  Please enter the email address you would like to manage, along with the code that identifies you as the owner of that address."></p>
+      <form method="get" action="<TMPL_VAR NAME=NOTIFIER_SCRIPT_URL>">
+      <p style="text-indent: 40px;"><label for="mail" style="font-weight: bold;"><MT_TRANS phrase="Email Address"></label></p>
+      <p style="text-indent: 40px;"><input id="mail" name="mail" size="50" type="text" value="<TMPL_VAR NAME=MAIL>" /></p>
+      <p style="text-indent: 40px;"><label for="code" style="font-weight: bold;"><MT_TRANS phrase="Validation Code"></label></p>
+      <p style="text-indent: 40px;"><input id="code" name="code" size="50" type="text"value="<TMPL_VAR NAME=CODE>" /></p>
+      <p style="text-indent: 40px;"><input type="submit" class="button" value="Go"></p>
+      </form>
+      <p><MT_TRANS phrase="This interface is designed to manage existing subscriptions.  The addition of new subscriptions is not supported.  Because of this, only existing subscribers are allowed access into the system through this method."></p>
+    </TMPL_IF>
+  </TMPL_IF>
+</TMPL_IF>
 
-	<tr>
-	<td width="39"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="39" height="1"></td>
-	<td valign="top" width="500" bgcolor="#CCCCCC"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="1" height="1"></td>
-	</tr>
+<TMPL_IF NAME=FUNC_TRANSFER>
+  <script language="JavaScript">
+    <!--
+      function hide_and_seek () {
+        document.getElementById('confirm-convert').disabled = !document.getElementById('convert').checked;
+        document.getElementById('path').disabled = (document.getElementById('mode').value != "sg");
+      }
+    //-->
+  </script>
+  <p><MT_TRANS phrase="You can use this screen to update the data from another notification package into the current version of MT-Notifier."></p>
+  <form method="get" action="<TMPL_VAR NAME=NOTIFIER_SCRIPT_URL>">
+  <input type="hidden" name="__mode" value="xfr">
+  <p style="text-indent: 40px;"><label for="mode" style="font-weight: bold;"><MT_TRANS phrase="Select Product for Conversion"></label></p>
+  <p style="text-indent: 40px;">
+    <select id="mode" name="mode" onchange="hide_and_seek()">
+      <option value="n1x">MT-Notifier version 1.x</option>
+      <option value="sg">Scripty Goddess</option>
+    </select>
+  </p>
+  <p style="text-indent: 40px;"><strong>Path to file and file name:</strong> <input id="path" name="path" size="80" value="<TMPL_VAR NAME=SG_PATH>" /></p>
+  <p><MT_TRANS phrase="The conversion option does not offer any confirmation screens and the actions performed cannot be reversed once executed.  Converting any data from another system carries with it the risk that existing data will be overwritten with the incoming information.  Please be sure that you have chosen the right selection, and make sure you have a backup copy of any data you cannot afford to lose, before submitting your conversion request."></p>
+  <p><MT_TRANS phrase="Click the box below to indicate that you have read this disclaimer and understand what can happen if you submit a conversion.  Once you do, you will be able to submit your conversion request."></p>
+  <p style="text-indent: 40px;"><input id="convert" name="convert" onclick="hide_and_seek()" type="checkbox" /> <label for="convert" style="font-weight: bold;"><MT_TRANS phrase="I understand and would like to continue."></label><input id="confirm-convert" class="button" style="margin-left: 40px;" type="submit" value="Go"></p>
+</TMPL_IF>
 
-	<tr>
-	<td width="39"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="39" height="1"></td>
-	<td valign="top" width="500">
-	<font class="instructional"><a class="instructional" href="http://www.cxliv.org/jayseae/notifier/" style="text-decoration: none;">MT-Notifier</a> <b>Version <TMPL_VAR NAME=APP_VERSION></b> Copyright &copy; 2003 Everitz Consulting. All Rights Reserved.</font>
-      </td>
-      </tr>
-
-	<tr>
-	<td colspan="2"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="1" height="4"></td>
-	</tr>
-
-	<tr>
-	<td width="39"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="39" height="1"></td>
-	<td valign="top" width="500" bgcolor="#CCCCCC"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="1" height="1"></td>
-	</tr>
-</table>
+<hr style="background-color: #8FAEBE; color: #8FAEBE;" />
+<p><a href="http://www.cxliv.org/jayseae/notifier/" style="text-decoration: none;">MT-Notifier</a> <b>Version <TMPL_VAR NAME=NOTIFIER_SCRIPT_VERSION></b> Copyright &copy; 2003-2004 Chad Everett. All Rights Reserved.</p>
 <!-- End main content -->
 
 <!-- Begin copyright and version info -->
-<TMPL_INCLUDE NAME="copyright.tmpl">
+<TMPL_INCLUDE NAME="footer.tmpl">
 <!-- End copyright and version info -->
 
 </body>
+<TMPL_IF NAME=DO_JAVASCRIPT>
+<SCRIPT LANGUAGE="JavaScript">
+<!--
+  hide_and_seek();
+//-->
+</SCRIPT>
+</TMPL_IF>
 </html>

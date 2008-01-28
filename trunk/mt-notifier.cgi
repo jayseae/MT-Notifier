@@ -1,25 +1,23 @@
 #!/usr/bin/perl -w
 
-# ---------------------------------------------------------------------------
-# MT-Notifier: Configure subscriptions to your blog entries.
+# ===========================================================================
+# MT-Notifier: Configure subscriptions to your blog.
 # A Plugin for Movable Type
 #
-# Release 1.4.1
-# March 17, 2004
+# Release 2.0.1
+# July 6, 2004
 #
 # http://www.cxliv.org/jayseae/notifier/
+# http://www.amazon.com/o/registry/2Y29QET3Y472A/
 #
-# Copyright 2003-2004, Chad Everett (plugins@cxliv.org)
-#
-# The program is licensed under the Open Software License version 2.0
-# http://www.opensource.org/licenses/osl-2.0.php
+# Copyright 2003-2004, Chad Everett (software@cxliv.org)
+# ~Licensed under the Open Software License version 2.1~
 #
 # If you find the software useful or even like it, then a simple 'thank you'
-# is always appreciated.  A reference back is even nicer so others can find
-# out about me.  If you figure out how you can make money from the software,
-# do what you feel is right.  I do have a wish list at Amazon if you are in
-# need of an idea.  :)
-# ---------------------------------------------------------------------------
+# is always appreciated.  A reference back to me is even nicer.  If you find
+# a way to make money from the software, do what you feel is right.
+# ===========================================================================
+
 use strict;
 
 my($MT_DIR);
