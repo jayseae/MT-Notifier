@@ -2,18 +2,18 @@
 # MT-Notifier: Configure subscriptions to your blog.
 # A Plugin for Movable Type
 #
-# Release 2.3.1
-# September 20, 2004
+# Release 2.3.2
+# September 23, 2004
 #
 # http://jayseae.cxliv.org/notifier/
 # http://www.amazon.com/o/registry/2Y29QET3Y472A/
 #
-# Copyright 2003-2004, Chad Everett (software@cxliv.org)
-# ~Licensed under the Open Software License version 2.1~
-#
 # If you find the software useful or even like it, then a simple 'thank you'
 # is always appreciated.  A reference back to me is even nicer.  If you find
 # a way to make money from the software, do what you feel is right.
+#
+# Copyright 2003-2004, Chad Everett (software@jayseae.cxliv.org)
+# Licensed under the Open Software License version 2.1
 # ===========================================================================
 
 package jayseae::notifier;
@@ -26,7 +26,7 @@ use MT::Util qw(archive_file_for format_ts);
 use vars qw(@ISA $FILESET $VERSION);
 @ISA = qw(MT::App::CMS);
 $FILESET = 'n2x';
-$VERSION = '2.3.1';
+$VERSION = '2.3.2';
 
 sub uri {
   $_[0]->path . ($_[0]->{author} ? MT::ConfigMgr->instance->AdminScript : $_[0]->script);
@@ -915,11 +915,16 @@ sub manage_address {
     } else {
       $error = 10;
     }
-  } elsif ($param{dkey} = $app->{query}->param('dkey')) {
-    $mail = $app->{query}->param('mail');
-    $error = $app->subs('add', 'sub', $param{dkey}, $mail);
+  } elsif (my $dkey = $app->{query}->param('dkey')) {
+    if ($app->test_data_key($dkey)) {
+      my $permit = $app->get_configuration_option($dkey, 'type');
+      my $type = $app->{query}->param('type') || $permit;
+      $error = $app->subs('add', $type, $dkey, $mail);
+    } else {
+      $error = 4;
+    }
     unless ($error) {
-      my ($name, $desc, $link) = $app->read_sub($param{dkey});
+      my ($name, $desc, $link) = $app->read_sub($dkey);
       $param{sub_name} = $name;
       $param{sub_desc} = $desc;
       $param{sub_link} = $link;
