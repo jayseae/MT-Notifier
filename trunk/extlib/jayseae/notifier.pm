@@ -2,8 +2,8 @@
 # MT-Notifier: Configure subscriptions to your blog.
 # A Plugin for Movable Type
 #
-# Release '2.4.0'
-# January 5, 2005
+# Release '2.4.1'
+# January 6, 2005
 #
 # http://jayseae.cxliv.org/notifier/
 # http://www.amazon.com/o/registry/2Y29QET3Y472A/
@@ -27,7 +27,7 @@ use vars qw(@ISA $FILESET $FILEURL $VERSION);
 @ISA = qw(MT::App::CMS);
 $FILESET = 'n2x';
 $FILEURL = 'mt-notifier.cgi';
-$VERSION = '2.4.0';
+$VERSION = '2.4.1';
 
 sub uri {
   $_[0]->path . ($_[0]->{author} ? MT::ConfigMgr->instance->AdminScript : $_[0]->script);
@@ -246,7 +246,7 @@ sub manager {
       return $app->manage_record if ($method eq 'blog');
       return $app->manage_record if ($method eq 'category');
       return $app->manage_record if ($method eq 'entry');
-      return $app->manage_address if ($method eq 'on');
+      return $app->manage_address if ($method eq 'address');
       $error = 7;
     } else {
       return $app->manage_address if (my $akey = $app->{query}->param('akey'));
@@ -265,13 +265,11 @@ sub menu {
 sub notify_comment {
   my $app = shift;
   my ($err, $comment) = @_;
-  my $blog_id = $comment->blog_id;
   require MT::Blog;
-  my $blog = MT::Blog->load($blog_id) or return;
-  my $entry_id = $comment->entry_id;
+  my $blog = MT::Blog->load($comment->blog_id) or return;
   require MT::Entry;
-  my $entry = MT::Entry->load($entry_id) or return;
-  my $subs = $app->load_subs($blog_id, $entry_id, 'sco');
+  my $entry = MT::Entry->load($comment->entry_id) or return;
+  my $subs = $app->load_subs($comment->blog_id, $comment->entry_id, 'sco');
   return unless scalar @$subs;
   my $author = $entry->author;
   $app->set_language($author->preferred_language)
@@ -279,7 +277,7 @@ sub notify_comment {
   require MT::ConfigMgr;
   my $cfg = MT::ConfigMgr->instance;
   my $charset = $cfg->PublishCharset || 'iso-8859-1';
-  my %head = (From => $app->get_configuration_option('0:'.$entry_id, 'from'));
+  my %head = (From => $app->get_configuration_option('0:'.$comment->entry_id, 'from'));
   $head{'Content-Type'} = qq(text/plain; charset="$charset");
   $head{Subject} = '['.$blog->name.'] '.
     $app->translate('New Comment from \'[_1]\' ', $comment->author).
@@ -305,18 +303,18 @@ sub notify_comment {
     require MT::Mail;
     MT::Mail->send(\%head, $body);
   }
+  $app->write_log_notify($comment->entry_id, scalar @$subs);
 }
 
 sub notify_entry {
   my $app = shift;
   my ($err, $entry) = @_;
-  my $blog_id = $entry->blog_id;
   require MT::Blog;
-  my $blog = MT::Blog->load($blog_id) or return;
+  my $blog = MT::Blog->load($entry->blog_id) or return;
   my $data_rec = $app->read_record($FILESET, 'data', '0:'.$entry->id);
   my $redo = $app->get_configuration_option('0:'.$entry->id, 'redo');
   return if ($data_rec->{redo} && $redo eq 'new');
-  my $subs = $app->load_subs($blog_id, $entry->id, 'seo');
+  my $subs = $app->load_subs($entry->blog_id, $entry->id, 'seo');
   return unless scalar @$subs;
   my $author = $entry->author;
   $app->set_language($author->preferred_language)
@@ -352,6 +350,7 @@ sub notify_entry {
     $data_rec->{redo} = 'one';
     $app->save_record('data', '0:'.$entry->id, $data_rec);
   }
+  $app->write_log_notify($entry->id, scalar @$subs);
 }
 
 sub transfer {
@@ -363,6 +362,7 @@ sub transfer {
   $param{sg_path} = '/home/username/public_html/commentsubscribe/subscriptions.inc';
   my $error = 0;
   my $msg = '';
+  my $x = 0;
   if ($convert) { 
     if ($mode eq 'ezstc') {
       require MT::PluginData;
@@ -405,6 +405,7 @@ sub transfer {
             }
           }
         }
+        $x++;
       }
       $msg = 'Your conversion request completed successfully.';
     } elsif ($mode eq 'mt') {
@@ -412,6 +413,7 @@ sub transfer {
       foreach my $data (MT::Notification->load()) {
         next unless ($data && $data->blog_id && $data->email);
         $app->subs('add', 'seo', $data->blog_id.':0', $data->email);
+        $x++;
       }
       $msg = 'Your conversion request completed successfully.';
     } elsif ($mode eq 'n1x') {
@@ -446,6 +448,7 @@ sub transfer {
             }
           }
         }
+        $x++;
       }
       $msg = 'Your conversion request completed successfully.';
     } elsif ($mode eq 'sg') {
@@ -457,6 +460,7 @@ sub transfer {
         foreach my $line (@file) {
           my ($email, $entry_id, $entry_title, $entry_path) = split (/\|/, $line);
           $app->subs('add', 'sub', '0:'.$entry_id, $email);
+          $x++;
         }
         $msg = 'Your conversion request completed successfully.';
       } else {
@@ -465,8 +469,20 @@ sub transfer {
     } else {
       $error = 7;   # invalid mode
     }
+    unless ($error) {
+    my $type;
+      $type = 'EZ Subscribe to Comments ' if ($mode eq 'ezstc');
+      $type = 'Movable Type ' if ($mode eq 'mt');
+      $type = 'MT-Notifier ' if ($mode eq 'n1x');
+      $type = 'Scripty Goddess ' if ($mode eq 'sg');
+      my $text = "<strong>$type</strong>";
+      $param{notifier_message} =
+        $app->translate('The [_1]conversion request processed [_2] records.',
+          $text,
+          $x
+        );
+    }
   }
-  $param{notifier_message} = $app->translate($msg) unless $error;
   $param{notifier_message} = status_message($app, $error) if $error;
   $app->build_page('notifier.tmpl', \%param);
 }
@@ -1056,6 +1072,7 @@ sub manage_address {
     $param{manage_user} = 1;
     $param{mail} = $mail;
   }
+  $param{method} = $app->{query}->param('method');
   $param{notifier_message} = status_message($app, $error);
   $app->build_page('notifier.tmpl', \%param);
 }
@@ -1344,7 +1361,7 @@ sub save_record {
 sub subs {
   my $app = shift;
   my $status = $app->do_subs(@_);
-  $app->write_log_entry(@_, $status);
+  $app->write_log_subscribe(@_, $status);
   $status;
 }
 
@@ -1404,7 +1421,19 @@ sub test_data_key {
   1;
 }
 
-sub write_log_entry {
+sub write_log_notify {
+  my $app = shift;
+  my ($entry, $users) = @_;
+  my $s = $users != 1 ? 's' : '';
+  my $msg = $app->translate("$users notification$s sent for ");
+  my ($name, $desc, $link) = $app->read_sub('0:'.$entry);
+  $msg .= "<a href=\"$FILEURL?__mode=mgr&amp;method=$desc&amp;dkey=0:$entry\">";
+  $msg .= "$name</a>.";
+  $app->log($msg);
+  1;
+}
+
+sub write_log_subscribe {
   my $app = shift;
   my ($action, $method, $key, $mail, $status) = @_;
   my $msg;

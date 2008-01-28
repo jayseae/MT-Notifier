@@ -172,7 +172,7 @@
   <input type="hidden" name="__mode" value="mgr">
   <TMPL_IF NAME=ADDRESS_COUNT>
     <p><MT_TRANS phrase="In order to manage subscriptions by email address, simply click the radio button below and select the address from the drop-down list that will be enabled after clicking.  Selecting an entry from the list will automatically take you to the next screen, where you can manage subscriptions for that address.  If you choose the wrong item, simply use your browser's back function to return to this screen and select a different user."></p>
-    <p style="text-indent: 40px;"><input id="methodbya" name="method" onclick="hide_and_seek()" style="vertical-align: -10%;" type="radio" /> <label for="methodbya" style="font-weight: bold;"><MT_TRANS phrase="Addresses"></label></p>
+    <p style="text-indent: 40px;"><input id="methodbya" name="method" onclick="hide_and_seek()" style="vertical-align: -10%;" type="radio" value="address" /> <label for="methodbya" style="font-weight: bold;"><MT_TRANS phrase="Addresses"></label></p>
     <p style="text-indent: 40px;">
       <select id="akey" name="akey" onchange="this.form.submit()">
         <TMPL_LOOP NAME=ADDRESS_LOOP>
@@ -298,7 +298,7 @@
             </tr>
             <TMPL_LOOP NAME=OPT_LOOP>
               <tr>
-                <td><TMPL_IF NAME=AUTHOR_ID><a href="<TMPL_VAR NAME=NOTIFIER_SCRIPT_URL>?__mode=mgr&amp;<TMPL_IF NAME=SUB_METHOD>method=<TMPL_VAR NAME=SUB_METHOD>&amp;</TMPL_IF><TMPL_IF NAME=BY_ADDRESS>dkey<TMPL_ELSE>akey</TMPL_IF>=<TMPL_VAR NAME=SUB_KEY>" style="text-decoration: none;" title="<MT_TRANS phrase="Manage subscriptions for"> <TMPL_VAR NAME=SUB_NAME>"><TMPL_VAR NAME=SUB_NAME></a><TMPL_ELSE><span style="font-weight: bold;"><TMPL_VAR NAME=SUB_NAME></span></TMPL_IF><TMPL_IF NAME=SUB_DESC> (<TMPL_VAR NAME=SUB_DESC>)</TMPL_IF></td>
+                <td><TMPL_IF NAME=AUTHOR_ID><a href="<TMPL_VAR NAME=NOTIFIER_SCRIPT_URL>?__mode=mgr&amp;method=<TMPL_IF NAME=SUB_METHOD><TMPL_VAR NAME=SUB_METHOD><TMPL_ELSE>address</TMPL_IF>&amp;<TMPL_IF NAME=BY_ADDRESS>dkey<TMPL_ELSE>akey</TMPL_IF>=<TMPL_VAR NAME=SUB_KEY>" style="text-decoration: none;" title="<MT_TRANS phrase="Manage subscriptions for"> <TMPL_VAR NAME=SUB_NAME>"><TMPL_VAR NAME=SUB_NAME></a><TMPL_ELSE><span style="font-weight: bold;"><TMPL_VAR NAME=SUB_NAME></span></TMPL_IF><TMPL_IF NAME=SUB_DESC> (<TMPL_VAR NAME=SUB_DESC>)</TMPL_IF></td>
                 <td align="center">
                   <TMPL_IF NAME=BY_ADDRESS><a href="<TMPL_VAR NAME=NOTIFIER_SCRIPT_URL>?<TMPL_IF NAME=AUTHOR_ID>__mode=mgr&amp;</TMPL_IF>akey=<TMPL_VAR NAME=MAIL>:<TMPL_VAR NAME=CODE>&amp;off=<TMPL_VAR NAME=SUB_KEY>~opt"<TMPL_ELSE><a href="<TMPL_VAR NAME=NOTIFIER_SCRIPT_URL>?__mode=mgr&amp;method=<TMPL_VAR NAME=METHOD>&amp;akey=<TMPL_VAR NAME=SUB_KEY>&amp;off=<TMPL_VAR NAME=DKEY>~opt"</TMPL_IF> style="text-decoration: none;" title="<TMPL_IF NAME=BY_ADDRESS><MT_TRANS phrase="Remove the opt-out record for"> <TMPL_VAR NAME=SUB_NAME><TMPL_ELSE><MT_TRANS phrase="Remove the"> <TMPL_VAR NAME=SUB_NAME> <MT_TRANS phrase="opt-out record for"> <TMPL_IF NAME=BY_BLOG><TMPL_VAR NAME=BLOG_NAME><TMPL_ELSE><TMPL_IF NAME=BY_CATEGORY><TMPL_VAR NAME=CATEGORY_LABEL><TMPL_ELSE><TMPL_IF NAME=BY_ENTRY><TMPL_VAR NAME=ENTRY_TITLE></TMPL_IF></TMPL_IF></TMPL_IF></TMPL_IF>"><MT_TRANS phrase="Remove"></a>
                   <TMPL_IF NAME=SUB_LINK>&middot; <a href="<TMPL_VAR NAME=SUB_LINK>" onClick="window.open('<TMPL_VAR NAME=SUB_LINK>');return false" style="text-decoration: none;" title="<MT_TRANS phrase="Display the contents of"> <TMPL_VAR NAME=SUB_NAME>"><MT_TRANS phrase="Review"></a></TMPL_IF>
@@ -325,7 +325,7 @@
             </tr>
             <TMPL_LOOP NAME=SUB_LOOP>
               <tr>
-                <td><TMPL_IF NAME=AUTHOR_ID><a href="<TMPL_VAR NAME=NOTIFIER_SCRIPT_URL>?__mode=mgr&amp;<TMPL_IF NAME=SUB_METHOD>method=<TMPL_VAR NAME=SUB_METHOD>&amp;</TMPL_IF><TMPL_IF NAME=BY_ADDRESS>dkey<TMPL_ELSE>akey</TMPL_IF>=<TMPL_VAR NAME=SUB_KEY>" style="text-decoration: none;" title="<MT_TRANS phrase="Manage subscriptions for"> <TMPL_VAR NAME=SUB_NAME>"><TMPL_VAR NAME=SUB_NAME></a><TMPL_ELSE><span style="font-weight: bold;"><TMPL_VAR NAME=SUB_NAME></span></TMPL_IF><TMPL_IF NAME=SUB_DESC> (<TMPL_VAR NAME=SUB_DESC>)</TMPL_IF></td>
+                <td><TMPL_IF NAME=AUTHOR_ID><a href="<TMPL_VAR NAME=NOTIFIER_SCRIPT_URL>?__mode=mgr&amp;method=<TMPL_IF NAME=SUB_METHOD><TMPL_VAR NAME=SUB_METHOD><TMPL_ELSE>address</TMPL_IF>&amp;<TMPL_IF NAME=BY_ADDRESS>dkey<TMPL_ELSE>akey</TMPL_IF>=<TMPL_VAR NAME=SUB_KEY>" style="text-decoration: none;" title="<MT_TRANS phrase="Manage subscriptions for"> <TMPL_VAR NAME=SUB_NAME>"><TMPL_VAR NAME=SUB_NAME></a><TMPL_ELSE><span style="font-weight: bold;"><TMPL_VAR NAME=SUB_NAME></span></TMPL_IF><TMPL_IF NAME=SUB_DESC> (<TMPL_VAR NAME=SUB_DESC>)</TMPL_IF></td>
                 <td align="center">
                   <TMPL_IF NAME=BY_ADDRESS>
                     <TMPL_IF NAME=SUB_ENTRY>
