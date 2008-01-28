@@ -2,8 +2,8 @@
 # MT-Notifier: Configure subscriptions to your blog.
 # A Plugin for Movable Type
 #
-# Release 2.3.5.2
-# January 4, 2005
+# Release '2.4.0'
+# January 5, 2005
 #
 # http://jayseae.cxliv.org/notifier/
 # http://www.amazon.com/o/registry/2Y29QET3Y472A/
@@ -27,7 +27,7 @@ use vars qw(@ISA $FILESET $FILEURL $VERSION);
 @ISA = qw(MT::App::CMS);
 $FILESET = 'n2x';
 $FILEURL = 'mt-notifier.cgi';
-$VERSION = '2.3.5.2';
+$VERSION = '2.4.0';
 
 sub uri {
   $_[0]->path . ($_[0]->{author} ? MT::ConfigMgr->instance->AdminScript : $_[0]->script);
@@ -364,41 +364,7 @@ sub transfer {
   my $error = 0;
   my $msg = '';
   if ($convert) { 
-    if ($mode eq 'n1x') {
-      require MT::PluginData;
-      foreach my $data (MT::PluginData->load({ plugin => 'Notifier' })) {
-        my $data_key = $data->key;
-        my $n1x_rec = $app->read_record('n1x', 'data', $data_key);
-        if ($data_key =~ /^([0-9]+):0$/) {
-          if ($app->test_data_key($data_key)) {
-            # (0:0) Site or (X:0) Blog
-            if ($n1x_rec->{from}) {
-              my $data_rec = $app->read_record($FILESET, 'data', $data_key);
-              $data_rec->{from} = $n1x_rec->{from};
-              $app->save_record('data', $data_key, $data_rec);
-            }
-            if ($n1x_rec->{subs}) {
-              foreach my $sub (split(';', $n1x_rec->{subs})) {
-                my ($mail_key) = split(':', $sub);
-                $app->subs('add', 'opt', $data_key, $mail_key);
-              }
-            }
-          }
-        } elsif ($data_key =~ /^([0-9]+):([0-9]+)$/) {
-          # (X:Y) Entry
-          $data_key = '0:'.$2;
-          if ($app->test_data_key($data_key)) {
-            if ($n1x_rec->{subs}) {
-              foreach my $sub (split(';', $n1x_rec->{subs})) {
-                my ($mail_key) = split(':', $sub);
-                $app->subs('add', 'sub', $data_key, $mail_key);
-              }
-            }
-          }
-        }
-      }
-      $msg = 'Your conversion request completed successfully.';
-    } elsif ($mode eq 'ezstc') {
+    if ($mode eq 'ezstc') {
       require MT::PluginData;
       foreach my $data (MT::PluginData->load({ plugin => 'subtocomm' })) {
         if ($data->key eq '0&0') {
@@ -435,6 +401,47 @@ sub transfer {
                 } elsif ($rec->{subscribe} eq 'unsubscribe') {
                   $app->subs('add', 'opt', $data_key, $rec->{email});
                 }
+              }
+            }
+          }
+        }
+      }
+      $msg = 'Your conversion request completed successfully.';
+    } elsif ($mode eq 'mt') {
+      require MT::Notification;
+      foreach my $data (MT::Notification->load()) {
+        next unless ($data && $data->blog_id && $data->email);
+        $app->subs('add', 'seo', $data->blog_id.':0', $data->email);
+      }
+      $msg = 'Your conversion request completed successfully.';
+    } elsif ($mode eq 'n1x') {
+      require MT::PluginData;
+      foreach my $data (MT::PluginData->load({ plugin => 'Notifier' })) {
+        my $data_key = $data->key;
+        my $n1x_rec = $app->read_record('n1x', 'data', $data_key);
+        if ($data_key =~ /^([0-9]+):0$/) {
+          if ($app->test_data_key($data_key)) {
+            # (0:0) Site or (X:0) Blog
+            if ($n1x_rec->{from}) {
+              my $data_rec = $app->read_record($FILESET, 'data', $data_key);
+              $data_rec->{from} = $n1x_rec->{from};
+              $app->save_record('data', $data_key, $data_rec);
+            }
+            if ($n1x_rec->{subs}) {
+              foreach my $sub (split(';', $n1x_rec->{subs})) {
+                my ($mail_key) = split(':', $sub);
+                $app->subs('add', 'opt', $data_key, $mail_key);
+              }
+            }
+          }
+        } elsif ($data_key =~ /^([0-9]+):([0-9]+)$/) {
+          # (X:Y) Entry
+          $data_key = '0:'.$2;
+          if ($app->test_data_key($data_key)) {
+            if ($n1x_rec->{subs}) {
+              foreach my $sub (split(';', $n1x_rec->{subs})) {
+                my ($mail_key) = split(':', $sub);
+                $app->subs('add', 'sub', $data_key, $mail_key);
               }
             }
           }
@@ -1430,21 +1437,21 @@ sub build_page {
   $param->{notifier_script_url} = $app->path.$app->script;
   $param->{notifier_script_version} = $VERSION;
   if (my $auth = $app->{author}) {
-    $app->{breadcrumbs} = [ { bc_name => 'Notifier', bc_uri => '?__mode=mnu' } ];
+    $app->{breadcrumbs} = [ { bc_name => 'MT-Notifier', bc_uri => '?__mode=mnu' } ];
     if ($param->{manage_items}) {
-      $app->add_breadcrumb('Manage MT-Notifier', '?__mode=mgr');
+      $app->add_breadcrumb('Manage', '?__mode=mgr');
       $app->add_breadcrumb('By Address') if $param->{by_address};
       $app->add_breadcrumb('By Blog') if $param->{by_blog};
       $app->add_breadcrumb('By Category') if $param->{by_category};
       $app->add_breadcrumb('By Entry') if $param->{by_entry};
     } elsif ($param->{func_enabler}) {
-      $app->add_breadcrumb('Configure MT-Notifier');
+      $app->add_breadcrumb('Configure');
     } elsif ($param->{func_install}) {
       my $blogs = $app->loop_blogs;
       $param->{blog_loop} = \@$blogs;
-      $app->add_breadcrumb('Install MT-Notifier');
+      $app->add_breadcrumb('Install');
     } elsif ($param->{func_transfer}) {
-      $app->add_breadcrumb('Transfer to MT-Notifier');
+      $app->add_breadcrumb('Transfer');
     } elsif (!$param->{func_default}) {
       my $blogs = $app->loop_blogs('subs');
       $param->{blog_loop} = \@$blogs;
@@ -1456,12 +1463,12 @@ sub build_page {
       $param->{entry_loop} = \@$entries;
       $param->{entry_count} = scalar @$entries;
       if ($param->{func_deleter}) {
-        $app->add_breadcrumb('Purge MT-Notifier');
+        $app->add_breadcrumb('Purge');
       } elsif ($param->{func_manager}) {
         my $addresses = $app->loop_addresses;
         $param->{address_loop} = \@$addresses;
         $param->{address_count} = scalar @$addresses;
-        $app->add_breadcrumb('Manage MT-Notifier');
+        $app->add_breadcrumb('Manage');
       }
     }
   } else {
