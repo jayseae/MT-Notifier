@@ -2,10 +2,10 @@
 # MT-Notifier: Configure subscriptions to your blog.
 # A Plugin for Movable Type
 #
-# Release 2.0.1
-# July 6, 2004
+# Release 2.2.2
+# September 3, 2004
 #
-# http://www.cxliv.org/jayseae/notifier/
+# http://jayseae.cxliv.org/notifier/
 # http://www.amazon.com/o/registry/2Y29QET3Y472A/
 #
 # Copyright 2003-2004, Chad Everett (software@cxliv.org)
@@ -26,7 +26,7 @@ use MT::Util qw(archive_file_for format_ts);
 use vars qw(@ISA $FILESET $VERSION);
 @ISA = qw(MT::App::CMS);
 $FILESET = 'n2x';
-$VERSION = '2.0.1';
+$VERSION = '2.2.2';
 
 sub uri {
   $_[0]->path . ($_[0]->{author} ? MT::ConfigMgr->instance->AdminScript : $_[0]->script);
@@ -323,7 +323,7 @@ sub transfer {
           }
         } elsif ($data_key =~ /^([0-9]+):([0-9]+)$/) {
           # (X:Y) Entry
-          my $data_key = '0:'.$2;
+          $data_key = '0:'.$2;
           if ($app->test_data_key($data_key)) {
             if ($n1x_rec->{subs}) {
               foreach my $sub (split(';', $n1x_rec->{subs})) {
@@ -333,26 +333,51 @@ sub transfer {
             }
           }
         }
-        $data->remove;
       }
       $msg = 'Your conversion request completed successfully.';
-#    } elsif ($mode eq 'ezstc') {
-#      # currently only converts default 'from' addresses
-#      require MT::PluginData;
-#      foreach my $data (MT::PluginData->load({ plugin => 'subtocomm' })) {
-#        if ($data->key eq '0&0') {
-#          my $d = $data->data;
-#          my @custom = @$d;
-#          for (my $i = 5; $i < scalar @custom; $i++) {
-#            my $blogdata = $custom[$i];
-#            my $data_key = $blogdata->{blog_id}.':0';
-#            my $data_rec = $app->read_record($FILESET, 'data', $data_key);
-#            ($data_rec->{from}) = $blogdata->{mail}->{from};
-#            $app->save_record('data', $data_key, $data_rec);
-#          }
-#        }
-#      }
-#      $msg = 'Your conversion request completed successfully.';
+    } elsif ($mode eq 'ezstc') {
+      require MT::PluginData;
+      foreach my $data (MT::PluginData->load({ plugin => 'subtocomm' })) {
+        if ($data->key eq '0&0') {
+          # (0&0) Site
+          my $d = $data->data;
+          my @custom = @$d;
+          for (my $i = 5; $i < scalar @custom; $i++) {
+            my $blogdata = $custom[$i];
+            my $data_key = $blogdata->{blog_id}.':0';
+            my $data_rec = $app->read_record($FILESET, 'data', $data_key);
+            ($data_rec->{from}) = $blogdata->{mail}->{from};
+            $app->save_record('data', $data_key, $data_rec);
+          }
+        } elsif ($data->key =~ /^([0-9]+)&0$/) {
+          # (X&0) Blog
+          my $data_key = $1.':0';
+          my $data_rec = $data->data;           
+          if ($data_rec) {
+            my @subs = @$data_rec;
+            foreach my $rec (@subs) {
+              $app->subs('add', 'opt', $data_key, $rec->{email});
+            }
+          }
+        } elsif ($data->key =~ /^([0-9]+)&([0-9]+)$/) {
+          # (X&Y) Entry
+          my $data_key = '0:'.$2;
+          my $data_rec = $data->data;           
+          if ($data_rec) {
+            my @subs = @$data_rec;
+            foreach my $rec (@subs) {
+              if ($rec->{subscribe}) {
+                if ($rec->{subscribe} eq 'subscribe') {
+                  $app->subs('add', 'sub', $data_key, $rec->{email});
+                } elsif ($rec->{subscribe} eq 'unsubscribe') {
+                  $app->subs('add', 'opt', $data_key, $rec->{email});
+                }
+              }
+            }
+          }
+        }
+      }
+      $msg = 'Your conversion request completed successfully.';
     } elsif ($mode eq 'sg') {
       $param{sg_path} = $app->{query}->param('path') || '';
       if (-f $param{sg_path}) {
@@ -791,9 +816,8 @@ sub manage_address {
       $error = 10;
     }
   } elsif ($param{dkey} = $app->{query}->param('dkey')) {
+    $mail = $app->{query}->param('mail');
     $error = $app->subs('add', 'sub', $param{dkey}, $mail);
-    $param{mail} = $mail;
-    $param{manage_user} = 1;
     unless ($error) {
       my ($name, $type, $link) = $app->read_sub($param{dkey});
       $param{sub_link} = $link;
@@ -802,6 +826,8 @@ sub manage_address {
     } else {
       $param{error} = 1;
     }
+    $param{manage_user} = 1;
+    $param{mail} = $mail;
   }
   $param{notifier_message} = status_message($app, $error);
   $app->build_page('notifier.tmpl', \%param);

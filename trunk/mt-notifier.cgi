@@ -4,10 +4,10 @@
 # MT-Notifier: Configure subscriptions to your blog.
 # A Plugin for Movable Type
 #
-# Release 2.0.1
-# July 6, 2004
+# Release 2.2.2
+# September 3, 2004
 #
-# http://www.cxliv.org/jayseae/notifier/
+# http://jayseae.cxliv.org/notifier/
 # http://www.amazon.com/o/registry/2Y29QET3Y472A/
 #
 # Copyright 2003-2004, Chad Everett (software@cxliv.org)

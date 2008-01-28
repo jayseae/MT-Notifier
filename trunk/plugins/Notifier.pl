@@ -2,10 +2,10 @@
 # MT-Notifier: Configure subscriptions to your blog.
 # A Plugin for Movable Type
 #
-# Release 2.0.1
-# July 6, 2004
+# Release 2.2.2
+# September 3, 2004
 #
-# http://www.cxliv.org/jayseae/notifier/
+# http://jayseae.cxliv.org/notifier/
 # http://www.amazon.com/o/registry/2Y29QET3Y472A/
 #
 # Copyright 2003-2004, Chad Everett (software@cxliv.org)
@@ -23,13 +23,13 @@ use MT;
 use MT::Plugin;
 
 use vars qw($VERSION);
-$VERSION = '2.0.1';
+$VERSION = '2.2.2';
 
 my $about = {
   name => 'MT-Notifier',
   config_link => '../mt-notifier.cgi?__mode=mnu',
   description => 'Subscription options for your installation.',
-  doc_link => 'http://www.cxliv.org/jayseae/notifier/'
+  doc_link => 'http://jayseae.cxliv.org/notifier/'
 }; 
 
 MT->add_plugin(new MT::Plugin($about));
