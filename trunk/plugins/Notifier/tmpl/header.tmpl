@@ -1,0 +1,29 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=<TMPL_VAR NAME=LANGUAGE_ENCODING>" />
+<title><TMPL_LOOP NAME=PAGE_TITLES><TMPL_VAR NAME=BC_NAME ESCAPE=HTML></TMPL_LOOP></title>
+<link rel="stylesheet" href="<TMPL_VAR NAME=STATIC_URI>styles.css" type="text/css" />
+</head>
+
+<body id="mode_<TMPL_VAR NAME=MODE>">
+
+<div id="topnav">
+<div id="topnav-container">
+<div id="topnav-img"><h1><img alt="Movable Type" src="<TMPL_VAR NAME=STATIC_URI>images/topnav-logo.gif" width="224" height="66" border="0" /></h1></div>
+</div>
+</div>
+
+<div class="body-wrap">
+<div class="body">
+<h2 id="breadcrumbs">
+<TMPL_IF NAME=LINK_NAME>
+<TMPL_IF NAME=LINK_URL>
+<span class="sitecrumb"><a href="<TMPL_VAR NAME=LINK_URL>"><MT_TRANS phrase="View"> &quot;<TMPL_VAR NAME=LINK_NAME>&quot;</a> &#187;</span>
+<TMPL_ELSE>
+<span class="sitecrumb">&quot;<TMPL_VAR NAME=LINK_NAME>&quot;</a></span>
+</TMPL_IF>
+</TMPL_IF>
+<TMPL_VAR NAME=PAGE_TITLE>
+</h2>

@@ -24,7 +24,6 @@ my $about = {
   blog_config_template => sub { $notifier->load_tmpl('settings_blog.tmpl') },
   system_config_template => sub { $notifier->load_tmpl('settings_system.tmpl') },
   settings => new MT::PluginSettings([
-    ['system_address_type', { Default => 0 }],
     ['system_address'],
     ['system_confirm', { Default => 1 }],
     ['blog_address_type', { Default => 1 }],

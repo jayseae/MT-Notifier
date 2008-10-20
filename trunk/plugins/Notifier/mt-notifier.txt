@@ -4,8 +4,8 @@ Copyright 2003-2005, Everitz Consulting (mt@everitz.com)
 Licensed under the Open Software License version 2.1
 *** --------------------------------------------------------------------- ***
 
-Release '3.0.0'
-August 25, 2005
+Release '3.1.0'
+August 31, 2005
 
 http://www.everitz.com/
 
@@ -195,6 +195,12 @@ well - just upload that to your PHP "plugins" directory to be able to use it.
 *** --------------------------------------------------------------------- ***
 
 Changelog:
+3.1.0
+  - Updated settings screen templates for clearer documentation of functions.
+  - Added header.tmpl to plugin to provide better confirmation data.
+  - Reworked request logic to handle blog configurations correctly.
+  - Fixed blog link in subscription confirmation.
+  - August 31, 2005.
 3.0.4
   - Added confirmation message to subscription screen.
   - Fixed subscription counts.

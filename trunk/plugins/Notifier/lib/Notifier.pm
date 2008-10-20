@@ -25,7 +25,7 @@ use constant BULK    => 1;
 
 # version
 use vars qw($VERSION);
-$VERSION = '3.0.4';
+$VERSION = '3.1.0';
 
 sub init {
   my $app = shift;
@@ -64,7 +64,6 @@ sub notifier_import {
           my $blog_id = $1;
           my $scope = 'blog:'.$blog_id if ($blog_id);
           if (my $from = $data->data->{'senderaddress'}) {
-            $notifier->set_config_value('system_address_type', 1, $scope);
             $notifier->set_config_value('system_address', $from, $scope);
           }
           next unless ($blog_id);
@@ -94,7 +93,6 @@ sub notifier_import {
           my $blog_id = $1;
           my $scope = 'blog:'.$blog_id if ($blog_id);
           if (my $from = $data->data->{'from'}) {
-            $notifier->set_config_value('system_address_type', 1, $scope);
             $notifier->set_config_value('system_address', $from, $scope);
           }
           next unless ($blog_id);
@@ -134,12 +132,10 @@ sub notifier_import {
   } else {
     $message = $app->translate('You are not authorized to run this process!');
   }
-  $app->{breadcrumbs} = [ {
-     bc_name => 'MT-Notifier > '.$app->translate('Data Import')
-  } ];
   $app->build_page($notifier->load_tmpl('notification_request.tmpl'), {
     message => $message,
-    notifier_version => version_number()
+    notifier_version => version_number(),
+    page_title => 'MT-Notifier '.$app->translate('Import Processing')
   });
 }
 
@@ -165,17 +161,15 @@ sub notifier_loader {
         next unless $stmt =~ /\S/;
         $dbh->do($stmt) or die $dbh->errstr;
       }
-      $message = $app->translate('Your system is installed and ready to use!');
+      $message = 'Your system is installed and ready to use!';
     }
   } else {
-    $message = $app->translate('You are not authorized to run this process!');
+    $message = 'You are not authorized to run this process!';
   }
-  $app->{breadcrumbs} = [ {
-     bc_name => 'MT-Notifier > '.$app->translate('Initial System Load')
-  } ];
   $app->build_page($notifier->load_tmpl('notification_request.tmpl'), {
-    message => $message,
-    notifier_version => version_number()
+    message => $app->translate($message),
+    notifier_version => version_number(),
+    page_title => 'MT-Notifier '.$app->translate('System Loader')
   });
 }
 
@@ -183,98 +177,137 @@ sub notifier_request {
   my $notifier = MT::Plugin::Notifier->instance;
   my $app = shift;
   my $cipher = $app->{query}->param('c');
-  my $email = $app->{query}->param('email');
   my $o = $app->{query}->param('o');                  # opt-out flag
   my $u = $app->{query}->param('u');                  # unsubscribe
-  my $redirect = $app->{query}->param('redirection'); # redirection
-  my $blog_id = $app->{query}->param('blog_id');
-  my $category_id = $app->{query}->param('category_id');
-  my $entry_id = $app->{query}->param('entry_id');
-  my ($confirm, $data, $message);
+  my ($email, $blog_id, $category_id, $entry_id);
+  my ($confirm, $data, $message, $name, $url);
   if ($cipher) {
     use Notifier::Data;
     $data = Notifier::Data->load({ cipher => $cipher });
     if ($data) {
       if ($o) {
-        my $blog_id = $data->blog_id;
-        my $category_id = $data->category_id;
-        my $entry_id = $data->entry_id;
-        my $email = $data->email;
+        $blog_id = $data->blog_id;
+        $category_id = $data->category_id;
+        $entry_id = $data->entry_id;
+        $email = $data->email;
         my $record = OPT;
         if ($entry_id) {
           use MT::Entry;
           my $entry = MT::Entry->load($entry_id);
           if ($entry) {
             $blog_id = $entry->blog_id;
+            $name = $entry->title;
+            $url = $entry->permalink;
           } else {
-            $message =
-              $app->translate('No entry was found to match that subscription record!');
+            $message = 'No entry was found to match that subscription record!';
           }
         } elsif ($category_id) {
+          use MT::Category;
           my $category = MT::Category->load($category_id);
           if ($category) {
             $blog_id = $category->blog_id;
+            $name = $category->label;
+            use MT::Blog;
+            use MT::Util;
+            my $blog = MT::Blog->load($category->blog_id);
+            if ($blog) {
+              $url = $blog->archive_url;
+              $url .= '/' unless $url =~ m/\/$/;
+              $url .= MT::Util::archive_file_for ('',  $blog, 'Category', $category);
+            }
           } else {
-            $message =
-              $app->translate('No category was found to match that subscription record!');
+            $message = 'No category was found to match that subscription record!';
+          }
+        } elsif ($blog_id) {
+          use MT::Blog;
+          my $blog = MT::Blog->load($blog_id);
+          if ($blog) {
+            $blog_id = $blog->id;
+            $name = $blog->name;
+            $url = $blog->site_url;
+          } else {
+            $message = 'No blog was found to match that subscription record!';
           }
         }
         $category_id = 0;
         $entry_id = 0;
         create_subscription($email, $record, $blog_id, $category_id, $entry_id);
-        $message = $app->translate('Your opt-out record has been created!')
+        $message = 'Your opt-out record has been created!';
       } elsif ($u) {
         $data->remove;
-        $message = $app->translate('Your subscription has been cancelled!')
+        $message = 'Your subscription has been cancelled!';
       }
     } else {
-      $message = $app->translate('No subscription record was found to match that locator!');
+      $message = 'No subscription record was found to match that locator!';
     }
     unless ($message) {
-      $message = $app->translate('Your request has been processed successfully!');
+      $message = 'Your request has been processed successfully!';
       $data->status(RUNNING);
       $data->save;
     }
   } else {
-    if ($email) {
+    if ($email = $app->{query}->param('email')) {
+      $blog_id = $app->{query}->param('blog_id');
+      $category_id = $app->{query}->param('category_id');
+      $entry_id = $app->{query}->param('entry_id');
       if ($blog_id || $category_id || $entry_id) {
         if ($entry_id) {
-          $blog_id = 0;
-          $category_id = 0;
+          use MT::Entry;
+          my $entry = MT::Entry->load($entry_id);
+          if ($entry) {
+            $blog_id = $entry->blog_id;
+            $name = $entry->title;
+            $url = $entry->permalink;
+          }
         } elsif ($category_id) {
-          $blog_id = 0;
-          $entry_id = 0;
+          use MT::Category;
+          my $category = MT::Category->load($category_id);
+          if ($category) {
+            $blog_id = $category->blog_id;
+            $name = $category->label;
+            use MT::Blog;
+            my $blog = MT::Blog->load($category->blog_id);
+            if ($blog) {
+              $url = $blog->archive_url;
+              $url .= '/' unless $url =~ m/\/$/;
+              $url .= MT::Util::archive_file_for ('',  $blog, 'Category', $category);
+            }
+          }
         } elsif ($blog_id) {
-          $category_id = 0;
-          $entry_id = 0;
+          use MT::Blog;
+          my $blog = MT::Blog->load($blog_id);
+          if ($blog) {
+            $name = $blog->name;
+            $url = $blog->site_url;
+          }
         }
         my $error = create_subscription($email, SUB, $blog_id, $category_id, $entry_id);
         if ($error == 1) {
-          $message = $app->translate('The specified email address is not valid!');
+          $message = 'The specified email address is not valid!';
         } elsif ($error == 2) {
-          $message = $app->translate('The requested record key is not valid!');
+          $message = 'The requested record key is not valid!';
+        } elsif ($error == 3) {
+          $message = 'That record already exists!';
         } else {
-          $message = $app->translate('Your request has been processed successfully!');
           my $config = $notifier->get_config_hash();
           my $blog_config = $notifier->get_config_hash('blog:'.$blog_id);
           $confirm = 1 if ($config->{'system_confirm'} && $blog_config->{'blog_confirm'});
+          $message = 'Your request has been processed successfully!';
         }
-
       } else {
-        $message = $app->translate('Your request did not include a record key!');
+        $message = 'Your request did not include a record key!';
       }
     } else {
-      $message = $app->translate('Your request must include an email address!');
+      $message = 'Your request must include an email address!';
     }
   }
-  $app->{breadcrumbs} = [ {
-     bc_name => 'MT-Notifier > '.$app->translate('Subscription Request Processing')
-  } ];
   $app->build_page($notifier->load_tmpl('notification_request.tmpl'), {
     confirm => $confirm,
-    message => $message,
+    link_name => $name,
+    link_url => $url,
+    message => $app->translate($message),
     notifier_version => version_number(),
-    redirect => $redirect
+    page_title => 'MT-Notifier '.$app->translate('Request Processing')
   });
 }
 
@@ -293,18 +326,22 @@ sub create_subscription {
     return 1;
   }
   return unless ($record eq OPT || $record eq SUB);
-  if ($blog_id) {
-    $blog = MT::Blog->load($blog_id) or return 2;
-  }
-  if ($category_id) {
-    use MT::Category;
-    my $category = MT::Category->load($category_id) or return 2;
-    $blog = MT::Blog->load($category->blog_id) or return 2;
-  }
   if ($entry_id) {
     use MT::Entry;
     my $entry = MT::Entry->load($entry_id) or return 2;
     $blog = MT::Blog->load($entry->blog_id) or return 2;
+    $blog_id = 0;
+    $category_id = 0;
+  } elsif ($category_id) {
+    use MT::Category;
+    my $category = MT::Category->load($category_id) or return 2;
+    $blog = MT::Blog->load($category->blog_id) or return 2;
+    $blog_id = 0;
+    $entry_id = 0;
+  } elsif ($blog_id) {
+    $blog = MT::Blog->load($blog_id) or return 2;
+    $category_id = 0;
+    $entry_id = 0;
   }
   my $data = Notifier::Data->load({
     blog_id => $blog_id,
@@ -313,7 +350,9 @@ sub create_subscription {
     email => $email,
     record => $record
   });
-  unless ($data) {
+  if ($data) {
+    return 3;
+  } else {
     $data = Notifier::Data->new;
     $data->blog_id($blog_id);
     $data->category_id($category_id);
@@ -410,7 +449,7 @@ sub data_confirmation {
       $app->translate("Please confirm your request to $record_text \'[_1]\'", $blog->name);
     $head{'Subject-Running'} =
       $app->translate("You have subscribed to $record_text \'[_1]\'", $blog->name);
-    $param{'record_link'} = $blog->archive_url;
+    $param{'record_link'} = $blog->site_url;
     $param{'record_name'} = MT::Util::remove_html($blog->name);
   }
   $param{'status'} = $data->status;
@@ -476,15 +515,18 @@ sub load_sender_address {
   my ($obj, $author) = @_;
   my $sender_address = $author->email if ($author);
   my $config = $notifier->get_config_hash();
-  if ($config && $config->{'system_address_type'}) {
+  if ($config) {
     $sender_address = $config->{'system_address'};
+  } else {
+    $app->log($app->translate('No system address - please configure one!'));
   }
   my $blog = load_blog($obj);
   unless ($blog) {
     $app->log($app->translate('Specified blog unavailable - please check your data!'));
     return $sender_address;
   }
-  my $blog_config = $notifier->get_config_hash('blog:'.$blog->id);  if ($blog_config) {
+  my $blog_config = $notifier->get_config_hash('blog:'.$blog->id);
+  if ($blog_config) {
     if ($blog_config->{'blog_address_type'} == 2) {
       $sender_address = $author->email if ($author);
     } elsif ($blog_config->{'blog_address_type'} == 3) {
@@ -511,8 +553,8 @@ sub notify_users {
   my $app = MT->instance;
   my ($obj, $work_subs) = @_;
   my ($entry, $comment, $type);
-  use MT::Entry;
   if (UNIVERSAL::isa($obj, 'MT::Comment')) {
+    use MT::Entry;
     $entry = MT::Entry->load($obj->entry_id) or return;
     $comment = $obj;
     $type = $app->translate('Comment');
@@ -529,6 +571,7 @@ sub notify_users {
       record => OPT,
       status => RUNNING
     });
+  use MT::Placement;
   my @places = MT::Placement->load({
     entry_id => $entry->id
   });

@@ -1,10 +1,3 @@
-<script language="JavaScript">
-  <!--
-    function hide_and_seek () {
-      document.getElementById('system_address').disabled = !document.getElementById('system_address_type').checked;
-    }
-  //-->
-</script>
 <div class="setting">
   <div class="field">
     <p>
@@ -13,13 +6,8 @@
     </p>
     <p>
       <br />
-      <input id="system_address_type" name="system_address_type" type="checkbox" onclick="hide_and_seek()" <TMPL_IF NAME=SYSTEM_ADDRESS_TYPE>checked="checked"</TMPL_IF> /> Override Author Address with This Address when Sending Notifications:<br /><br />
+      Address to use when sending notifications and no other addresses are available:<br /><br />
       <input id="system_address" name="system_address" maxlength="75" size="75" <TMPL_IF NAME=SYSTEM_ADDRESS>value="<TMPL_VAR NAME=SYSTEM_ADDRESS>"</TMPL_IF> />
     </p>
   </div> 
 </div>
-<script language="JavaScript">
-<!--
-  hide_and_seek();
-//-->
-</script>
