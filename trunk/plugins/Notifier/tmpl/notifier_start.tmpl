@@ -1,0 +1,32 @@
+<TMPL_INCLUDE NAME="header.tmpl">
+
+<TMPL_IF NAME=RECORD>
+<h2><MT_TRANS phrase="Add Subscription(s)"></h2>
+
+<p class="page-desc"><MT_TRANS phrase="Enter the email addresses, one per line, that you would like to subscribe to the current selection.  Click the Add Subscription(s) button to process the addresses when your list is complete."></p>
+<TMPL_ELSE>
+<h2><MT_TRANS phrase="Block Notification(s)"></h2>
+
+<p class="page-desc"><MT_TRANS phrase="Enter the email addresses, one per line, that you would like to enter into the system in order to block notifications.  These records are used to prevent notifications from being sent to a specific address, and are used in the event that a particular user no longer wants to receive anything from your site.  Click the Block Notification(s) button to process the addresses when your list is complete."></p>
+</TMPL_IF>
+
+<form method="post" action="<TMPL_VAR NAME=SCRIPT_URL>">
+<input type="hidden" name="__mode" value="add_subscriptions" />
+<input type="hidden" name="_type" value="<TMPL_VAR NAME=TYPE>" />
+<input type="hidden" name="return_args" value="<TMPL_VAR NAME=RETURN_ARGS ESCAPE=HTML>" />
+<input type="hidden" name="record" value="<TMPL_VAR NAME=RECORD>" />
+
+<div class="field">
+<textarea name="addresses" cols="60" rows="15">
+</textarea>
+</div>
+
+<TMPL_LOOP NAME=IDS>
+<input type="hidden" name="id" value="<TMPL_VAR NAME=ID>" />
+</TMPL_LOOP>
+
+<p><input type="submit" value="<TMPL_IF NAME=RECORD><MT_TRANS phrase="Create Notification(s)"><TMPL_ELSE><MT_TRANS phrase="Block Notification(s)"></TMPL_IF>" /></p>
+
+</form>
+
+<TMPL_INCLUDE NAME="footer.tmpl">

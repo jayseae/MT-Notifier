@@ -1,0 +1,321 @@
+*** --------------------------------------------------------------------- ***
+Copyright 2003-2005, Everitz Consulting (mt@everitz.com)
+
+Licensed under the Open Software License version 2.1
+*** --------------------------------------------------------------------- ***
+
+Release '3.0.0'
+August 25, 2005
+
+http://www.everitz.com/
+
+*** --------------------------------------------------------------------- ***
+
+This Movable Type plugin allows you to provide a subscription service to
+your users so that they can keep up on changes to your site without having
+to check back repeatedly to see if anything has changed.
+
+Perhaps most importantly, MT-Notifier offers both double-opt processing, so
+that each request must be confirmed from the given email address, but it also
+includes support for opt-out records, to allow users to indicate that they no
+longer wish to receive any notifications from a particular Movable Type blog.
+
+This version of MT-Notifier requires Movable Type 3.2.
+
+*** --------------------------------------------------------------------- ***
+
+Installation:
+
+The installation of this version is simpler than ever.  Simply upload the
+entire contents of the "Notifier" directory from the distribution archive into
+your "plugins" directory under the main Movable Type directory.
+
+Once you have done this, set the permissions of mt-notifier.cgi to 755.
+
+After this file has execute permission, sign into your installation as a
+superuser and run:
+
+  http://www.example.com/mt/plugins/Notifier/mt-notifier.cgi?__mode=loader
+
+This needs to be run only once, and it will build the necessary table in your
+database so that you may use MT-Notifier with your installation.
+
+Next, visit the system and/or blog settings to make sure you have parameters
+set as you would like for your installation.
+
+*** --------------------------------------------------------------------- ***
+
+Upgrading:
+
+If you use a prior version of MT-Notifier, you can import the records from
+that version.  After running the "loader" function above, run this command:
+
+  http://www.example.com/mt/plugins/Notifier/mt-notifier.cgi?__mode=import
+
+And then add &from=XXX to the end of this URL to indicate the source for your
+import.  XXX can be "mt", "n1x" or "n2x", to import the standard Movable Type
+notifications, or those from MT-Notifier v1.x or v2.x, respectively.
+
+If you had a prior version installed, and you do not use a new directory for
+your 3.20 installation, you should remove any "old" files:
+
+  ../mt-notifier.cgi
+  ../extlib/everitz/Notifier.pm
+  ../extlib/Everitz/Notifier.pm
+  ../extlib/jayseae/Notifier.pm
+  ../plugins/Notifier.pl
+  ../tmpl/cms/notifier.tmpl
+  ../tmpl/email/notification.tmpl
+
+This file was optional, and has been updated for 3.2.  So make sure you use
+the one from the new distribution, whether you used the old version from this
+plugin or the one from a prior Movable Type distribution:
+
+  ../tmpl/cms/view_log.tmpl
+
+This file was used to "integrate" MT-Notifier, but the integration is not
+needed any longer, and it's also been updated.  Make sure you use the version
+from Movable Type 3.2:
+
+  ../lib/MT/App/Comments.pm
+
+*** --------------------------------------------------------------------- ***
+
+Configuration:
+
+Movable Type 3.2 allows you to disable plugins at the system level, so there
+is not a system-level function to disable or enable the plugin.  Just use the
+Movable Type function if you need to do that.
+
+Each blog provides the option of disabling MT-Notifier through blog settings,
+because you cannot disable plugins at the blog level.
+
+On the system level you have the option of overriding the author email address
+for notifications.  Even if you want to use the author email address, you may
+want to consider setting this option, as there are cases (such as blog and
+category subscription requests) that don't have an author associated with
+them.  If you don't have a valid email address, no notifications will be sent.
+
+At the blog level, you can accept the system setting for the sender address,
+you can use the author address, or you can specify an address to use.
+
+The new confirmation feature requires that you have enabled the confirmation
+function at both the system and the blog level.  If one is off, none will be
+sent, disabling that feature.  If both are on, then each subscription request
+coming from outside the administrative interface will require the recipient
+to confirm their request before they will receive any notifications.
+
+*** --------------------------------------------------------------------- ***
+
+Usage:
+
+Unlike prior versions of MT-Notifier, there is no standalone interface.  All
+of the functions you will use regularly as an administrator are integrated
+into the "action" menu within the itemsets (that is to say, blog, category
+and entry lists).
+
+Add Subscription(s)
+
+This option allows you to create subscriptions to the selected item(s).
+
+Block Notification(s)
+
+This option allows you to block notifications to a particular address.
+
+View Subscription Count
+
+This option allows you to see the subscription count of the selected item(s).
+
+*** --------------------------------------------------------------------- ***
+
+Creating Subscriptions
+
+If you'd like to use your existing comments form to allow users to add an
+email to the subscription list, add a field named "subscribe" to the form.
+I used a checkbox myself, but you should be able to use about any sort of
+input field that is sent to the script.  If such a field is on a submitted
+form, it will be processed.
+
+The other alternative is to create a "stand alone" comment subscription form,
+which allows someone to subscribe even if they are not leaving a comment.
+
+The format of this form has changed slightly from prior versions, but it
+should be easier to use.  Here's an example:
+
+  <form method="get" action="full_url_to/mt-notifier.cgi">
+    <input type="hidden" name="entry_id" value="<$MTEntryID$>" />
+    Subscribe Without Commenting<br/ ><br />
+    <input name="email" />
+    <input type="submit" class="button" value="Go" />
+  </form>
+
+This example form would be to subscribe to an individual entry.  For categories,
+just change the name of the hidden field to "category_id" and the value of this
+field to "<$MTCategoryID$>", and for blogs, change the value to "<$MTBlogID$>",
+with a field name of "blog_id".  Here are sample forms for those:
+
+  <!-- subscribe to a category -->
+  <form method="get" action="full_url_to/mt-notifier.cgi">
+    <input type="hidden" name="category_id" value="<$MTCategoryID$>" />
+    Subscribe Without Commenting<br/ ><br />
+    <input name="email" />
+    <input type="submit" class="button" value="Go" />
+  </form>
+
+  <!-- subscribe to a blog -->
+  <form method="get" action="full_url_to/mt-notifier.cgi">
+    <input type="hidden" name="blog_id" value="<$MTBlogID$>" />
+    Subscribe Without Commenting<br/ ><br />
+    <input name="email" />
+    <input type="submit" class="button" value="Go" />
+  </form>
+
+Because of changes to version 3.0.0, any prior forms will need to be redone
+so that they will work!
+
+*** --------------------------------------------------------------------- ***
+
+Template Tags:
+
+The category ID is not always avaialable (notably in individual archives), so
+MT-Notifier includes a tag called <MTNotifierCatID> that you can insert into
+your templates to produce the category ID when you need it.  For instance:
+
+  <!-- subscribe to a category -->
+  <form method="get" action="full_url_to/mt-notifier.cgi">
+    <input type="hidden" name="category_id" value="<$MTNotifierCatID$>" />
+    Subscribe Without Commenting<br/ ><br />
+    <input name="email" />
+    <input type="submit" class="button" value="Go" />
+  </form>
+
+There is a PHP (dynamic) version of this tag available in the distrubtion as
+well - just upload that to your PHP "plugins" directory to be able to use it.
+
+*** --------------------------------------------------------------------- ***
+
+Changelog:
+3.0.0
+  - Reworked for MT 3.2.
+  - August 17, 2005
+2.5.0
+  - Updated copyright info to reflect acquisition by Everitz Consulting.
+  - May 18, 2005
+2.4.6
+  - Fixed regex for handling single-digit subscriptions.
+  - March 10, 2005
+2.4.5
+  - Added ability to specify parameter "url" on subscription form.
+  - March 1, 2005
+2.4.4
+  - Added MTNotifierCatID template tag to display ID of context category.
+  - February 15, 2005
+2.4.3
+  - Fixed blog or category subscriptions when subscription type set (like 2.3.5).
+  - January 21, 2005
+2.4.2
+  - Fixed display of site-wide configuration type.
+  - January 12, 2005
+2.4.1
+  - Additional logging of the number of notification items sent.
+  - Fixed user purge within management screen (to stay in management mode).
+  - January 6, 2005
+2.4.0
+  - Added transfer of Movable Type subscription data.
+  - January 5, 2005
+2.3.5.2
+  - Fixed a small bug in module_magic, introduced in 2.3.5.1.
+  - January 4, 2005
+2.3.5.1
+  - Fixed a problem with logging during comment subscription.
+  - January 4, 2005
+2.3.5
+  - Fixed a problem with entry subscription when subscription type set.
+  - January 3, 2005
+2.3.4
+  - Added some log messages to subscription process.
+  - December 31, 2004
+2.3.3
+  - Fixed problem with sending duplicate entry notifications.
+  - Created parameter to send all entries or only new ones.
+  - November 8, 2004
+2.3.2
+  - Fixed problem with manual subscription process.
+  - September 23, 2004
+2.3.1
+  - Fixed problem with variable message in enabler subroutine.
+  - September 20, 2004
+2.3.0
+  - Added entry notifications, including configuration options.
+  - Cleaned up code, fixed some minor bugs.
+  - September 15, 2004
+2.2.4
+  - Updated manage_address login to handle $mail/$code as well as $akey.
+  - September 6, 2004
+2.2.3
+  - Corrected module_magic for MT 3.1.
+  - September 4, 2004
+2.2.2
+  - Re-fixed 2.2 change.
+  - September 3, 2004
+2.2.1
+  - Repackaged with directory structure.
+  - August 25, 2004
+2.2.0
+  - Fixed subscription routine outside of management interface.
+  - July 25, 2004
+2.1.0
+  - Added conversion of EZ Subscribe to Comments data.
+  - July 15, 2004
+2.0.1
+  - Re-designed/cleaned up user interface.
+  - Fixed redirects when login required.
+  - Updated interface to MT 3-style design.
+  - Updated data access to use subroutines.
+  - Updated purge interface with more options.
+  - Updated conversion from Scripty Goddess.
+  - Updated hackomatic to process subscribe.
+  - Added category subscriptions and opt-out records.
+  - Added translation hooks for most text strings.
+  - Added admin and user management interface.
+  - Added enabler sub for configuration.
+  - Added conversion from Notifier version 1.
+  - Added skip first message to commentor.
+  - Standardized error messages.
+  - July 6, 2004
+1.4.1
+  - Fixed $sender variable declaration.
+  - March 17, 2004
+1.4.0
+  - Added auto-backup and auto-hack functions.
+  - Fixed some tags in the template to be XHTML-compliant.
+  - February 6, 2004
+1.3.0
+  - Added conversion of ScriptyGoddess subscription data.
+  - Fixed distribution package.
+  - December 15, 2003
+1.2.0
+  - Added per-blog and per-install default "from" addresses.
+  - Added subroutine to get an email address for the sender.
+  - Added purge of address information.
+  - Fixed purges to work correctly.
+  - Removed $SENDER variable.
+  - December 10, 2003
+1.1.0
+  - Added redirect information on confirmation screen.
+  - Added additional author information to notification email.
+  - Use entry author first, then $SENDER.
+  - November 20, 2003
+1.0.0
+  - Initial release
+  - November 19, 2003
+
+*** -------------------------------------------------------------------- ***
+
+Thanks To:
+
+David [1] for picking up on my regex error.
+
+[1] http://www.rayners.org/
+
+*** -------------------------------------------------------------------- ***

@@ -1,0 +1,17 @@
+create table mt_notifier_data (
+  notifier_data_id integer not null auto_increment primary key,
+  notifier_data_blog_id integer not null default 0,
+  notifier_data_category_id integer not null default 0,
+  notifier_data_entry_id integer not null default 0,
+  notifier_data_email varchar(75) not null,
+  notifier_data_cipher varchar(75) not null,
+  notifier_data_record smallint not null default 0,
+  notifier_data_status smallint not null default 0,
+  index (notifier_data_blog_id),
+  index (notifier_data_category_id),
+  index (notifier_data_entry_id),
+  index (notifier_data_email),
+  index (notifier_data_cipher),
+  index (notifier_data_record),
+  index (notifier_data_status)
+);

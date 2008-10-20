@@ -1,0 +1,14 @@
+'<TMPL_VAR NAME=BLOG_NAME>' <MT_TRANS phrase="requires you to use a double-opt system for making any changes to your subscription information.">
+
+<MT_TRANS phrase="Because you, or someone using your email address, recently submitted a request at"> '<TMPL_VAR NAME=BLOG_NAME>' <MT_TRANS phrase=", you are being sent this confirmation to verify that the request is genuine.">
+
+<MT_TRANS phrase="The request is to"> <TMPL_VAR NAME=RECORD_TEXT>:
+<TMPL_VAR NAME=RECORD_NAME>
+
+<TMPL_VAR NAME=REQUEST_SUBJECT> <MT_TRANS phrase="by clicking this link">:
+<TMPL_VAR NAME=NOTIFIER_LINK>?c=<TMPL_VAR NAME=RECORD_CIPHER>
+
+<MT_TRANS phrase="Use this link if you would like to visit before confirming this request">:
+<TMPL_VAR NAME=RECORD_LINK>
+
+<MT_TRANS phrase="If you did not make this request, do nothing.  You will receive no further reminders of this request.  If you did make this request, but there are errors in the request, you can simply submit a new one to correct any problems.  Confirmation of that request will follow your re-submission.">

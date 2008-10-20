@@ -1,0 +1,25 @@
+<script language="JavaScript">
+  <!--
+    function hide_and_seek () {
+      document.getElementById('system_address').disabled = !document.getElementById('system_address_type').checked;
+    }
+  //-->
+</script>
+<div class="setting">
+  <div class="field">
+    <p>
+      <input type="radio" name="system_confirm" id="system_confirm_0" value="0" <TMPL_IF NAME=SYSTEM_CONFIRM_0>checked="checked"</TMPL_IF> /> Do not Send Any Confirmation Messages<br />
+      <input type="radio" name="system_confirm" id="system_confirm_1" value="1" <TMPL_IF NAME=SYSTEM_CONFIRM_1>checked="checked"</TMPL_IF> /> Send Confirmation for New Subscriptions
+    </p>
+    <p>
+      <br />
+      <input id="system_address_type" name="system_address_type" type="checkbox" onclick="hide_and_seek()" <TMPL_IF NAME=SYSTEM_ADDRESS_TYPE>checked="checked"</TMPL_IF> /> Override Author Address with This Address when Sending Notifications:<br /><br />
+      <input id="system_address" name="system_address" maxlength="75" size="75" <TMPL_IF NAME=SYSTEM_ADDRESS>value="<TMPL_VAR NAME=SYSTEM_ADDRESS>"</TMPL_IF> />
+    </p>
+  </div> 
+</div>
+<script language="JavaScript">
+<!--
+  hide_and_seek();
+//-->
+</script>

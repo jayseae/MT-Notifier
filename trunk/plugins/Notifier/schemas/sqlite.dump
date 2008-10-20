@@ -1,0 +1,17 @@
+create table mt_notifier_data (
+  notifier_data_id integer not null primary key,
+  notifier_data_blog_id integer not null default 0,
+  notifier_data_category_id integer not null default 0,
+  notifier_data_entry_id integer not null default 0,
+  notifier_data_email varchar(75) not null,
+  notifier_data_cipher varchar(75) not null,
+  notifier_data_record smallint not null default 0,
+  notifier_data_status smallint not null default 0
+);
+create index mt_notifier_data_blog_id on mt_notifier_data (notifier_data_blog_id);
+create index mt_notifier_data_category_id on mt_notifier_data (notifier_data_category_id);
+create index mt_notifier_data_entry_id on mt_notifier_data (notifier_data_entry_id);
+create index mt_notifier_data_email on mt_notifier_data (notifier_data_email);
+create index mt_notifier_data_cipher on mt_notifier_data (notifier_data_cipher);
+create index mt_notifier_data_record on mt_notifier_data (notifier_data_record);
+create index mt_notifier_data_status on mt_notifier_data (notifier_data_status);
