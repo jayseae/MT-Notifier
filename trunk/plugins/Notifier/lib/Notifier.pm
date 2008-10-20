@@ -24,10 +24,11 @@ use constant TEMP    => 2;
 use constant BULK    => 1;
 
 # version
-use vars qw($SENTSRV1 $SENTSRV2 $VERSION);
+use vars qw($SENTSRV1 $SENTSRV2 $SENTSRV3 $VERSION);
 $SENTSRV1 = 'http://www.everitz.com/sol/notifier/sentservice.html';
 $SENTSRV2 = 'http://www.everitz.com/sol/notifier/sent_service.html';
-$VERSION = '3.2.6';
+$SENTSRV3 = 'http://www.everitz.com/sol/mt-notifier/sent_service.html';
+$VERSION = '3.2.7';
 
 sub init {
   my $app = shift;
@@ -476,6 +477,7 @@ sub entry_notifications {
     my $pinged = $entry->pinged_urls;
     next if ($pinged && $pinged =~ m/$SENTSRV1/);
     next if ($pinged && $pinged =~ m/$SENTSRV2/);
+    next if ($pinged && $pinged =~ m/$SENTSRV3/);
     my $blog_id = $entry->blog_id;
     my @work_subs =
       map { $_ }
@@ -502,7 +504,7 @@ sub entry_notifications {
     next unless ($work_users);
     notify_users($entry, \@work_subs);
     $pinged = $entry->pinged_url_list;
-    push(@$pinged, $SENTSRV2);
+    push(@$pinged, $SENTSRV3);
     $entry->pinged_urls(join("\n", @$pinged));
     $entry->save;
   }
