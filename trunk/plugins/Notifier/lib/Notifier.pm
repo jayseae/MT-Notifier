@@ -14,9 +14,9 @@ use constant PENDING => 0;
 use constant RUNNING => 1;
 
 # record type
-use constant OPT     => 0;
-use constant SUB     => 1;
-use constant TEMP    => 2;
+use constant OPT_OUT   => 0;
+use constant SUBSCRIBE => 1;
+use constant TEMPORARY => 2;
 
 # other
 use constant BULK    => 1;
@@ -26,14 +26,13 @@ use vars qw($SENTSRV1 $SENTSRV2 $SENTSRV3 $VERSION);
 $SENTSRV1 = 'http://www.everitz.com/sol/notifier/sentservice.html';
 $SENTSRV2 = 'http://www.everitz.com/sol/notifier/sent_service.html';
 $SENTSRV3 = 'http://www.everitz.com/sol/mt-notifier/sent_service.html';
-$VERSION = '3.4.4';
+$VERSION = '3.4.5';
 
 sub init {
   my $app = shift;
   $app->SUPER::init (@_) or return;
   $app->add_methods (
     default => \&notifier_request,
-    loader => \&notifier_loader,
     import => \&notifier_import,
     queued => \&send_queued,
     update => \&notifier_loader
@@ -62,7 +61,7 @@ sub notifier_import {
       use MT::Notification;
       foreach my $data (MT::Notification->load()) {
         next unless ($data && $data->blog_id && $data->email);
-        create_subscription($data->email, SUB, $data->blog_id, 0, 0, BULK);
+        create_subscription($data->email, SUBSCRIBE, $data->blog_id, 0, 0, BULK);
         $count++;
       }
     } elsif ($from eq 'n1x') {
@@ -78,7 +77,7 @@ sub notifier_import {
           if (my $subs = $data->data->{'subscriptions'}) {
             foreach my $sub (split(';', $subs)) {
               my ($email) = split(':', $sub);
-              create_subscription($email, OPT, $blog_id, 0, 0, BULK);
+              create_subscription($email, OPT_OUT, $blog_id, 0, 0, BULK);
               $count++;
             }
           }
@@ -87,7 +86,7 @@ sub notifier_import {
           if (my $subs = $data->data->{'subscriptions'}) {
             foreach my $sub (split(';', $subs)) {
               my ($email) = split(':', $sub);
-              create_subscription($email, SUB, 0, 0, $entry_id, BULK);
+              create_subscription($email, SUBSCRIBE, 0, 0, $entry_id, BULK);
               $count++;
             }
           }
@@ -107,7 +106,7 @@ sub notifier_import {
           if (my $subs = $data->data->{'subs'}) {
             foreach my $sub (split(';', $subs)) {
               my ($email, $type) = split(':', $sub);
-              $type = ($type eq 'opt') ? OPT : SUB;
+              $type = ($type eq 'opt') ? OPT_OUT : SUBSCRIBE;
               create_subscription($email, $type, $blog_id, 0, 0, BULK);
               $count++;
             }
@@ -117,7 +116,7 @@ sub notifier_import {
           if (my $subs = $data->data->{'subs'}) {
             foreach my $sub (split(';', $subs)) {
               my ($email, $type) = split(':', $sub);
-              $type = ($type eq 'opt') ? OPT : SUB;
+              $type = ($type eq 'opt') ? OPT_OUT : SUBSCRIBE;
               create_subscription($email, $type, 0, $category_id, 0, BULK);
               $count++;
             }
@@ -128,7 +127,7 @@ sub notifier_import {
             foreach my $sub (split(';', $subs)) {
               my ($email, $type) = split(':', $sub);
               next if ($type eq 'opt');
-              create_subscription($email, SUB, 0, 0, $entry_id, BULK);
+              create_subscription($email, SUBSCRIBE, 0, 0, $entry_id, BULK);
               $count++;
             }
           }
@@ -144,42 +143,6 @@ sub notifier_import {
     message => $message,
     notifier_version => version_number(),
     page_title => 'MT-Notifier '.$app->translate('Import Processing')
-  });
-}
-
-sub notifier_loader {
-  my $notifier = MT::Plugin::Notifier->instance;
-  my $app = MT->instance;
-  my $auth = ($app->user->is_superuser) ? 1 : 0;
-  my $load = ($app->{query}->param('__mode') eq 'loader') ? 1 : 0;
-  my $message;
-  if ($auth) {
-    if ($app->{cfg}->ObjectDriver =~ /^DBI::(.*)$/) {
-      my $type = $1;
-      my $cfg = MT::ConfigMgr->instance;
-      my $dbh = MT::Object->driver->{dbh};
-      my $update = ($load == 0) ? '-update' : '';
-      my $schema = File::Spec->catfile('schemas', $type.$update.'.dump');
-      open FH, $schema or die "<p class=\"bad\">Can't open '$schema': $!</p>";
-      my $ddl;
-      { local $/; $ddl = <FH> }
-      close FH;
-      my @stmts = split /;/, $ddl;
-      for my $stmt (@stmts) {
-        $stmt =~ s!^\s*!!;
-        $stmt =~ s!\s*$!!;
-        next unless $stmt =~ /\S/;
-        $dbh->do($stmt) or die $dbh->errstr;
-      }
-      $message = 'Your system is installed and ready to use!';
-    }
-  } else {
-    $message = 'You are not authorized to run this process!';
-  }
-  $app->build_page($notifier->load_tmpl('notification_request.tmpl'), {
-    message => $app->translate($message),
-    notifier_version => version_number(),
-    page_title => 'MT-Notifier '.$app->translate('System Loader')
   });
 }
 
@@ -202,7 +165,7 @@ sub notifier_request {
         $category_id = $data->category_id;
         $entry_id = $data->entry_id;
         $email = $data->email;
-        my $record = OPT;
+        my $record = OPT_OUT;
         if ($entry_id) {
           use MT::Entry;
           my $entry = MT::Entry->load($entry_id);
@@ -293,7 +256,7 @@ sub notifier_request {
             $url = $blog->site_url;
           }
         }
-        my $error = create_subscription($email, SUB, $blog_id, $category_id, $entry_id);
+        my $error = create_subscription($email, SUBSCRIBE, $blog_id, $category_id, $entry_id);
         if ($error == 1) {
           $message = 'The specified email address is not valid!';
         } elsif ($error == 2) {
@@ -341,7 +304,7 @@ sub create_subscription {
   } else {
     return 1;
   }
-  return unless ($record eq OPT || $record eq SUB);
+  return unless ($record eq OPT_OUT || $record eq SUBSCRIBE);
   if ($entry_id) {
     use MT::Entry;
     my $entry = MT::Entry->load($entry_id) or return 2;
@@ -425,7 +388,7 @@ sub data_confirmation {
   my $cfg = MT::ConfigMgr->instance;
   $app->set_language($cfg->DefaultLanguage) unless ($lang);
   my $charset = $cfg->PublishCharset || 'iso-8859-1';
-  my $record_text = ($data->record == SUB) ?
+  my $record_text = ($data->record == SUBSCRIBE) ?
     $app->translate('subscribe to') :
     $app->translate('opt-out of');
   my %head = (
@@ -486,7 +449,7 @@ sub entry_notifications {
       map { $_ }
       Notifier::Data->load({
         blog_id => $blog_id,
-        record => Notifier::SUB,
+        record => Notifier::SUBSCRIBE,
         status => Notifier::RUNNING
       });
     use MT::Placement;
@@ -496,7 +459,7 @@ sub entry_notifications {
     foreach my $place (@places) {
       my @category_subs = Notifier::Data->load({
         category_id => $place->category_id,
-        record => Notifier::SUB,
+        record => Notifier::SUBSCRIBE,
         status => Notifier::RUNNING
       });
       foreach (@category_subs) {
@@ -507,7 +470,7 @@ sub entry_notifications {
     next unless ($work_users);
     notify_users($entry, \@work_subs);
     $pinged = $entry->pinged_url_list;
-    push(@$pinged, $SENTSRV3);
+    push @$pinged, $SENTSRV3;
     $entry->pinged_urls(join("\n", @$pinged));
     $entry->save;
   }
@@ -534,7 +497,7 @@ sub notify_users {
     map { $_ }
     Notifier::Data->load({
       blog_id => $blog->id,
-      record => OPT,
+      record => OPT_OUT,
       status => RUNNING
     });
   use MT::Placement;
@@ -544,7 +507,7 @@ sub notify_users {
   foreach my $place (@places) {
     my @category_opts = Notifier::Data->load({
       category_id => $place->category_id,
-      record => OPT,
+      record => OPT_OUT,
       status => RUNNING
     });
     foreach (@category_opts) {
@@ -782,6 +745,11 @@ sub produce_cipher {
   my $cipher = crypt ($key, $salt);
   $cipher =~ s/\.$/q/;
   $cipher;
+}
+
+sub schema_version {
+  (my $ver = $VERSION) =~ s/^([\d]+)[\.].*$/$1/;
+  $ver;
 }
 
 sub version_number {

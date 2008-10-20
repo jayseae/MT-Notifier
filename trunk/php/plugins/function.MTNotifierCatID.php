@@ -1,7 +1,6 @@
 <?php
-# ===========================================================================
-# Copyright Everitz Consulting.  Not for redistribution.
-# ===========================================================================
+
+# Copyright 2003-2006, Everitz Consulting.  Not to be redistributed without permission.
 
 function smarty_function_MTNotifierCatID($args, &$ctx) {
   $cat_id = '';

@@ -13,7 +13,7 @@ __PACKAGE__->install_properties({
         'head_content' => 'string(75)',
         'head_from' => 'string(75) not null',
         'head_to' => 'string(75) not null',
-        'head_subject' => 'varchar(255)',
+        'head_subject' => 'text',
         'body' => 'text',
     },
     datasource => 'notifier_queue',

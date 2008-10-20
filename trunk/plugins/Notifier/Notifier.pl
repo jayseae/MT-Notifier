@@ -12,31 +12,42 @@ use Notifier;
 use vars qw($EXECUTE);
 $EXECUTE = 0;
 
-my $notifier;
+my $Notifier;
 my $about = {
   name => 'MT-Notifier',
   description => 'Subscription options for your Movable Type installation.',
   author_name => 'Everitz Consulting',
   author_link => 'http://www.everitz.com/',
   plugin_link => 'http://www.everitz.com/sol/mt-notifier/index.html',
-  doc_link => 'http://www.everitz.com/sol/mt-notifier/installation.html',
+  doc_link => 'http://www.everitz.com/sol/mt-notifier/index.html#install',
   version => Notifier->VERSION,
+#
+# config
+#
   config => \&configure_plugin_settings,
-  blog_config_template => sub { $notifier->load_tmpl('settings_blog.tmpl') },
-  system_config_template => sub { $notifier->load_tmpl('settings_system.tmpl') },
+  blog_config_template => sub { $Notifier->load_tmpl('settings_blog.tmpl') },
+  system_config_template => sub { $Notifier->load_tmpl('settings_system.tmpl') },
   settings => new MT::PluginSettings([
     ['system_address'],
     ['system_confirm', { Default => 1 }],
     ['system_queued', { Default => 0 }],
-    ['blog_address_type', { Default => 1 }],
     ['blog_address'],
+    ['blog_address_type', { Default => 1 }],
     ['blog_confirm', { Default => 1 }],
+    ['blog_disabled', { Default => 0 }],
     ['blog_queued', { Default => 0 }],
-    ['blog_disabled', { Default => 0 }]
-  ])
+  ]),
+#
+# tables
+#
+  object_classes => [
+    'Notifier::Data',
+    'Notifier::Queue'
+  ],
+  schema_version => Notifier->schema_version
 };
-$notifier = MT::Plugin::Notifier->new($about);
-MT->add_plugin($notifier);
+$Notifier = MT::Plugin::Notifier->new($about);
+MT->add_plugin($Notifier);
 
 use MT::Comment;
 MT::Comment->add_callback('pre_save', 11, $about, \&check_comment);
@@ -54,13 +65,13 @@ MT::Template::Context->add_tag(NotifierCheck => \&notifier_check);
 
 sub configure_plugin_settings {
   my $config = {};
-  if ($notifier) {
+  if ($Notifier) {
     use MT::Request;
     my $r = MT::Request->instance;
     my ($scope) = (@_);
     $config = $r->cache('notifier_config_'.$scope);
     if (!$config) {
-      $config = $notifier->get_config_hash($scope);
+      $config = $Notifier->get_config_hash($scope);
       $r->cache('notifier_config_'.$scope, $config);
     }
   }
@@ -77,20 +88,14 @@ sub init_app {
       type  => $_,
       key   => 'mtn_add_subscriptions',
       label => 'Add Subscription(s)',
-      code  => sub { notifier_start($plugin, Notifier::SUB, @_) },
+      code  => sub { notifier_start($plugin, Notifier::SUBSCRIBE, @_) },
     });
     $app->add_itemset_action({
       type  => $_,
       key   => 'mtn_block_notifications',
       label => 'Block Notification(s)',
-      code  => sub { notifier_start($plugin, Notifier::OPT, @_) },
+      code  => sub { notifier_start($plugin, Notifier::OPT_OUT, @_) },
     });
-#    $app->add_itemset_action({
-#      type  => $_,
-#      key   => 'mtn_send_a_notification',
-#      label => 'Send a Notification',
-#      code  => sub { notifier_start($plugin, Notifier::TEMP, @_) },
-#    }) if ($_ eq 'entry');
     $app->add_itemset_action({
       type  => $_,
       key   => 'mtn_view_subscription_count',
@@ -99,8 +104,7 @@ sub init_app {
     });
   }
   $app->add_methods(
-    add_subscriptions => sub { subscribe_addresses($plugin, @_) },
-#    send_notification => sub { send_notification($plugin, @_) },
+    add_subscriptions => sub { subscribe_addresses($plugin, @_) }
   );
 }
 
@@ -108,7 +112,7 @@ sub init_app {
 
 sub END { Notifier::entry_notifications() }
 
-sub instance { $notifier }
+sub instance { $Notifier }
 
 # user interaction
 
@@ -125,24 +129,24 @@ sub subscription_view {
     if ($type eq 'blog') {
       use MT::Blog;
       my $blog = MT::Blog->load($id);
-      my $opts = Notifier::Data->count({ blog_id => $id, record => Notifier::OPT });
-      my $subs = Notifier::Data->count({ blog_id => $id, record => Notifier::SUB });
+      my $opts = Notifier::Data->count({ blog_id => $id, record => Notifier::OPT_OUT });
+      my $subs = Notifier::Data->count({ blog_id => $id, record => Notifier::SUBSCRIBE });
       push @subs, { name => $blog->name, opt_count => $opts, sub_count => $subs };
       $total_opts += $opts;
       $total_subs += $subs;
     } elsif ($type eq 'category') {
       use MT::Category;
       my $category = MT::Category->load($id);
-      my $opts = Notifier::Data->count({ category_id => $id, record => Notifier::OPT });
-      my $subs = Notifier::Data->count({ category_id => $id, record => Notifier::SUB });
+      my $opts = Notifier::Data->count({ category_id => $id, record => Notifier::OPT_OUT });
+      my $subs = Notifier::Data->count({ category_id => $id, record => Notifier::SUBSCRIBE });
       push @subs, { name => $category->label, opt_count => $opts, sub_count => $subs };
       $total_opts += $opts;
       $total_subs += $subs;
     } elsif ($type eq 'entry') {
       use MT::Entry;
       my $entry = MT::Entry->load($id);
-      my $opts = Notifier::Data->count({ entry_id => $id, record => Notifier::OPT });
-      my $subs = Notifier::Data->count({ entry_id => $id, record => Notifier::SUB });
+      my $opts = Notifier::Data->count({ entry_id => $id, record => Notifier::OPT_OUT });
+      my $subs = Notifier::Data->count({ entry_id => $id, record => Notifier::SUBSCRIBE });
       push @subs, { name => $entry->title, opt_count => $opts, sub_count => $subs };
       $total_opts += $opts;
       $total_subs += $subs;
@@ -164,11 +168,9 @@ sub notifier_start {
   my $app = shift;
   my @ids = $app->param('id');
   my $type = $app->param('_type');
-  my $send = ($record == Notifier::TEMP) ? 1 : 0;
   $app->build_page($plugin->load_tmpl('notifier_start.tmpl'), {
     ids  => [ map { { id => $_ } } @ids ],
     record => $record,
-    send => $send,
     type => $type
   });
 }
@@ -182,7 +184,7 @@ sub send_notification {
   my $type = $app->param('_type');
   Notifier::Data->remove({
     entry_id => $id,
-    record => Notifier::TEMP,
+    record => Notifier::TEMPORARY,
     status => Notifier::RUNNING
   });
   foreach my $email (split(/\r\n/, $app->param('addresses'))) {
@@ -192,7 +194,7 @@ sub send_notification {
     map { $_ }
     Notifier::Data->load({
       entry_id => $id,
-      record => Notifier::TEMP,
+      record => Notifier::TEMPORARY,
       status => Notifier::RUNNING
     });
   my $work_users = scalar @work_subs;
@@ -332,7 +334,7 @@ sub notify_comment {
   my ($err, $obj) = @_;
   if ($app->{query}->param('subscribe')) {
     my $email = $obj->email;
-    my $record = Notifier::SUB;
+    my $record = Notifier::SUBSCRIBE;
     my $blog_id = 0;
     my $category_id = 0;
     my $entry_id = $obj->entry_id;
@@ -347,7 +349,7 @@ sub notify_comment {
     map { $_ }
     Notifier::Data->load({
       entry_id => $entry_id,
-      record => Notifier::SUB,
+      record => Notifier::SUBSCRIBE,
       status => Notifier::RUNNING
     });
   my $work_users = scalar @work_subs;
