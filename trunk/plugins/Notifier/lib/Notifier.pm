@@ -24,8 +24,9 @@ use constant TEMP    => 2;
 use constant BULK    => 1;
 
 # version
-use vars qw($VERSION);
-$VERSION = '3.1.0';
+use vars qw($SENTSRV $VERSION);
+$SENTSRV = 'http://www.everitz.com/sol/notifier/sentservice.html';
+$VERSION = '3.2.2';
 
 sub init {
   my $app = shift;
@@ -311,7 +312,7 @@ sub notifier_request {
   });
 }
 
-# shared functions
+# subscription functions
 
 sub create_subscription {
   my $notifier = MT::Plugin::Notifier->instance;
@@ -461,91 +462,49 @@ sub data_confirmation {
   send_email(\%head, $body);
 }
 
-sub load_blog {
-  my ($obj) = @_;
-  my $blog_id;
-  use MT::Blog;
-  if ($obj->entry_id) {
+sub entry_notifications {
+  my $app = MT->instance;
+  use MT::Request;
+  my $r = MT::Request->instance;
+  my $notify_list = $r->stash('mtn_notify_list') || {};
+  return unless (scalar(keys(%$notify_list)));
+  foreach my $entry_id (keys %$notify_list) {
     use MT::Entry;
-    my $entry = MT::Entry->load($obj->entry_id) or return;
-    $blog_id = $entry->blog_id;
-  } elsif ($obj->category_id) {
-    use MT::Category;
-    my $category = MT::Category->load($obj->category_id) or return;
-    $blog_id = $category->blog_id;
-  } else {
-    $blog_id = $obj->blog_id;
-  }
-  my $blog = MT::Blog->load($blog_id) or return;
-  $blog;
-}
-
-sub load_email {
-  my $notifier = MT::Plugin::Notifier->instance;
-  my $app = MT->instance;
-  my ($file, $param) = @_;
-  my @paths;
-  my $dir = File::Spec->catdir($app->mt_dir, $notifier->envelope, 'tmpl', 'email');
-  push @paths, $dir if -d $dir;
-  $dir = File::Spec->catdir($app->mt_dir, $notifier->envelope, 'tmpl');
-  push @paths, $dir if -d $dir;
-  $dir = File::Spec->catdir($app->mt_dir, $notifier->envelope);
-  push @paths, $dir if -d $dir;
-  require HTML::Template;
-  my $tmpl;
-  eval {
-    local $1; ## This seems to fix a utf8 bug (of course).
-    $tmpl = HTML::Template->new_file(
-      $file,
-      path => \@paths,
-      search_path_on_include => 1,
-      die_on_bad_params => 0,
-      global_vars => 1);
-  };
-  return MT->trans_error("Loading template '[_1]' failed: [_2]", $file, $@) if $@;
-  for my $key (keys %$param) {
-    $tmpl->param($key, $param->{$key});
-  }
-  MT->translate_templatized($tmpl->output);
-}
-
-sub load_sender_address {
-  my $notifier = MT::Plugin::Notifier->instance;
-  my $app = MT->instance;
-  my ($obj, $author) = @_;
-  my $sender_address = $author->email if ($author);
-  my $config = $notifier->get_config_hash();
-  if ($config) {
-    $sender_address = $config->{'system_address'};
-  } else {
-    $app->log($app->translate('No system address - please configure one!'));
-  }
-  my $blog = load_blog($obj);
-  unless ($blog) {
-    $app->log($app->translate('Specified blog unavailable - please check your data!'));
-    return $sender_address;
-  }
-  my $blog_config = $notifier->get_config_hash('blog:'.$blog->id);
-  if ($blog_config) {
-    if ($blog_config->{'blog_address_type'} == 2) {
-      $sender_address = $author->email if ($author);
-    } elsif ($blog_config->{'blog_address_type'} == 3) {
-      $sender_address = $blog_config->{'blog_address'};
+    my $entry = MT::Entry->load($entry_id);
+    next unless ($entry);
+    my $pinged = $entry->pinged_urls;
+    next if ($pinged =~ m/$SENTSRV/);
+    my $blog_id = $entry->blog_id;
+    my @work_subs =
+      map { $_ }
+      Notifier::Data->load({
+        blog_id => $blog_id,
+        record => Notifier::SUB,
+        status => Notifier::RUNNING
+      });
+    use MT::Placement;
+    my @places = MT::Placement->load({
+      entry_id => $entry_id
+    });
+    foreach my $place (@places) {
+      my @category_subs = Notifier::Data->load({
+        category_id => $place->category_id,
+        record => Notifier::SUB,
+        status => Notifier::RUNNING
+      });
+      foreach (@category_subs) {
+        push @work_subs, $_;
+      }
     }
+    my $work_users = scalar @work_subs;
+    next unless ($work_users);
+    notify_users($entry, \@work_subs);
+    $pinged = $entry->pinged_url_list;
+    push(@$pinged, $SENTSRV);
+    $entry->pinged_urls(join("\n", @$pinged));
+    $entry->save;
   }
-  use MT::Util;
-  if (my $fixed = MT::Util::is_valid_email($sender_address)) {
-    return $fixed;
-  } else {
-    my $message = 'MT-Notifier: ';
-    if ($sender_address) {
-      $message .= $app->translate('Invalid sender address - please reconfigure it!');
-    } else {
-      $message .= $app->translate('No sender address - please configure one!');
-    }
-    $app->log($message);
-    return;
-  }
+  $r->stash('mtn_notify_list', {});
 }
 
 sub notify_users {
@@ -642,14 +601,6 @@ sub notify_users {
   }
 }
 
-sub produce_cipher {
-  my $key = shift;
-  my $salt = join '', ('.', '/', 0..9, 'A'..'Z', 'a'..'z')[rand 64, rand 64];
-  my $cipher = crypt ($key, $salt);
-  $cipher =~ s/\.$/q/;
-  $cipher;
-}
-
 sub send_email {
   my $notifier = MT::Plugin::Notifier->instance;
   my $app = MT->instance;
@@ -677,6 +628,103 @@ sub send_email {
     return MT::Mail->error(MT->translate(
       "Unknown MailTransfer method '[_1]'", $xfer ));
   }
+}
+
+# shared functions
+
+sub load_blog {
+  my ($obj) = @_;
+  my $blog_id;
+  use MT::Blog;
+  if ($obj->entry_id) {
+    use MT::Entry;
+    my $entry = MT::Entry->load($obj->entry_id) or return;
+    $blog_id = $entry->blog_id;
+  } elsif ($obj->category_id) {
+    use MT::Category;
+    my $category = MT::Category->load($obj->category_id) or return;
+    $blog_id = $category->blog_id;
+  } else {
+    $blog_id = $obj->blog_id;
+  }
+  my $blog = MT::Blog->load($blog_id) or return;
+  $blog;
+}
+
+sub load_email {
+  my $notifier = MT::Plugin::Notifier->instance;
+  my $app = MT->instance;
+  my ($file, $param) = @_;
+  my @paths;
+  my $dir = File::Spec->catdir($app->mt_dir, $notifier->envelope, 'tmpl', 'email');
+  push @paths, $dir if -d $dir;
+  $dir = File::Spec->catdir($app->mt_dir, $notifier->envelope, 'tmpl');
+  push @paths, $dir if -d $dir;
+  $dir = File::Spec->catdir($app->mt_dir, $notifier->envelope);
+  push @paths, $dir if -d $dir;
+  require HTML::Template;
+  my $tmpl;
+  eval {
+    local $1; ## This seems to fix a utf8 bug (of course).
+    $tmpl = HTML::Template->new_file(
+      $file,
+      path => \@paths,
+      search_path_on_include => 1,
+      die_on_bad_params => 0,
+      global_vars => 1);
+  };
+  return MT->trans_error("Loading template '[_1]' failed: [_2]", $file, $@) if $@;
+  for my $key (keys %$param) {
+    $tmpl->param($key, $param->{$key});
+  }
+  MT->translate_templatized($tmpl->output);
+}
+
+sub load_sender_address {
+  my $notifier = MT::Plugin::Notifier->instance;
+  my $app = MT->instance;
+  my ($obj, $author) = @_;
+  my $sender_address = $author->email if ($author);
+  my $config = $notifier->get_config_hash();
+  if ($config) {
+    $sender_address = $config->{'system_address'};
+  } else {
+    $app->log($app->translate('No system address - please configure one!'));
+  }
+  my $blog = load_blog($obj);
+  unless ($blog) {
+    $app->log($app->translate('Specified blog unavailable - please check your data!'));
+    return $sender_address;
+  }
+  my $blog_config = $notifier->get_config_hash('blog:'.$blog->id);
+  if ($blog_config) {
+    if ($blog_config->{'blog_address_type'} == 2) {
+      $sender_address = $author->email if ($author);
+    } elsif ($blog_config->{'blog_address_type'} == 3) {
+      $sender_address = $blog_config->{'blog_address'};
+    }
+  }
+  use MT::Util;
+  if (my $fixed = MT::Util::is_valid_email($sender_address)) {
+    return $fixed;
+  } else {
+    my $message;
+    if ($sender_address) {
+      $message .= $app->translate('Invalid sender address - please reconfigure it!');
+    } else {
+      $message .= $app->translate('No sender address - please configure one!');
+    }
+    $app->log($message);
+    return;
+  }
+}
+
+sub produce_cipher {
+  my $key = shift;
+  my $salt = join '', ('.', '/', 0..9, 'A'..'Z', 'a'..'z')[rand 64, rand 64];
+  my $cipher = crypt ($key, $salt);
+  $cipher =~ s/\.$/q/;
+  $cipher;
 }
 
 sub version_number {

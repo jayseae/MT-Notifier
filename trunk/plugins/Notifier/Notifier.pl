@@ -11,6 +11,9 @@ use strict;
 use MT;
 use Notifier;
 
+use vars qw($EXECUTE);
+$EXECUTE = 0;
+
 my $notifier;
 my $about = {
   name => 'MT-Notifier',
@@ -41,10 +44,27 @@ MT::Comment->add_callback('post_save', 1, $about, \&notify_comment);
 
 use MT::Entry;
 MT::Entry->add_callback('pre_save', 11, $about, \&check_entry);
-MT->add_callback('CMSPostEntrySave', 1, $about, \&notify_entry);
+MT::Entry->add_callback('post_save', 1, $about, \&notify_entry);
 
 use MT::Template::Context;
 MT::Template::Context->add_tag(NotifierCatID => \&notifier_category_id);
+
+# plugin stuff
+
+sub configure_plugin_settings {
+  my $config = {};
+  if ($notifier) {
+    use MT::Request;
+    my $r = MT::Request->instance;
+    my ($scope) = (@_);
+    $config = $r->cache('notifier_config_'.$scope);
+    if (!$config) {
+      $config = $notifier->get_config_hash($scope);
+      $r->cache('notifier_config_'.$scope, $config);
+    }
+  }
+  $config;
+}
 
 sub init_app {
   my $plugin = shift;
@@ -83,21 +103,11 @@ sub init_app {
   );
 }
 
-sub instance { $notifier }
+# app functions
 
-sub configure_plugin_settings {
-  my $config = {};
-  if ($notifier) {
-    use MT::Request;
-    my ($scope) = (@_);
-    $config = MT::Request->instance->cache('notifier_config_'.$scope);
-    if (!$config) {
-      $config = $notifier->get_config_hash($scope);
-      MT::Request->instance->cache('notifier_config_'.$scope, $config);
-    }
-  }
-  $config;
-}
+sub END { Notifier::entry_notifications() }
+
+sub instance { $notifier }
 
 # user interaction
 
@@ -314,19 +324,19 @@ sub check_entry {
 
 sub notify_comment {
   my $app = MT->instance;
-  my ($err, $comment) = @_;
+  my ($err, $obj) = @_;
   if ($app->{query}->param('subscribe')) {
-    my $email = $comment->email;
+    my $email = $obj->email;
     my $record = Notifier::SUB;
     my $blog_id = 0;
     my $category_id = 0;
-    my $entry_id = $comment->entry_id;
+    my $entry_id = $obj->entry_id;
     Notifier::create_subscription($email, $record, $blog_id, $category_id, $entry_id);
   }
   my $r = MT::Request->instance;
   return unless ($r->cache('mtn_notify_comment'));
-  my $blog_id = $comment->blog_id;
-  my $entry_id = $comment->entry_id;
+  my $blog_id = $obj->blog_id;
+  my $entry_id = $obj->entry_id;
   use Notifier::Data;
   my @work_subs =
     map { $_ }
@@ -337,40 +347,21 @@ sub notify_comment {
     });
   my $work_users = scalar @work_subs;
   return unless ($work_users);
-  Notifier::notify_users($comment, \@work_subs);
+  Notifier::notify_users($obj, \@work_subs);
 }
 
 sub notify_entry {
-  my ($err, $app, $entry) = @_;
+  my ($err, $obj) = @_;
+  use MT::Request;
   my $r = MT::Request->instance;
   return unless ($r->cache('mtn_notify_entry'));
-  my $blog_id = $entry->blog_id;
-  my $entry_id = $entry->id;
-  use Notifier::Data;
-  my @work_subs =
-    map { $_ }
-    Notifier::Data->load({
-      blog_id => $blog_id,
-      record => Notifier::SUB,
-      status => Notifier::RUNNING
-    });
-  use MT::Placement;
-  my @places = MT::Placement->load({
-    entry_id => $entry_id
-  });
-  foreach my $place (@places) {
-    my @category_subs = Notifier::Data->load({
-      category_id => $place->category_id,
-      record => Notifier::SUB,
-      status => Notifier::RUNNING
-    });
-    foreach (@category_subs) {
-      push @work_subs, $_;
-    }
+  my $notify_list = $r->stash('mtn_notify_list') || {};
+  $notify_list->{$obj->id} = 1;
+  $r->stash('mtn_notify_list', $notify_list);
+  unless ($EXECUTE) {
+    MT->add_callback('TakeDown', 5, $about, \&Notifier::entry_notifications);
+    $EXECUTE = 1;
   }
-  my $work_users = scalar @work_subs;
-  return unless ($work_users);
-  Notifier::notify_users($entry, \@work_subs);
 }
 
 1;

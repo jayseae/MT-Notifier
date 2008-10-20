@@ -195,6 +195,10 @@ well - just upload that to your PHP "plugins" directory to be able to use it.
 *** --------------------------------------------------------------------- ***
 
 Changelog:
+3.2.2
+  - Fixed notifications for entries submitted via API.
+  - Added another method for detecting (preventing) duplicates.
+  - September 3, 2005.
 3.1.0
   - Updated settings screen templates for clearer documentation of functions.
   - Added header.tmpl to plugin to provide better confirmation data.
