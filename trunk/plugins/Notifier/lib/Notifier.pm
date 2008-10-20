@@ -28,7 +28,7 @@ use vars qw($SENTSRV1 $SENTSRV2 $SENTSRV3 $VERSION);
 $SENTSRV1 = 'http://www.everitz.com/sol/notifier/sentservice.html';
 $SENTSRV2 = 'http://www.everitz.com/sol/notifier/sent_service.html';
 $SENTSRV3 = 'http://www.everitz.com/sol/mt-notifier/sent_service.html';
-$VERSION = '3.3.0';
+$VERSION = '3.3.1';
 
 sub init {
   my $app = shift;
@@ -43,8 +43,8 @@ sub init {
   $app->{default_mode} = 'default';
   my $mode = $app->{query}->param('__mode');
   $app->{requires_login} = ($mode) ? 1 : 0;
-  if ($ARGV[0] eq 'send_queued') {
-    $app->{query}->param('__mode', 'send_queued');
+  if ($ARGV[0] eq 'queued') {
+    $app->{query}->param('__mode', 'queued');
     $app->{query}->param('limit', $ARGV[1]);
     $app->{requires_login} = 0;
   }
