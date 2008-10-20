@@ -44,7 +44,7 @@ my $about = {
     'Notifier::Data',
     'Notifier::Queue'
   ],
-  schema_version => Notifier->schema_version
+  schema_version => 3.002
 };
 $Notifier = MT::Plugin::Notifier->new($about);
 MT->add_plugin($Notifier);

@@ -26,7 +26,7 @@ use vars qw($SENTSRV1 $SENTSRV2 $SENTSRV3 $VERSION);
 $SENTSRV1 = 'http://www.everitz.com/sol/notifier/sentservice.html';
 $SENTSRV2 = 'http://www.everitz.com/sol/notifier/sent_service.html';
 $SENTSRV3 = 'http://www.everitz.com/sol/mt-notifier/sent_service.html';
-$VERSION = '3.4.5';
+$VERSION = '3.4.6';
 
 sub init {
   my $app = shift;
@@ -349,6 +349,7 @@ sub create_subscription {
     } else {
       $data->status(RUNNING);
     }
+    $data->type(0); # 4.0
     $data->save;
     data_confirmation($data) if ($data->status == PENDING);
   }
@@ -541,10 +542,10 @@ sub notify_users {
     'entry_excerpt' => $entry->get_excerpt,
     'entry_id' => $entry->id,
     'entry_id_'.$entry->id => 1,
-    'entry_keywords' => $entry->get_keywords,
+    'entry_keywords' => $entry->keywords,
     'entry_link' => $entry->permalink,
     'entry_more' => $entry->text_more,
-    'entry_status' => $entry->permalink,
+    'entry_status' => $entry->status,
     'entry_title' => $entry->title,
     'notifier_home' => $notifier->author_link,
     'notifier_name' => $notifier->name,
@@ -711,10 +712,17 @@ sub load_sender_address {
   } else {
     $app->log($app->translate('No system address - please configure one!'));
   }
-  my $blog = load_blog($obj);
+  my $entry;
+  if (UNIVERSAL::isa($obj, 'MT::Comment')) {
+    use MT::Entry;
+    $entry = MT::Entry->load($obj->entry_id) or return;
+  } else {
+    $entry = $obj;
+  }
+  my $blog = MT::Blog->load($entry->blog_id) or return;
   unless ($blog) {
     $app->log($app->translate('Specified blog unavailable - please check your data!'));
-    return $sender_address;
+    return;
   }
   my $blog_config = $notifier->get_config_hash('blog:'.$blog->id);
   if ($blog_config) {
