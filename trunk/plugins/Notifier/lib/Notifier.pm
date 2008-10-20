@@ -24,10 +24,10 @@ use constant TEMP    => 2;
 use constant BULK    => 1;
 
 # version
-use vars qw($SENTSRV $VERSION);
+use vars qw($SENTSRV1 $SENTSRV2 $VERSION);
 $SENTSRV1 = 'http://www.everitz.com/sol/notifier/sentservice.html';
 $SENTSRV2 = 'http://www.everitz.com/sol/notifier/sent_service.html';
-$VERSION = '3.2.4';
+$VERSION = '3.2.5';
 
 sub init {
   my $app = shift;
