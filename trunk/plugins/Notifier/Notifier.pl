@@ -50,6 +50,7 @@ MT::Entry->add_callback('post_save', 1, $about, \&notify_entry);
 
 use MT::Template::Context;
 MT::Template::Context->add_tag(NotifierCatID => \&notifier_category_id);
+MT::Template::Context->add_tag(NotifierCheck => \&notifier_check);
 
 # plugin stuff
 
@@ -278,6 +279,10 @@ sub notifier_category_id {
     $cat_id = $placement->category_id if $placement;
   }
   $cat_id;
+}
+
+sub notifier_check {
+  return MT->instance->{query}->param('subscribe');
 }
 
 # callbacks
