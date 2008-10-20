@@ -28,19 +28,26 @@ use vars qw($SENTSRV1 $SENTSRV2 $SENTSRV3 $VERSION);
 $SENTSRV1 = 'http://www.everitz.com/sol/notifier/sentservice.html';
 $SENTSRV2 = 'http://www.everitz.com/sol/notifier/sent_service.html';
 $SENTSRV3 = 'http://www.everitz.com/sol/mt-notifier/sent_service.html';
-$VERSION = '3.2.7';
+$VERSION = '3.3.0';
 
 sub init {
   my $app = shift;
   $app->SUPER::init (@_) or return;
   $app->add_methods (
     default => \&notifier_request,
-    import => \&notifier_import,
     loader => \&notifier_loader,
+    import => \&notifier_import,
+    queued => \&send_queued,
+    update => \&notifier_loader
   );
   $app->{default_mode} = 'default';
   my $mode = $app->{query}->param('__mode');
-  $app->{requires_login} = (!$mode) ? 0 : 1;
+  $app->{requires_login} = ($mode) ? 1 : 0;
+  if ($ARGV[0] eq 'send_queued') {
+    $app->{query}->param('__mode', 'send_queued');
+    $app->{query}->param('limit', $ARGV[1]);
+    $app->{requires_login} = 0;
+  }
   $app;
 }
 
@@ -146,14 +153,16 @@ sub notifier_loader {
   my $notifier = MT::Plugin::Notifier->instance;
   my $app = MT->instance;
   my $auth = ($app->user->is_superuser) ? 1 : 0;
+  my $load = ($app->{query}->param('__mode') eq 'loader') ? 1 : 0;
   my $message;
   if ($auth) {
     if ($app->{cfg}->ObjectDriver =~ /^DBI::(.*)$/) {
       my $type = $1;
       my $cfg = MT::ConfigMgr->instance;
       my $dbh = MT::Object->driver->{dbh};
-      my $schema = File::Spec->catfile('schemas', $type . '.dump');
-      open FH, $schema or die "<p class=\"bad\">Can't open schema file '$schema': $!</p>";
+      my $update = ($load == 0) ? '-update' : '';
+      my $schema = File::Spec->catfile('schemas', $type.$update.'.dump');
+      open FH, $schema or die "<p class=\"bad\">Can't open '$schema': $!</p>";
       my $ddl;
       { local $/; $ddl = <FH> }
       close FH;
@@ -180,7 +189,9 @@ sub notifier_request {
   my $notifier = MT::Plugin::Notifier->instance;
   my $app = shift;
   my $cipher = $app->{query}->param('c');
-  my $o = $app->{query}->param('o');                  # opt-out flag
+  my $n = $app->{query}->param('n');                  # redirect name
+  my $o = $app->{query}->param('o');                  # opt-out
+  my $r = $app->{query}->param('r');                  # redirect link
   my $u = $app->{query}->param('u');                  # unsubscribe
   my ($email, $blog_id, $category_id, $entry_id);
   my ($confirm, $data, $message, $name, $url);
@@ -292,9 +303,9 @@ sub notifier_request {
         } elsif ($error == 3) {
           $message = 'That record already exists!';
         } else {
-          my $config = $notifier->get_config_hash();
-          my $blog_config = $notifier->get_config_hash('blog:'.$blog_id);
-          $confirm = 1 if ($config->{'system_confirm'} && $blog_config->{'blog_confirm'});
+          $confirm = 1 if
+            $notifier->get_config_value('system_confirm') &&
+            $notifier->get_config_value('blog_confirm', $blog_id);
           $message = 'Your request has been processed successfully!';
         }
       } else {
@@ -304,10 +315,14 @@ sub notifier_request {
       $message = 'Your request must include an email address!';
     }
   }
+  if ($r && $r ne '1') {
+    $name = ($n) ? $n : $r;
+    $url = $r;
+  }
   $app->build_page($notifier->load_tmpl('notification_request.tmpl'), {
     confirm => $confirm,
-    link_name => $name,
-    link_url => $url,
+    link_name => ($r) ? $name : '',
+    link_url => ($r) ? $url : '',
     message => $app->translate($message),
     notifier_version => version_number(),
     page_title => 'MT-Notifier '.$app->translate('Request Processing')
@@ -432,14 +447,16 @@ sub data_confirmation {
   );
   if ($entry) {
     $head{'Subject-Pending'} =
-      $app->translate("Please confirm your request to $record_text \'[_1]\'", $entry->title);
+      $app->translate("Please confirm your request to $record_text \'[_1]\'",
+      $entry->title);
     $head{'Subject-Running'} =
       $app->translate("You have subscribed to $record_text \'[_1]\'", $entry->title);
     $param{'record_link'} = $entry->permalink;
     $param{'record_name'} = MT::Util::remove_html($entry->title);
   } elsif ($category) {
     $head{'Subject-Pending'} =
-      $app->translate("Please confirm your request to $record_text \'[_1]\'", $category->label);
+      $app->translate("Please confirm your request to $record_text \'[_1]\'",
+      $category->label);
     $head{'Subject-Running'} =
       $app->translate("You have subscribed to $record_text \'[_1]\'", $category->label);
     my $link = $blog->archive_url;
@@ -449,7 +466,8 @@ sub data_confirmation {
     $param{'record_name'} = MT::Util::remove_html($category->label);
   } elsif ($blog) {
     $head{'Subject-Pending'} =
-      $app->translate("Please confirm your request to $record_text \'[_1]\'", $blog->name);
+      $app->translate("Please confirm your request to $record_text \'[_1]\'",
+      $blog->name);
     $head{'Subject-Running'} =
       $app->translate("You have subscribed to $record_text \'[_1]\'", $blog->name);
     $param{'record_link'} = $blog->site_url;
@@ -560,27 +578,24 @@ sub notify_users {
   use MT::ConfigMgr;
   my $cfg = MT::ConfigMgr->instance;
   my $charset = $cfg->PublishCharset || 'iso-8859-1';
-  my %head = (
-    'Content-Type' => qq(text/plain; charset="$charset"),
-    'From' => $sender_address,
-    'Subject' => '['.$blog->name.'] '
-  );
-  if ($comment) {
-    $head{'Subject'} .=
-      $app->translate('New Comment from \'[_1]\' ', $comment->author).
-      $app->translate('on \'[_1]\' ', $entry->title);
-  } else {
-    $head{'Subject'} .=
-      $app->translate('New Entry \'[_1]\' ', $entry->title).
-      $app->translate('from \'[_1]\'', $author->name);
-  }
   use MT::Util;
   my %param = (
-    'blog_name' => MT::Util::remove_html($blog->name),
+    'blog_id' => $blog->id,
+    'blog_description' => $blog->description,
+    'blog_name' => $blog->name,
+    'blog_url' => $blog->site_url,
+    'entry_author' => $entry->author->name,
+    'entry_author_nickname' => $entry->author->nickname,
+    'entry_author_email' => $entry->author->email,
+    'entry_author_url' => $entry->author->url,
+    'entry_body' => $entry->text,
     'entry_excerpt' => $entry->get_excerpt,
     'entry_id' => $entry->id,
+    'entry_keywords' => $entry->get_keywords,
     'entry_link' => $entry->permalink,
-    'entry_title' => MT::Util::remove_html($entry->title),
+    'entry_more' => $entry->text_more,
+    'entry_status' => $entry->permalink,
+    'entry_title' => $entry->title,
     'notifier_home' => $notifier->author_link,
     'notifier_name' => $notifier->name,
     'notifier_link' => $cfg->CGIPath.$notifier->envelope.'/mt-notifier.cgi',
@@ -588,21 +603,45 @@ sub notify_users {
   );
   if ($comment) {
     $param{'comment_author'} = $comment->author;
+    $param{'comment_body'} = $comment->text;
+    $param{'comment_id'} = $comment->id;
     $param{'comment_url'} = $comment->url;
-    $param{'comment_text'} = $comment->text;
     $param{'notifier_comment'} = 1,
     $param{'notifier_entry'} = 0
   } else {
     $param{'notifier_comment'} = 0,
     $param{'notifier_entry'} = 1
   }
+  my %head = (
+    'Content-Type' => qq(text/plain; charset="$charset"),
+    'From' => $sender_address,
+    'Subject' => load_email('notification-subject.tmpl', \%param)
+  );
+  my $blog_queued = $notifier->get_config_value('blog_queued', 'blog:'.$blog->id);
+  my $system_queued = $notifier->get_config_value('system_queued');
   foreach my $sub (@subs) {
     next if ($comment && $sub->email eq $comment->email);
     $head{'To'} = $sub->email;
     $param{'record_cipher'} = $sub->cipher;
     my $body = load_email('notification.tmpl', \%param);
-    send_email(\%head, $body);
+    if ($system_queued && $blog_queued) {
+      queue_email(\%head, $body);
+    } else {
+      send_email(\%head, $body);
+    }
   }
+}
+
+sub queue_email {
+  my ($hdrs, $body) = @_;
+  use Notifier::Queue;
+  my $queue = Notifier::Queue->new;
+  $queue->head_content($hdrs->{'Content-Type'});
+  $queue->head_from($hdrs->{'From'});
+  $queue->head_to($hdrs->{'To'});
+  $queue->head_subject($hdrs->{'Subject'});
+  $queue->body($body);
+  $queue->save;
 }
 
 sub send_email {
@@ -632,6 +671,33 @@ sub send_email {
     return MT::Mail->error(MT->translate(
       "Unknown MailTransfer method '[_1]'", $xfer ));
   }
+}
+
+sub send_queued {
+  my $notifier = MT::Plugin::Notifier->instance;
+  my $app = shift;
+  my (%terms, %args);
+  $args{'limit'} = $app->{query}->param('limit');
+  $args{'sort'} = 'id';
+  $args{'direction'} = 'ascend';
+  use Notifier::Queue;
+  my $iter = Notifier::Queue->load_iter(\%terms, \%args);
+  my $count = 0;
+  while (my $q = $iter->()) {
+    my %head = (
+      'Content-Type' => $q->head_content_type,
+      'From' => $q->head_from,
+      'To' => $q->head_to,
+      'Subject' => $q->head_subject
+    );
+    send_email(\%head, $q->body);
+    $q->remove;
+    $count++;
+  }
+  my $s = ($count != 1) ? 's' : '';
+  $app->log($app->translate(
+    "[_1]: Sent [_2] queued notification$s.", 'MT-Notifier', $count)
+  );
 }
 
 # shared functions

@@ -4,6 +4,8 @@
       if (document.getElementById('blog_disabled').checked) {
         document.getElementById('blog_confirm_0').disabled = 1;
         document.getElementById('blog_confirm_1').disabled = 1;
+        document.getElementById('blog_queued_0').disabled = 1;
+        document.getElementById('blog_queued_1').disabled = 1;
         document.getElementById('blog_address_type_1').disabled = 1;
         document.getElementById('blog_address_type_2').disabled = 1;
         document.getElementById('blog_address_type_3').disabled = 1;
@@ -11,6 +13,8 @@
       } else {
         document.getElementById('blog_confirm_0').disabled = 0;
         document.getElementById('blog_confirm_1').disabled = 0;
+        document.getElementById('blog_queued_0').disabled = 0;
+        document.getElementById('blog_queued_1').disabled = 0;
         document.getElementById('blog_address_type_1').disabled = 0;
         document.getElementById('blog_address_type_2').disabled = 0;
         document.getElementById('blog_address_type_3').disabled = 0;
@@ -32,6 +36,11 @@
       <br />
       <input type="radio" name="blog_confirm" id="blog_confirm_0" value="0" <TMPL_IF NAME=BLOG_CONFIRM_0>checked="checked"</TMPL_IF> /> Do not Send Any Confirmation Messages<br />
       <input type="radio" name="blog_confirm" id="blog_confirm_1" value="1" <TMPL_IF NAME=BLOG_CONFIRM_1>checked="checked"</TMPL_IF> /> Send Confirmation for New Subscriptions
+    </p>
+    <p>
+      <br />
+      <input type="radio" name="blog_queued" id="blog_queued_0" value="0" <TMPL_IF NAME=BLOG_QUEUED_0>checked="checked"</TMPL_IF> /> <MT_TRANS phrase="Do not Submit any Notifications to Delivery Queue"><br />
+      <input type="radio" name="blog_queued" id="blog_queued_1" value="1" <TMPL_IF NAME=BLOG_QUEUED_1>checked="checked"</TMPL_IF> /> <MT_TRANS phrase="Submit Notifications to Queue for Later Delivery">
     </p>
     <p>
       <br />

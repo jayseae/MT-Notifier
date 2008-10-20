@@ -1,12 +1,17 @@
 <div class="setting">
   <div class="field">
     <p>
-      <input type="radio" name="system_confirm" id="system_confirm_0" value="0" <TMPL_IF NAME=SYSTEM_CONFIRM_0>checked="checked"</TMPL_IF> /> Do not Send Any Confirmation Messages<br />
-      <input type="radio" name="system_confirm" id="system_confirm_1" value="1" <TMPL_IF NAME=SYSTEM_CONFIRM_1>checked="checked"</TMPL_IF> /> Send Confirmation for New Subscriptions
+      <input type="radio" name="system_confirm" id="system_confirm_0" value="0" <TMPL_IF NAME=SYSTEM_CONFIRM_0>checked="checked"</TMPL_IF> /> <MT_TRANS phrase="Do not Send any Confirmation Messages"><br />
+      <input type="radio" name="system_confirm" id="system_confirm_1" value="1" <TMPL_IF NAME=SYSTEM_CONFIRM_1>checked="checked"</TMPL_IF> /> <MT_TRANS phrase="Send Confirmation for New Subscriptions">
     </p>
     <p>
       <br />
-      Address to use when sending notifications and no other addresses are available:<br /><br />
+      <input type="radio" name="system_queued" id="system_queued_0" value="0" <TMPL_IF NAME=SYSTEM_QUEUED_0>checked="checked"</TMPL_IF> /> <MT_TRANS phrase="Do not Submit any Notifications to Delivery Queue"><br />
+      <input type="radio" name="system_queued" id="system_queued_1" value="1" <TMPL_IF NAME=SYSTEM_QUEUED_1>checked="checked"</TMPL_IF> /> <MT_TRANS phrase="Submit Notifications to Queue for Later Delivery">
+    </p>
+    <p>
+      <br />
+      <MT_TRANS phrase="Address to use when sending notifications and no other addresses are available:"><br /><br />
       <input id="system_address" name="system_address" maxlength="75" size="75" <TMPL_IF NAME=SYSTEM_ADDRESS>value="<TMPL_VAR NAME=SYSTEM_ADDRESS>"</TMPL_IF> />
     </p>
   </div> 

@@ -29,9 +29,11 @@ my $about = {
   settings => new MT::PluginSettings([
     ['system_address'],
     ['system_confirm', { Default => 1 }],
+    ['system_queued', { Default => 0 }],
     ['blog_address_type', { Default => 1 }],
     ['blog_address'],
     ['blog_confirm', { Default => 1 }],
+    ['blog_queued', { Default => 0 }],
     ['blog_disabled', { Default => 0 }]
   ])
 };
