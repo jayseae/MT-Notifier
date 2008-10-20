@@ -15,3 +15,12 @@ create index mt_notifier_data_email on mt_notifier_data (notifier_data_email);
 create index mt_notifier_data_cipher on mt_notifier_data (notifier_data_cipher);
 create index mt_notifier_data_record on mt_notifier_data (notifier_data_record);
 create index mt_notifier_data_status on mt_notifier_data (notifier_data_status);
+
+create table mt_notifier_queue (
+  notifier_queue_id integer not null primary key,
+  notifier_queue_head_content varchar(75),
+  notifier_queue_head_from varchar(75) not null,
+  notifier_queue_head_to varchar(75) not null,
+  notifier_queue_head_subject varchar(255),
+  notifier_queue_body text
+);
