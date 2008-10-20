@@ -1,0 +1,158 @@
+*** --------------------------------------------------------------------- ***
+Copyright 2003-2005, Everitz Consulting (mt@everitz.com)
+
+Licensed under the Open Software License version 2.1
+*** --------------------------------------------------------------------- ***
+
+3.2.6
+  - Redirect documentation to online location.
+  - Create separate revisions document.
+  - September 26, 2005.
+3.2.5
+  - Fixed problem introduced in 3.2.4 with variable declaration.
+  - September 16, 2005.
+3.2.4
+  - Updated sent service URL.
+  - September 15, 2005.
+3.2.3
+  - Fixed documentation link.
+  - September 3, 2005.
+3.2.2
+  - Fixed notifications for entries submitted via API.
+  - Added another method for detecting (preventing) duplicates.
+  - September 3, 2005.
+3.1.0
+  - Updated settings screen templates for clearer documentation of functions.
+  - Added header.tmpl to plugin to provide better confirmation data.
+  - Reworked request logic to handle blog configurations correctly.
+  - Fixed blog link in subscription confirmation.
+  - August 31, 2005.
+3.0.4
+  - Added confirmation message to subscription screen.
+  - Fixed subscription counts.
+  - Fixed blog lookups.
+  - August 30, 2005.
+3.0.0
+  - Reworked for MT 3.2.
+  - August 17, 2005
+2.5.0
+  - Updated copyright info to reflect acquisition by Everitz Consulting.
+  - May 18, 2005
+2.4.6
+  - Fixed regex for handling single-digit subscriptions.
+  - March 10, 2005
+2.4.5
+  - Added ability to specify parameter "url" on subscription form.
+  - March 1, 2005
+2.4.4
+  - Added MTNotifierCatID template tag to display ID of context category.
+  - February 15, 2005
+2.4.3
+  - Fixed blog or category subscriptions when subscription type set (like 2.3.5).
+  - January 21, 2005
+2.4.2
+  - Fixed display of site-wide configuration type.
+  - January 12, 2005
+2.4.1
+  - Additional logging of the number of notification items sent.
+  - Fixed user purge within management screen (to stay in management mode).
+  - January 6, 2005
+2.4.0
+  - Added transfer of Movable Type subscription data.
+  - January 5, 2005
+2.3.5.2
+  - Fixed a small bug in module_magic, introduced in 2.3.5.1.
+  - January 4, 2005
+2.3.5.1
+  - Fixed a problem with logging during comment subscription.
+  - January 4, 2005
+2.3.5
+  - Fixed a problem with entry subscription when subscription type set.
+  - January 3, 2005
+2.3.4
+  - Added some log messages to subscription process.
+  - December 31, 2004
+2.3.3
+  - Fixed problem with sending duplicate entry notifications.
+  - Created parameter to send all entries or only new ones.
+  - November 8, 2004
+2.3.2
+  - Fixed problem with manual subscription process.
+  - September 23, 2004
+2.3.1
+  - Fixed problem with variable message in enabler subroutine.
+  - September 20, 2004
+2.3.0
+  - Added entry notifications, including configuration options.
+  - Cleaned up code, fixed some minor bugs.
+  - September 15, 2004
+2.2.4
+  - Updated manage_address login to handle $mail/$code as well as $akey.
+  - September 6, 2004
+2.2.3
+  - Corrected module_magic for MT 3.1.
+  - September 4, 2004
+2.2.2
+  - Re-fixed 2.2 change.
+  - September 3, 2004
+2.2.1
+  - Repackaged with directory structure.
+  - August 25, 2004
+2.2.0
+  - Fixed subscription routine outside of management interface.
+  - July 25, 2004
+2.1.0
+  - Added conversion of EZ Subscribe to Comments data.
+  - July 15, 2004
+2.0.1
+  - Re-designed/cleaned up user interface.
+  - Fixed redirects when login required.
+  - Updated interface to MT 3-style design.
+  - Updated data access to use subroutines.
+  - Updated purge interface with more options.
+  - Updated conversion from Scripty Goddess.
+  - Updated hackomatic to process subscribe.
+  - Added category subscriptions and opt-out records.
+  - Added translation hooks for most text strings.
+  - Added admin and user management interface.
+  - Added enabler sub for configuration.
+  - Added conversion from Notifier version 1.
+  - Added skip first message to commentor.
+  - Standardized error messages.
+  - July 6, 2004
+1.4.1
+  - Fixed $sender variable declaration.
+  - March 17, 2004
+1.4.0
+  - Added auto-backup and auto-hack functions.
+  - Fixed some tags in the template to be XHTML-compliant.
+  - February 6, 2004
+1.3.0
+  - Added conversion of ScriptyGoddess subscription data.
+  - Fixed distribution package.
+  - December 15, 2003
+1.2.0
+  - Added per-blog and per-install default "from" addresses.
+  - Added subroutine to get an email address for the sender.
+  - Added purge of address information.
+  - Fixed purges to work correctly.
+  - Removed $SENDER variable.
+  - December 10, 2003
+1.1.0
+  - Added redirect information on confirmation screen.
+  - Added additional author information to notification email.
+  - Use entry author first, then $SENDER.
+  - November 20, 2003
+1.0.0
+  - Initial release
+  - November 19, 2003
+
+*** -------------------------------------------------------------------- ***
+
+Thanks To:
+
+David [1] for picking up on my regex error.
+
+[1] http://www.rayners.org/
+
+*** -------------------------------------------------------------------- ***
