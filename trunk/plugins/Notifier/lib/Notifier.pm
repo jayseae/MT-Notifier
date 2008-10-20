@@ -28,7 +28,7 @@ use vars qw($SENTSRV1 $SENTSRV2 $SENTSRV3 $VERSION);
 $SENTSRV1 = 'http://www.everitz.com/sol/notifier/sentservice.html';
 $SENTSRV2 = 'http://www.everitz.com/sol/notifier/sent_service.html';
 $SENTSRV3 = 'http://www.everitz.com/sol/mt-notifier/sent_service.html';
-$VERSION = '3.4.3';
+$VERSION = '3.4.4';
 
 sub init {
   my $app = shift;
