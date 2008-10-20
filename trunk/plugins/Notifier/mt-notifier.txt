@@ -195,6 +195,11 @@ well - just upload that to your PHP "plugins" directory to be able to use it.
 *** --------------------------------------------------------------------- ***
 
 Changelog:
+3.0.4
+  - Added confirmation message to subscription screen.
+  - Fixed subscription counts.
+  - Fixed blog lookups.
+  - August 30, 2005.
 3.0.0
   - Reworked for MT 3.2.
   - August 17, 2005

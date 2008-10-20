@@ -25,7 +25,7 @@ use constant BULK    => 1;
 
 # version
 use vars qw($VERSION);
-$VERSION = '3.0.0';
+$VERSION = '3.0.4';
 
 sub init {
   my $app = shift;
@@ -190,7 +190,7 @@ sub notifier_request {
   my $blog_id = $app->{query}->param('blog_id');
   my $category_id = $app->{query}->param('category_id');
   my $entry_id = $app->{query}->param('entry_id');
-  my ($data, $message);
+  my ($confirm, $data, $message);
   if ($cipher) {
     use Notifier::Data;
     $data = Notifier::Data->load({ cipher => $cipher });
@@ -202,6 +202,7 @@ sub notifier_request {
         my $email = $data->email;
         my $record = OPT;
         if ($entry_id) {
+          use MT::Entry;
           my $entry = MT::Entry->load($entry_id);
           if ($entry) {
             $blog_id = $entry->blog_id;
@@ -248,12 +249,17 @@ sub notifier_request {
           $entry_id = 0;
         }
         my $error = create_subscription($email, SUB, $blog_id, $category_id, $entry_id);
-        $message = $app->translate('The specified email address is not valid!')
-          if ($error == 1);
-        $message = $app->translate('The requested record key is not valid!')
-          if ($error == 2);
-        $message = $app->translate('Your request has been processed successfully!')
-          unless ($error);
+        if ($error == 1) {
+          $message = $app->translate('The specified email address is not valid!');
+        } elsif ($error == 2) {
+          $message = $app->translate('The requested record key is not valid!');
+        } else {
+          $message = $app->translate('Your request has been processed successfully!');
+          my $config = $notifier->get_config_hash();
+          my $blog_config = $notifier->get_config_hash('blog:'.$blog_id);
+          $confirm = 1 if ($config->{'system_confirm'} && $blog_config->{'blog_confirm'});
+        }
+
       } else {
         $message = $app->translate('Your request did not include a record key!');
       }
@@ -265,6 +271,7 @@ sub notifier_request {
      bc_name => 'MT-Notifier > '.$app->translate('Subscription Request Processing')
   } ];
   $app->build_page($notifier->load_tmpl('notification_request.tmpl'), {
+    confirm => $confirm,
     message => $message,
     notifier_version => version_number(),
     redirect => $redirect
@@ -327,15 +334,16 @@ sub create_subscription {
     $data->save;
     data_confirmation($data) if ($data->status == PENDING);
   }
+  return 0;
 }
 
 sub data_confirmation {
   my $notifier = MT::Plugin::Notifier->instance;
   my $app = MT->instance;
   my ($data) = @_;
-  my $blog = MT::Blog->load($data->blog_id) or return;
   my ($category, $entry, $type);
   if ($data->entry_id) {
+    use MT::Entry;
     $entry = MT::Entry->load($data->entry_id) or return;
     $type = $app->translate('Entry');
   } elsif ($data->category_id) {
@@ -353,7 +361,11 @@ sub data_confirmation {
     }
   }
   my $sender_address = load_sender_address($data, $author);
-  return unless ($sender_address);
+  unless ($sender_address) {
+    $app->log($app->translate('No sender address available - aborting confirmation!'));
+    return;
+  }
+  my $blog = load_blog($data);
   use MT::ConfigMgr;
   my $cfg = MT::ConfigMgr->instance;
   $app->set_language($cfg->DefaultLanguage) unless ($lang);
@@ -410,40 +422,23 @@ sub data_confirmation {
   send_email(\%head, $body);
 }
 
-sub load_sender_address {
-  my $notifier = MT::Plugin::Notifier->instance;
-  my $app = MT->instance;
-  my ($obj, $author) = @_;
-  my $sender_address;
-  my $config = $notifier->get_config_hash();
-  if ($config) {
-    if ($config->{'system_address_type'}) {
-      $sender_address = $config->{'system_address'};
-    } else {
-      $sender_address = $author->email if ($author);
-    }
-  }
-  my $blog_config = $notifier->get_config_hash('blog:'.$obj->blog_id);
-  if ($blog_config) {
-    if ($blog_config->{'blog_address_type'} == 2) {
-      $sender_address = $author->email if ($author);
-    } elsif ($blog_config->{'blog_address_type'} == 3) {
-      $sender_address = $blog_config->{'blog_address'};
-    }
-  }
-  use MT::Util;
-  if (my $fixed = MT::Util::is_valid_email($sender_address)) {
-    return $fixed;
+sub load_blog {
+  my ($obj) = @_;
+  my $blog_id;
+  use MT::Blog;
+  if ($obj->entry_id) {
+    use MT::Entry;
+    my $entry = MT::Entry->load($obj->entry_id) or return;
+    $blog_id = $entry->blog_id;
+  } elsif ($obj->category_id) {
+    use MT::Category;
+    my $category = MT::Category->load($obj->category_id) or return;
+    $blog_id = $category->blog_id;
   } else {
-    my $message = 'MT-Notifier: ';
-    if ($sender_address) {
-      $message .= $app->translate('Invalid sender address - please reconfigure it!');
-    } else {
-      $message .= $app->translate('No sender address - please configure one!');
-    }
-    $app->log($message);
-    return;
+    $blog_id = $obj->blog_id;
   }
+  my $blog = MT::Blog->load($blog_id) or return;
+  $blog;
 }
 
 sub load_email {
@@ -475,12 +470,48 @@ sub load_email {
   MT->translate_templatized($tmpl->output);
 }
 
+sub load_sender_address {
+  my $notifier = MT::Plugin::Notifier->instance;
+  my $app = MT->instance;
+  my ($obj, $author) = @_;
+  my $sender_address = $author->email if ($author);
+  my $config = $notifier->get_config_hash();
+  if ($config && $config->{'system_address_type'}) {
+    $sender_address = $config->{'system_address'};
+  }
+  my $blog = load_blog($obj);
+  unless ($blog) {
+    $app->log($app->translate('Specified blog unavailable - please check your data!'));
+    return $sender_address;
+  }
+  my $blog_config = $notifier->get_config_hash('blog:'.$blog->id);  if ($blog_config) {
+    if ($blog_config->{'blog_address_type'} == 2) {
+      $sender_address = $author->email if ($author);
+    } elsif ($blog_config->{'blog_address_type'} == 3) {
+      $sender_address = $blog_config->{'blog_address'};
+    }
+  }
+  use MT::Util;
+  if (my $fixed = MT::Util::is_valid_email($sender_address)) {
+    return $fixed;
+  } else {
+    my $message = 'MT-Notifier: ';
+    if ($sender_address) {
+      $message .= $app->translate('Invalid sender address - please reconfigure it!');
+    } else {
+      $message .= $app->translate('No sender address - please configure one!');
+    }
+    $app->log($message);
+    return;
+  }
+}
+
 sub notify_users {
   my $notifier = MT::Plugin::Notifier->instance;
   my $app = MT->instance;
   my ($obj, $work_subs) = @_;
-  my $blog = MT::Blog->load($obj->blog_id) or return;
   my ($entry, $comment, $type);
+  use MT::Entry;
   if (UNIVERSAL::isa($obj, 'MT::Comment')) {
     $entry = MT::Entry->load($obj->entry_id) or return;
     $comment = $obj;
@@ -489,6 +520,8 @@ sub notify_users {
     $entry = $obj;
     $type = $app->translate('Entry');
   }
+  use MT::Blog;
+  my $blog = MT::Blog->load($obj->blog_id) or return;
   my @work_opts =
     map { $_ }
     Notifier::Data->load({

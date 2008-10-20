@@ -117,7 +117,7 @@ sub subscription_view {
       my $blog = MT::Blog->load($id);
       my $opts = Notifier::Data->count({ blog_id => $id, record => Notifier::OPT });
       my $subs = Notifier::Data->count({ blog_id => $id, record => Notifier::SUB });
-      push @subs, { name => $blog->name, opts => $opts, subs => $subs };
+      push @subs, { name => $blog->name, opt_count => $opts, sub_count => $subs };
       $total_opts += $opts;
       $total_subs += $subs;
     } elsif ($type eq 'category') {
@@ -125,7 +125,7 @@ sub subscription_view {
       my $category = MT::Category->load($id);
       my $opts = Notifier::Data->count({ category_id => $id, record => Notifier::OPT });
       my $subs = Notifier::Data->count({ category_id => $id, record => Notifier::SUB });
-      push @subs, { name => $category->label, opts => $opts, subs => $subs };
+      push @subs, { name => $category->label, opt_count => $opts, sub_count => $subs };
       $total_opts += $opts;
       $total_subs += $subs;
     } elsif ($type eq 'entry') {
