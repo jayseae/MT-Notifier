@@ -28,7 +28,7 @@ use vars qw($SENTSRV1 $SENTSRV2 $SENTSRV3 $VERSION);
 $SENTSRV1 = 'http://www.everitz.com/sol/notifier/sentservice.html';
 $SENTSRV2 = 'http://www.everitz.com/sol/notifier/sent_service.html';
 $SENTSRV3 = 'http://www.everitz.com/sol/mt-notifier/sent_service.html';
-$VERSION = '3.3.1';
+$VERSION = '3.4.0';
 
 sub init {
   my $app = shift;
@@ -437,46 +437,33 @@ sub data_confirmation {
   );
   use MT::Util;
   my %param = (
+    'blog_id' => $blog->id,
+    'blog_id_'.$blog->id => 1,
+    'blog_description' => MT::Util::remove_html($blog->description),
     'blog_name' => MT::Util::remove_html($blog->name),
+    'blog_url' => $blog->site_url,
     'notifier_home' => $notifier->author_link,
     'notifier_name' => $notifier->name,
     'notifier_link' => $cfg->CGIPath.$notifier->envelope.'/mt-notifier.cgi',
+    'notifier_running' => $data->status,
     'notifier_version' => version_number(),
     'record_cipher' => $data->cipher,
     'record_text' => $record_text
   );
   if ($entry) {
-    $head{'Subject-Pending'} =
-      $app->translate("Please confirm your request to $record_text \'[_1]\'",
-      $entry->title);
-    $head{'Subject-Running'} =
-      $app->translate("You have subscribed to $record_text \'[_1]\'", $entry->title);
     $param{'record_link'} = $entry->permalink;
     $param{'record_name'} = MT::Util::remove_html($entry->title);
   } elsif ($category) {
-    $head{'Subject-Pending'} =
-      $app->translate("Please confirm your request to $record_text \'[_1]\'",
-      $category->label);
-    $head{'Subject-Running'} =
-      $app->translate("You have subscribed to $record_text \'[_1]\'", $category->label);
     my $link = $blog->archive_url;
     $link .= '/' unless $link =~ m/\/$/;
     $link .= MT::Util::archive_file_for ('',  $blog, $type, $category);
     $param{'record_link'} = $link;
     $param{'record_name'} = MT::Util::remove_html($category->label);
   } elsif ($blog) {
-    $head{'Subject-Pending'} =
-      $app->translate("Please confirm your request to $record_text \'[_1]\'",
-      $blog->name);
-    $head{'Subject-Running'} =
-      $app->translate("You have subscribed to $record_text \'[_1]\'", $blog->name);
     $param{'record_link'} = $blog->site_url;
     $param{'record_name'} = MT::Util::remove_html($blog->name);
   }
-  $param{'status'} = $data->status;
-  $param{'request_subject'} = ($param{'status'}) ?
-    $head{'Subject-Running'} : $head{'Subject-Pending'};
-  $head{'Subject'} .= $param{'request_subject'};
+  $head{'Subject'} = load_email('confirmation-subject.tmpl', \%param);
   $head{'To'} = $data->email;
   my $body = load_email('confirmation.tmpl', \%param);
   send_email(\%head, $body);
@@ -581,8 +568,9 @@ sub notify_users {
   use MT::Util;
   my %param = (
     'blog_id' => $blog->id,
-    'blog_description' => $blog->description,
-    'blog_name' => $blog->name,
+    'blog_id_'.$blog->id => 1,
+    'blog_description' => MT::Util::remove_html($blog->description),
+    'blog_name' => MT::Util::remove_html($blog->name),
     'blog_url' => $blog->site_url,
     'entry_author' => $entry->author->name,
     'entry_author_nickname' => $entry->author->nickname,
@@ -591,6 +579,7 @@ sub notify_users {
     'entry_body' => $entry->text,
     'entry_excerpt' => $entry->get_excerpt,
     'entry_id' => $entry->id,
+    'entry_id_'.$entry->id => 1,
     'entry_keywords' => $entry->get_keywords,
     'entry_link' => $entry->permalink,
     'entry_more' => $entry->text_more,
