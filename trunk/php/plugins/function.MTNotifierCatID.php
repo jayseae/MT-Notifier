@@ -1,8 +1,6 @@
 <?php
 # ===========================================================================
-# Copyright 2003-2005, Everitz Consulting (mt@everitz.com)
-#
-# Licensed under the Open Software License version 2.1
+# Copyright Everitz Consulting.  Not for redistribution.
 # ===========================================================================
 
 function smarty_function_MTNotifierCatID($args, &$ctx) {
