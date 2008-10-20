@@ -4,8 +4,8 @@ Copyright 2003-2005, Everitz Consulting (mt@everitz.com)
 Licensed under the Open Software License version 2.1
 *** --------------------------------------------------------------------- ***
 
-Release '3.1.0'
-August 31, 2005
+Release '3.2.4'
+September 15, 2005
 
 http://www.everitz.com/
 
@@ -195,6 +195,12 @@ well - just upload that to your PHP "plugins" directory to be able to use it.
 *** --------------------------------------------------------------------- ***
 
 Changelog:
+3.2.4
+  - Updated sent service URL.
+  - September 15, 2005.
+3.2.3
+  - Fixed documentation link.
+  - September 3, 2005.
 3.2.2
   - Fixed notifications for entries submitted via API.
   - Added another method for detecting (preventing) duplicates.

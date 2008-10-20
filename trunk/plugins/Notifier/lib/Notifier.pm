@@ -25,8 +25,9 @@ use constant BULK    => 1;
 
 # version
 use vars qw($SENTSRV $VERSION);
-$SENTSRV = 'http://www.everitz.com/sol/notifier/sentservice.html';
-$VERSION = '3.2.3';
+$SENTSRV1 = 'http://www.everitz.com/sol/notifier/sentservice.html';
+$SENTSRV2 = 'http://www.everitz.com/sol/notifier/sent_service.html';
+$VERSION = '3.2.4';
 
 sub init {
   my $app = shift;
@@ -473,7 +474,8 @@ sub entry_notifications {
     my $entry = MT::Entry->load($entry_id);
     next unless ($entry);
     my $pinged = $entry->pinged_urls;
-    next if ($pinged && $pinged =~ m/$SENTSRV/);
+    next if ($pinged && $pinged =~ m/$SENTSRV1/);
+    next if ($pinged && $pinged =~ m/$SENTSRV2/);
     my $blog_id = $entry->blog_id;
     my @work_subs =
       map { $_ }
@@ -500,7 +502,7 @@ sub entry_notifications {
     next unless ($work_users);
     notify_users($entry, \@work_subs);
     $pinged = $entry->pinged_url_list;
-    push(@$pinged, $SENTSRV);
+    push(@$pinged, $SENTSRV2);
     $entry->pinged_urls(join("\n", @$pinged));
     $entry->save;
   }
