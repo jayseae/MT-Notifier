@@ -59,11 +59,12 @@ use vars qw( %Lexicon );
 	'Clear Subscription(s)' => 'Mitteilung(en) zur&uuml;cksetzen',
 	'Verify Subscription(s)' => 'Mitteilung(en) best&auml;tigen',
 
-	## Notifier.pl (Admin interface)
-	'subscription address' => 'Mitteilungs-Adresse',
-	'subscription addresses' => 'Mitteilungs-Adressen',
-	'Delete selected subscription addresses (x)' => 'L&ouml;sche ausgew&auml;hlte Mitteilungs-Adressen (x)',
-	'Subscriptions' => 'Abonnements',
+	## lib/Manager.pm (Admin interface)
+	'Edit Subscription List' => 'Mitteilungsliste bearbeiten',
+	'Subscriptions' => 'Mitteilungen',
+	'You did not select any [_1] to delete' => 'You did not select any [_1] to delete',
+	'Are you sure you want to delete this [_1]?' => 'Are you sure you want to delete this [_1]?',
+	'Are you sure you want to delete the [_1] selected [_2]?' => 'Are you sure you want to delete the [_1] selected [_2]?',
 	'Create New Blog Subscription' => 'Erstelle neues Blog Abonnement',
 	'[_1] is currently providing this list. You may change this behavior from the plugins settings menu.' => '[_1] bietet derzeit diese Liste an. Sie k&ouml;nnen dieses Verhalten im Menu der Plugineinstellungen &auml;ndern.',
 	'Only show' => 'Zeige nur',
@@ -71,16 +72,17 @@ use vars qw( %Lexicon );
 	'blocked' => 'blockiert',
 	'or' => 'oder',
 	'pending' => 'ausstehend',
-	'subscriptions' => 'Abonnements',
-	 'Show all subscriptions' => 'Zeige alle Mitteilungen',
+	'subscriptions' => 'Mitteilungen',
+        'Show all subscriptions' => 'Zeige alle Mitteilungen',
 	'(Showing all subscriptions.)' => '(alle Mitteilungen werden angezeigt.)',
 	'Showing only active subscriptions.' => 'Zeige nur aktive Mitteilungen.',
 	'Showing only blocked subscriptions.' => 'Zeige nur blockierte Mitteilungen.',
 	'Showing only pending subscriptions.' => 'Zeige nur ausstehende Mitteilungen.',
 	'Add Subscription' => 'Mitteilung(en) hinzuf&uuml;gen',
 	'No subscriptions could be found.' => 'Es konten keine Mitteilungen gefunden werden.',
-	'Edit Subscription List' => 'Mitteilungsliste bearbeiten',
-	'Subscriptions' => 'Mitteilungen',
+	'subscription address' => 'Mitteilungs-Adresse',
+	'subscription addresses' => 'Mitteilungs-Adressen',
+	'Delete selected subscription addresses (x)' => 'L&ouml;sche ausgew&auml;hlte Mitteilungs-Adressen (x)',
 	'Only show blocked subscriptions' => 'Zeige nur blockierte Mitteilungen.',
 	'Blocked' => 'Blockiert',
 	'Only show active subscriptions' => 'Zeige nur aktive Mitteilungen.',
@@ -109,10 +111,9 @@ use vars qw( %Lexicon );
 	'No sender address available - aborting confirmation!' => 'Kein Absender verf&uuml;gbar - Best&auml;tigung wird abgebrochen!',
 	'subscribe to' => 'anmelden bei',
 	'opt-out of' => 'opt-out von',
-	'Unknown MailTransfer method \'[_1]\'' => 'Unbekannte MailTransfer Methode \'[_1]\'',
 	'[_1]: Sent [_2] queued notification[_3].' => '[_1]: [_2] Benachrichtigungen gesendet.',
 	'Loading template \'[_1]\' failed: [_2]' => 'Laden der Vorlage \'[_1]\' gescheitert: [_2]',
-	# 'No system address - please configure one!' => 'Keine Systemadresse - bitte richten Sie eine ein!',
+	'No system address - please configure one!' => 'Keine Systemadresse - bitte richten Sie eine ein!',
 	'Specified blog unavailable - please check your data!' => 'Angegebener Blog nicht verf&uuml;gbar - bitte &uuml;berpr&uuml;fen Sie Ihre Angaben!',
 	'Invalid sender address - please reconfigure it!' => 'Ung&uuml;ltige Absenderadresse - bitte &uuml;berpr&uuml;fen Sie Ihre Angaben!',
 	'No sender address - please configure one!' => 'Keine Absenderadresse - bitte richten Sie eine ein!',
@@ -124,11 +125,9 @@ use vars qw( %Lexicon );
 	'You will receive an email to confirm your request momentarily.  If you do not, you may submit your request again.' => 'Sie erhalten in K&uuml;rze eine E-Mail um Ihre Anmeldung zu best&auml;tigen. Wenn Sie keine E-Mail erhalten, melden Sie sich erneut an.',
 
 	## tmpl/notifier_start.tmpl
-	'Add Subscription(s)' => 'Mitteilung(en) hinzuf&uuml;gen',
 	'Enter the email addresses, one per line, that you would like to subscribe to the current selection.  Click the Add Subscription(s) button to process the addresses when your list is complete.' => 'Geben Sie zeilenweise die E-Mail Adressen an, die Sie der Auswahl hinzuf&uuml;gen m&ouml;chten. Klicken Sie \"Mitteilung(en) hinzuf&uuml;gen\" um die komplette Liste anzumelden.',
-	'Block Notification(s)' => 'Mitteilung(en) blockieren',
 	'Enter the email addresses, one per line, that you would like to enter into the system in order to block notifications.  These records are used to prevent notifications from being sent to a specific address, and are used in the event that a particular user no longer wants to receive anything from your site.  Click the Block Notification(s) button to process the addresses when your list is complete.' => 'Geben Sie zeilenweise die E-Mail Adressen an, die Sie vom System blockieren lassen m&ouml;chten.Diese Eintr&auml;ge werden verwendet um zu verhindern, dass Benachrichtigungen an bestimmte Adressen gesendet werden. Dies geschieht, wenn ein Benutzer angibt, nicht l&auml;nger von Ihrer Seite benachrichtigt zu werden.Klicken Sie \"Mitteilung(en) blockieren\" um die komplette Liste zu blockieren.',
-	'Create Notification(s)' => 'Mitteilung(en) erstellen',
+	'Create Subscription(s)' => 'Mitteilung(en) erstellen',
 
 	## tmpl/settings_blog.tmpl
 	'Disable MT-Notifier for This Blog' => 'MT-Notifier f&uuml;r diesen Blog deaktivieren',
@@ -153,7 +152,6 @@ use vars qw( %Lexicon );
 	'Address to use when sending notifications and no other addresses are available:' => 'Adresse, welche verwendet wird, wenn Benachrichtigungen gesendet werden und keine andere Adresse verf&uuml;gbar ist:',
 
 	## tmpl/subscription_view.tmpl
-	'View Subscription Count' => 'Anzahl der Mitteilungen anzeigen',
 	'Total' => 'Insgesamt',
 	'Here is the count of current subscribers for your selected items.' => 'Hier ist die Anzahl der derzeitigen Abonnenten f&uuml;r die Auswahl',
 	'Blog Name' => 'Blog Name',

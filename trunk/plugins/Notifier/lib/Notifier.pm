@@ -35,7 +35,7 @@ use constant BULK    => 1;
 
 # version
 use vars qw($VERSION);
-$VERSION = '3.5.0';
+$VERSION = '3.5.1';
 
 sub init {
   my $app = shift;
@@ -143,7 +143,7 @@ sub notifier_import {
       }
     }
     my $s = ($count eq 1) ? '' : 's';
-    $message = $app->translate("You have successfully converted [_1] record$s!", $count);
+    $message = $app->translate("You have successfully converted [_1] record[_2]!", $count, $s);
   } else {
     $message = $app->translate('You are not authorized to run this process!');
   }
@@ -356,6 +356,7 @@ sub create_subscription {
     } else {
       $data->status(RUNNING);
     }
+    $data->ip($app->remote_ip);
     $data->type(0); # 4.0
     $data->save;
     data_confirmation($data) if ($data->status == PENDING);
@@ -441,7 +442,7 @@ sub entry_notifications {
   my $app = MT->instance;
   require MT::Request;
   my $r = MT::Request->instance;
-  my $notify_list = $r->stash('mtn_notify_list') || {};
+  my $notify_list = $r->cache('mtn_notify_list') || {};
   return unless (scalar(keys(%$notify_list)));
   foreach my $entry_id (keys %$notify_list) {
     require MT::Entry;
@@ -477,7 +478,7 @@ sub entry_notifications {
     next unless ($work_users);
     notify_users($entry, \@work_subs);
   }
-  $r->stash('mtn_notify_list', {});
+  $r->cache('mtn_notify_list', {});
 }
 
 sub notify_users {
@@ -667,7 +668,7 @@ sub send_queued {
   }
   my $s = ($count != 1) ? 's' : '';
   $app->log($app->translate(
-    "[_1]: Sent [_2] queued notification$s.", 'MT-Notifier', $count)
+    "[_1]: Sent [_2] queued notification[_3].", 'MT-Notifier', $count, $s)
   );
 }
 
