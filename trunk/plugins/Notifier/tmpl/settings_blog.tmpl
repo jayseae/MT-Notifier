@@ -2,6 +2,9 @@
   <!--
     function hide_and_seek () {
       if (document.getElementById('blog_disabled').checked) {
+        document.getElementById('blog_userlist_1').disabled = 1;
+        document.getElementById('blog_userlist_2').disabled = 1;
+        document.getElementById('blog_userlist_3').disabled = 1;
         document.getElementById('blog_confirm_0').disabled = 1;
         document.getElementById('blog_confirm_1').disabled = 1;
         document.getElementById('blog_queued_0').disabled = 1;
@@ -11,6 +14,9 @@
         document.getElementById('blog_address_type_3').disabled = 1;
         document.getElementById('blog_address').disabled = 1;
       } else {
+        document.getElementById('blog_userlist_1').disabled = 0;
+        document.getElementById('blog_userlist_2').disabled = 0;
+        document.getElementById('blog_userlist_3').disabled = 0;
         document.getElementById('blog_confirm_0').disabled = 0;
         document.getElementById('blog_confirm_1').disabled = 0;
         document.getElementById('blog_queued_0').disabled = 0;
@@ -30,12 +36,18 @@
 <div class="setting">
   <div class="field">
     <p>
-      <input type="checkbox" name="blog_disabled" id="blog_disabled" onclick="hide_and_seek(this.form)" value="1" <TMPL_IF NAME=BLOG_DISABLED>checked="checked"</TMPL_IF> /> Disable MT-Notifier for This Blog
+      <input type="checkbox" name="blog_disabled" id="blog_disabled" onclick="hide_and_seek(this.form)" value="1" <TMPL_IF NAME=BLOG_DISABLED>checked="checked"</TMPL_IF> /> <MT_TRANS phrase="Disable MT-Notifier for This Blog">
     </p>
     <p>
       <br />
-      <input type="radio" name="blog_confirm" id="blog_confirm_0" value="0" <TMPL_IF NAME=BLOG_CONFIRM_0>checked="checked"</TMPL_IF> /> Do not Send Any Confirmation Messages<br />
-      <input type="radio" name="blog_confirm" id="blog_confirm_1" value="1" <TMPL_IF NAME=BLOG_CONFIRM_1>checked="checked"</TMPL_IF> /> Send Confirmation for New Subscriptions
+      <input type="radio" name="blog_userlist" id="blog_userlist_1" value="1" <TMPL_IF NAME=BLOG_USERLIST_1>checked="checked"</TMPL_IF> /> <MT_TRANS phrase="Use System Setting for Notification List (Default)"><br />
+      <input type="radio" name="blog_userlist" id="blog_userlist_2" value="2" <TMPL_IF NAME=BLOG_USERLIST_2>checked="checked"</TMPL_IF> /> <MT_TRANS phrase="Display Movable Type Notification List"><br />
+      <input type="radio" name="blog_userlist" id="blog_userlist_3" value="3" <TMPL_IF NAME=BLOG_USERLIST_3>checked="checked"</TMPL_IF> /> <MT_TRANS phrase="Display MT-Notifier Subscription List">
+    </p>
+    <p>
+      <br />
+      <input type="radio" name="blog_confirm" id="blog_confirm_0" value="0" <TMPL_IF NAME=BLOG_CONFIRM_0>checked="checked"</TMPL_IF> /> <MT_TRANS phrase="Do not Send Any Confirmation Messages"><br />
+      <input type="radio" name="blog_confirm" id="blog_confirm_1" value="1" <TMPL_IF NAME=BLOG_CONFIRM_1>checked="checked"</TMPL_IF> /> <MT_TRANS phrase="Send Confirmation for New Subscriptions">
     </p>
     <p>
       <br />
@@ -44,9 +56,9 @@
     </p>
     <p>
       <br />
-      <input type="radio" name="blog_address_type" id="blog_address_type_1" onclick="hide_and_seek()" value="1" <TMPL_IF NAME=BLOG_ADDRESS_TYPE_1>checked="checked"</TMPL_IF> /> Use System Address for Sender Address (Default)<br />
-      <input type="radio" name="blog_address_type" id="blog_address_type_2" onclick="hide_and_seek()" value="2" <TMPL_IF NAME=BLOG_ADDRESS_TYPE_2>checked="checked"</TMPL_IF> /> Use Author Address for Sending Notifications<br />
-      <input type="radio" name="blog_address_type" id="blog_address_type_3" onclick="hide_and_seek()" value="3" <TMPL_IF NAME=BLOG_ADDRESS_TYPE_3>checked="checked"</TMPL_IF> /> Use This Address for Sending Notifications:<br /><br />
+      <input type="radio" name="blog_address_type" id="blog_address_type_1" onclick="hide_and_seek()" value="1" <TMPL_IF NAME=BLOG_ADDRESS_TYPE_1>checked="checked"</TMPL_IF> /> <MT_TRANS phrase="Use System Address for Sender Address (Default)"><br />
+      <input type="radio" name="blog_address_type" id="blog_address_type_2" onclick="hide_and_seek()" value="2" <TMPL_IF NAME=BLOG_ADDRESS_TYPE_2>checked="checked"</TMPL_IF> /> <MT_TRANS phrase="Use Author Address for Sending Notifications"><br />
+      <input type="radio" name="blog_address_type" id="blog_address_type_3" onclick="hide_and_seek()" value="3" <TMPL_IF NAME=BLOG_ADDRESS_TYPE_3>checked="checked"</TMPL_IF> /> <MT_TRANS phrase="Use This Address for Sending Notifications:"><br /><br />
       <input id="blog_address" name="blog_address" size="50" <TMPL_IF NAME=BLOG_ADDRESS>value="<TMPL_VAR NAME=BLOG_ADDRESS>"</TMPL_IF> />
     </p>
   </div> 

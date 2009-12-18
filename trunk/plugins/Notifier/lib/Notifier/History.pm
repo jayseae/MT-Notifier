@@ -13,23 +13,26 @@
 # You should have received a copy of the Artistic License with this program.
 # If not, see <http://www.opensource.org/licenses/artistic-license-2.0.php>.
 # ===========================================================================
-package Notifier::Queue;
+package Notifier::History;
 
 use strict;
 
 use MT::Object;
-@Notifier::Queue::ISA = qw(MT::Object);
+@Notifier::History::ISA = qw(MT::Object);
 __PACKAGE__->install_properties({
     column_defs => {
         'id' => 'integer not null auto_increment',
-        'head_content' => 'string(75)',
-        'head_from' => 'string(75) not null',
-        'head_to' => 'string(75) not null',
-        'head_subject' => 'text',
-        'body' => 'text',
+        'data_id' => 'integer not null default 0',
+        'entry_id' => 'integer not null default 0',
+        'comment_id' => 'integer not null default 0',
+    },
+    indexes => {
+        data_id => 1,
+        entry_id => 1,
+        comment_id => 1,
     },
     audit => 1,
-    datasource => 'notifier_queue',
+    datasource => 'notifier_history',
     primary_key => 'id',
 });
 

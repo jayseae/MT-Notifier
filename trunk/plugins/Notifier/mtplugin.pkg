@@ -1,12 +1,33 @@
 <?xml version="1.0"?>
-<plugin version="3.4.6">
+<plugin version="3.5.0">
   <name>MT-Notifier</name>
   <version_url>http://www.everitz.com/sol/mt-notifier/version.xml</version_url>
   <sig>Notifier/Notifier.pl</sig>
+  <icon>mt-static/plugins/Notifier/images/Notifier.png</icon>
   <files>
     <file>
+      <src>mt-static/plugins/Notifier</src>
+      <destination>plugins/Notifier</destination>
+      <static>1</static>
+    </file>
+    <file>
+      <src>mt-static/plugins/Notifier/images</src>
+      <destination>plugins/Notifier/images</destination>
+      <static>1</static>
+    </file>
+    <file>
+      <src>mt-static/plugins/Notifier/images/Notifier.gif</src>
+      <destination>plugins/Notifier/images/Notifier.gif</destination>
+      <static>1</static>
+    </file>
+    <file>
+      <src>mt-static/plugins/Notifier/images/Notifier.png</src>
+      <destination>plugins/Notifier/images/Notifier.png</destination>
+      <static>1</static>
+    </file>
+    <file>
       <src>php/plugins/function.MTNotifierCatID.php</src>
-      <destination>php/plugins</destination>
+      <destination>php/plugins/function.MTNotifierCatID.php</destination>
     </file>
     <file>
       <src>plugins/Notifier</src>
@@ -42,8 +63,36 @@
       <destination>plugins/Notifier/lib/Notifier/Data.pm</destination>
     </file>
     <file>
+      <src>plugins/Notifier/lib/Notifier/History.pm</src>
+      <destination>plugins/Notifier/lib/Notifier/History.pm</destination>
+    </file>
+    <file>
+      <src>plugins/Notifier/lib/Notifier/L10N.pm</src>
+      <destination>plugins/Notifier/lib/Notifier/L10N.pm</destination>
+    </file>
+    <file>
+      <src>plugins/Notifier/lib/Notifier/Manager.pm</src>
+      <destination>plugins/Notifier/lib/Notifier/Manager.pm</destination>
+    </file>
+    <file>
       <src>plugins/Notifier/lib/Notifier/Queue.pm</src>
       <destination>plugins/Notifier/lib/Notifier/Queue.pm</destination>
+    </file>
+    <file>
+      <src>plugins/Notifier/lib/Notifier/Upgrader.pm</src>
+      <destination>plugins/Notifier/lib/Notifier/Upgrader.pm</destination>
+    </file>
+    <file>
+      <src>plugins/Notifier/lib/Notifier/L10N</src>
+      <destination>plugins/Notifier/lib/Notifier/L10N</destination>
+    </file>
+    <file>
+      <src>plugins/Notifier/lib/Notifier/L10N/de.pm</src>
+      <destination>plugins/Notifier/lib/Notifier/L10N/de.pm</destination>
+    </file>
+    <file>
+      <src>plugins/Notifier/lib/Notifier/L10N/en_us.pm</src>
+      <destination>plugins/Notifier/lib/Notifier/L10N/en_us.pm</destination>
     </file>
     <file>
       <src>plugins/Notifier/tmpl</src>

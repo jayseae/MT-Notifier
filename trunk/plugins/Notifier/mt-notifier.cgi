@@ -2,7 +2,7 @@
   
 # ===========================================================================
 # A Movable Type plugin with subscription options for your installation
-# Copyright 2003, 2004, 2005, 2006 Everitz Consulting <everitz.com>.
+# Copyright 2003, 2004, 2005, 2006, 2007 Everitz Consulting <everitz.com>.
 #
 # This program is free software:  You may redistribute it and/or modify it
 # it under the terms of the Artistic License version 2 as published by the
@@ -17,6 +17,7 @@
 # ===========================================================================
 
 use strict;
-use lib 'lib';
-use lib '../../lib';
+use lib 'lib', ($ENV{MT_HOME} ? "$ENV{MT_HOME}/lib" : '../../lib');
 use MT::Bootstrap App => 'Notifier';
+
+__END__

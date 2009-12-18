@@ -1,6 +1,11 @@
 <div class="setting">
   <div class="field">
     <p>
+      <input type="radio" name="system_userlist" id="system_userlist_1" value="1" <TMPL_IF NAME=SYSTEM_USERLIST_1>checked="checked"</TMPL_IF> /> <MT_TRANS phrase="Display Movable Type Notification List"><br />
+      <input type="radio" name="system_userlist" id="system_userlist_2" value="2" <TMPL_IF NAME=SYSTEM_USERLIST_2>checked="checked"</TMPL_IF> /> <MT_TRANS phrase="Display MT-Notifier Subscription List">
+    </p>
+    <p>
+      <br />
       <input type="radio" name="system_confirm" id="system_confirm_0" value="0" <TMPL_IF NAME=SYSTEM_CONFIRM_0>checked="checked"</TMPL_IF> /> <MT_TRANS phrase="Do not Send any Confirmation Messages"><br />
       <input type="radio" name="system_confirm" id="system_confirm_1" value="1" <TMPL_IF NAME=SYSTEM_CONFIRM_1>checked="checked"</TMPL_IF> /> <MT_TRANS phrase="Send Confirmation for New Subscriptions">
     </p>

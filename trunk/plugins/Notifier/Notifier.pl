@@ -1,6 +1,6 @@
 # ===========================================================================
 # A Movable Type plugin with subscription options for your installation
-# Copyright 2003, 2004, 2005, 2006 Everitz Consulting <everitz.com>.
+# Copyright 2003, 2004, 2005, 2006, 2007 Everitz Consulting <everitz.com>.
 #
 # This program is free software:  You may redistribute it and/or modify it
 # it under the terms of the Artistic License version 2 as published by the
@@ -20,75 +20,88 @@ use strict;
 
 use MT;
 use Notifier;
+use Notifier::Upgrader;
 
-use vars qw($EXECUTE);
-$EXECUTE = 0;
+use vars qw($TAKEDOWN);
+$TAKEDOWN = 0;
 
-my $Notifier;
-my $about = {
+our $Notifier;
+MT->add_plugin($Notifier = __PACKAGE__->new({
   name => 'MT-Notifier',
-  description => 'Subscription options for your Movable Type installation.',
+  description => "<MT_TRANS phrase=\"Subscription options for your Movable Type installation.\">",
   author_name => 'Everitz Consulting',
   author_link => 'http://www.everitz.com/',
   plugin_link => 'http://www.everitz.com/sol/mt-notifier/index.html',
   doc_link => 'http://www.everitz.com/sol/mt-notifier/index.html#install',
+  icon => 'images/Notifier.gif',
+  l10n_class => 'Notifier::L10N',
   version => Notifier->VERSION,
 #
 # config
 #
-  config => \&configure_plugin_settings,
-  blog_config_template => sub { $Notifier->load_tmpl('settings_blog.tmpl') },
-  system_config_template => sub { $Notifier->load_tmpl('settings_system.tmpl') },
+  blog_config_template => 'settings_blog.tmpl',
+  system_config_template => 'settings_system.tmpl',
   settings => new MT::PluginSettings([
-    ['system_address'],
-    ['system_confirm', { Default => 1 }],
-    ['system_queued', { Default => 0 }],
     ['blog_address'],
     ['blog_address_type', { Default => 1 }],
     ['blog_confirm', { Default => 1 }],
     ['blog_disabled', { Default => 0 }],
     ['blog_queued', { Default => 0 }],
+    ['blog_userlist', { Default => 1 }],
+    ['system_address'],
+    ['system_confirm', { Default => 1 }],
+    ['system_queued', { Default => 0 }],
+    ['system_userlist', { Default => 1 }],
   ]),
 #
 # tables
 #
   object_classes => [
     'Notifier::Data',
+    'Notifier::History',
     'Notifier::Queue'
   ],
-  schema_version => 3.002
-};
-$Notifier = MT::Plugin::Notifier->new($about);
-MT->add_plugin($Notifier);
-
-use MT::Comment;
-MT::Comment->add_callback('pre_save', 11, $about, \&check_comment);
-MT::Comment->add_callback('post_save', 1, $about, \&notify_comment);
-
-use MT::Entry;
-MT::Entry->add_callback('pre_save', 11, $about, \&check_entry);
-MT::Entry->add_callback('post_save', 1, $about, \&notify_entry);
-
-use MT::Template::Context;
-MT::Template::Context->add_tag(NotifierCatID => \&notifier_category_id);
-MT::Template::Context->add_tag(NotifierCheck => \&notifier_check);
-
-# plugin stuff
-
-sub configure_plugin_settings {
-  my $config = {};
-  if ($Notifier) {
-    use MT::Request;
-    my $r = MT::Request->instance;
-    my ($scope) = (@_);
-    $config = $r->cache('notifier_config_'.$scope);
-    if (!$config) {
-      $config = $Notifier->get_config_hash($scope);
-      $r->cache('notifier_config_'.$scope, $config);
+  upgrade_functions => {
+    'set_blog_id' => {
+      code => \&Notifier::Upgrader::_set_blog_id,
+      version_limit => 3.5
+    },
+    'set_history' => {
+      code => \&Notifier::Upgrader::_set_history,
+      version_limit => 3.5
     }
+  },
+  schema_version => Notifier->notifier_schema_version,
+#
+# tags
+#
+  template_tags => {
+    'NotifierCatID' => \&notifier_category_id,
+    'NotifierCheck' => \&notifier_check,
   }
-  $config;
+}));
+
+# callback registration
+
+require MT::Comment;
+MT::Comment->add_callback('pre_save', 10, $Notifier, \&check_comment);
+MT::Comment->add_callback('post_save', 1, $Notifier, \&notify_comment);
+
+require MT::Entry;
+MT::Entry->add_callback('pre_save', 10, $Notifier, \&check_entry);
+MT::Entry->add_callback('post_save', 1, $Notifier, \&notify_entry);
+
+if (eval { require Notifier::Manager; 1 }) {
+  MT->add_callback('MT::App::CMS::AppTemplateOutput', 1, $Notifier, \&Notifier::Manager::_output_itemset_action_widget);
+  MT->add_callback('MT::App::CMS::AppTemplateParam.list_notification', 1, $Notifier, \&Notifier::Manager::_param_list_notification);
+  MT->add_callback('MT::App::CMS::AppTemplateSource.blog-left-nav', 1, $Notifier, \&Notifier::Manager::_source_blog_left_nav);
+  MT->add_callback('MT::App::CMS::AppTemplateSource.header', 1, $Notifier, \&Notifier::Manager::_source_header);
+  MT->add_callback('MT::App::CMS::AppTemplateSource.list_notification', 1, $Notifier, \&Notifier::Manager::_source_list_notification);
+  MT->add_callback('MT::App::CMS::AppTemplateSource.notification_actions', 1, $Notifier, \&Notifier::Manager::_source_notification_actions);
+  MT->add_callback('MT::App::CMS::AppTemplateSource.notification_table', 1, $Notifier, \&Notifier::Manager::_source_notification_table);
 }
+
+# plugin initialization
 
 sub init_app {
   my $plugin = shift;
@@ -98,35 +111,73 @@ sub init_app {
   foreach (@sets) {
     $app->add_itemset_action({
       type  => $_,
-      key   => 'mtn_add_subscriptions',
-      label => 'Add Subscription(s)',
-      code  => sub { notifier_start($plugin, Notifier::SUBSCRIBE, @_) },
+      key   => 'mtn_add_subscription',
+      label => "<MT_TRANS phrase=\"Add Subscription(s)\">",
+      code  => sub { notifier_start($plugin, Notifier::SUBSCRIBE, @_) }
     });
     $app->add_itemset_action({
       type  => $_,
-      key   => 'mtn_block_notifications',
-      label => 'Block Notification(s)',
-      code  => sub { notifier_start($plugin, Notifier::OPT_OUT, @_) },
+      key   => 'mtn_add_subscription_block',
+      label => "<MT_TRANS phrase=\"Add Subscription Block(s)\">",
+      code  => sub { notifier_start($plugin, Notifier::OPT_OUT, @_) }
     });
     $app->add_itemset_action({
       type  => $_,
       key   => 'mtn_view_subscription_count',
-      label => 'View Subscription Count',
-      code  => sub { subscription_view($plugin, @_) },
+      label => "<MT_TRANS phrase=\"View Subscription Count\">",
+      code  => sub { subscription_view($plugin, @_) }
+    });
+  }
+  @sets = qw(notification);
+  foreach (@sets) {
+    $app->add_itemset_action({
+      type  => $_,
+      key   => 'mtn_block_subscription',
+      label => "<MT_TRANS phrase=\"Block Subscription(s)\">",
+      code  => sub { block_subs($plugin, @_) }
+    });
+    $app->add_itemset_action({
+      type  => $_,
+      key   => 'mtn_clear_subscription',
+      label => "<MT_TRANS phrase=\"Clear Subscription(s)\">",
+      code  => sub { clear_subs($plugin, @_) }
+    });
+    $app->add_itemset_action({
+      type  => $_,
+      key   => 'mtn_verify_subscription',
+      label => "<MT_TRANS phrase=\"Verify Subscription(s)\">",
+      code  => sub { verify_subs($plugin, @_) }
     });
   }
   $app->add_methods(
-    add_subscriptions => sub { subscribe_addresses($plugin, @_) }
+    block_subs => sub { block_subs($plugin, @_) },
+    clear_subs => sub { clear_subs($plugin, @_) },
+    create_subs => sub { create_subs($plugin, @_) },
+    delete_subs => sub { delete_subs($plugin, @_) },
+    verify_subs => sub { verify_subs($plugin, @_) },
   );
 }
 
-# app functions
+# needed for xmlrpc
 
 sub END { Notifier::entry_notifications() }
 
 sub instance { $Notifier }
 
 # user interaction
+
+sub notifier_start {
+  my $plugin = shift;
+  my $record = shift;
+  my $app = shift;
+  my @ids = $app->param('id');
+  my $type = $app->param('_type');
+  $app->build_page($plugin->load_tmpl('notifier_start.tmpl'), {
+    ids  => [ map { { id => $_ } } @ids ],
+    record => $record,
+    type => $type
+  });
+}
 
 sub subscription_view {
   my $plugin = shift;
@@ -136,10 +187,10 @@ sub subscription_view {
   my $total_opts = 0;
   my $total_subs = 0;
   my @subs;
-  use Notifier::Data;
+  require Notifier::Data;
   foreach my $id (@ids) {
     if ($type eq 'blog') {
-      use MT::Blog;
+      require MT::Blog;
       my $blog = MT::Blog->load($id);
       my $opts = Notifier::Data->count({ blog_id => $id, record => Notifier::OPT_OUT });
       my $subs = Notifier::Data->count({ blog_id => $id, record => Notifier::SUBSCRIBE });
@@ -147,7 +198,7 @@ sub subscription_view {
       $total_opts += $opts;
       $total_subs += $subs;
     } elsif ($type eq 'category') {
-      use MT::Category;
+      require MT::Category;
       my $category = MT::Category->load($id);
       my $opts = Notifier::Data->count({ category_id => $id, record => Notifier::OPT_OUT });
       my $subs = Notifier::Data->count({ category_id => $id, record => Notifier::SUBSCRIBE });
@@ -155,7 +206,7 @@ sub subscription_view {
       $total_opts += $opts;
       $total_subs += $subs;
     } elsif ($type eq 'entry') {
-      use MT::Entry;
+      require MT::Entry;
       my $entry = MT::Entry->load($id);
       my $opts = Notifier::Data->count({ entry_id => $id, record => Notifier::OPT_OUT });
       my $subs = Notifier::Data->count({ entry_id => $id, record => Notifier::SUBSCRIBE });
@@ -174,59 +225,68 @@ sub subscription_view {
   });
 }
 
-sub notifier_start {
-  my $plugin = shift;
-  my $record = shift;
-  my $app = shift;
-  my @ids = $app->param('id');
-  my $type = $app->param('_type');
-  $app->build_page($plugin->load_tmpl('notifier_start.tmpl'), {
-    ids  => [ map { { id => $_ } } @ids ],
-    record => $record,
-    type => $type
-  });
-}
+# automated modes
 
-sub send_notification {
+sub block_subs {
   my $plugin = shift;
   my $app = shift;
-  my $id = $app->param('id');
   my $return = $app->param('return_args');
-  my $record = $app->param('record');
-  my $type = $app->param('_type');
-  Notifier::Data->remove({
-    entry_id => $id,
-    record => Notifier::TEMPORARY,
-    status => Notifier::RUNNING
-  });
-  foreach my $email (split(/\r\n/, $app->param('addresses'))) {
-    Notifier::create_subscription($email, $record, 0, 0, $id, Notifier::BULK);
+  my @ids = $app->param('id');
+
+  require Notifier::Data;
+  require Notifier::Queue;
+
+  for my $id (@ids) {
+    my $iter = Notifier::Data->load_iter($id);
+    while (my $obj = $iter->()) {
+      my @queue = Notifier::Queue->load({ head_to => $obj->email });
+      foreach my $queue (@queue) {
+        $queue->remove;
+      }
+      $obj->record(0);
+      $obj->save;
+    }
   }
-  my @work_subs =
-    map { $_ }
-    Notifier::Data->load({
-      entry_id => $id,
-      record => Notifier::TEMPORARY,
-      status => Notifier::RUNNING
-    });
-  my $work_users = scalar @work_subs;
-  if ($work_users) {
-    use MT::Entry;
-    my $entry = MT::Entry->load($id);
-    Notifier::notify_users($entry, \@work_subs) if ($entry);
+
+  unless ($return) {
+    $return =
+      '__mode='.$app->param('mtmode').'&amp;'.
+      '_type='.$app->param('mttype').'&amp;'.
+      'blog_id='.$app->param('blog_id');
   }
-  ## This is a hack. make_return_args seems to generate a mode of
-  ## itemset_action, whereas we want list (determine what to list).
-  my $mode =
-    ($type eq 'blog') ? 'system_list_blogs' :
-    ($type eq 'category') ? 'list_cat' :
-    'list_entries';
-  $return =~ s/__mode=itemset_action/__mode=$mode/;
+
   $app->return_args($return);
   $app->call_return;
 }
 
-sub subscribe_addresses {
+sub clear_subs {
+  my $plugin = shift;
+  my $app = shift;
+  my $return = $app->param('return_args');
+  my @ids = $app->param('id');
+
+  require Notifier::Data;
+
+  for my $id (@ids) {
+    my $iter = Notifier::Data->load_iter($id);
+    while (my $obj = $iter->()) {
+      $obj->record(1);
+      $obj->save;
+    }
+  }
+
+  unless ($return) {
+    $return =
+      '__mode='.$app->param('mtmode').'&amp;'.
+      '_type='.$app->param('mttype').'&amp;'.
+      'blog_id='.$app->param('blog_id');
+  }
+
+  $app->return_args($return);
+  $app->call_return;
+}
+
+sub create_subs {
   my $plugin = shift;
   my $app = shift;
   my @ids = $app->param('id');
@@ -236,22 +296,23 @@ sub subscribe_addresses {
   my $blog_id;
   my $category_id;
   my $entry_id;
+
   foreach my $id (@ids) {
     if ($type eq 'blog') {
-      use MT::Blog;
+      require MT::Blog;
       my $blog = MT::Blog->load($id);
       $blog_id = $blog->id if ($blog);
     } elsif ($type eq 'category') {
-      use MT::Category;
+      require MT::Category;
       my $category = MT::Category->load($id);
       $blog_id = $category->blog_id if ($category);
     } elsif ($type eq 'entry') {
-      use MT::Entry;
+      require MT::Entry;
       my $entry = MT::Entry->load($id);
       $blog_id = $entry->blog_id if ($entry);
     }
     next unless ($blog_id);
-    use MT::Permission;
+    require MT::Permission;
     my $perm = MT::Permission->load({
       author_id => $app->user->id,
       blog_id => $blog_id
@@ -275,36 +336,70 @@ sub subscribe_addresses {
   $app->call_return;
 }
 
-# template tags
+sub delete_subs {
+  my $plugin = shift;
+  my $app = shift;
+  my $return = $app->param('return_args');
+  my @ids = $app->param('id');
 
-sub notifier_category_id {
-  my ($ctx, $args) = @_;
-  my $cat_id = '';
-  if (my $cat = $ctx->stash('category') || $ctx->stash('archive_category')) {
-    $cat_id = $cat->id;
-  } elsif (my $entry = $ctx->stash('entry')) {
-    use MT::Placement;
-    my $placement = MT::Placement->load({
-      entry_id => $entry->id,
-      is_primary => 1
-    });
-    $cat_id = $placement->category_id if $placement;
+  require Notifier::Data;
+  require Notifier::Queue;
+
+  for my $id (@ids) {
+    my $iter = Notifier::Data->load_iter($id);
+    while (my $obj = $iter->()) {
+      my @queue = Notifier::Queue->load({ head_to => $obj->email });
+      foreach my $queue (@queue) {
+        $queue->remove;
+      }
+      $obj->remove;
+    }
   }
-  $cat_id;
+
+  unless ($return) {
+    $return =
+      '__mode='.$app->param('mtmode').'&amp;'.
+      '_type='.$app->param('mttype').'&amp;'.
+      'blog_id='.$app->param('blog_id');
+  }
+
+  $app->return_args($return);
+  $app->call_return;
 }
 
-sub notifier_check {
-  return MT->instance->{query}->param('subscribe');
+sub verify_subs {
+  my $plugin = shift;
+  my $app = shift;
+  my $return = $app->param('return_args');
+  my @ids = $app->param('id');
+
+  require Notifier::Data;
+
+  for my $id (@ids) {
+    my $iter = Notifier::Data->load_iter($id);
+    while (my $obj = $iter->()) {
+      $obj->status(1);
+      $obj->save;
+    }
+  }
+
+  unless ($return) {
+    $return =
+      '__mode='.$app->param('mtmode').'&amp;'.
+      '_type='.$app->param('mttype').'&amp;'.
+      'blog_id='.$app->param('blog_id');
+  }
+
+  $app->return_args($return);
+  $app->call_return;
 }
 
 # callbacks
 
 sub check_comment {
-  my $app = MT->instance;
   my ($err, $obj) = @_;
   return unless ($obj->visible);
-  my $blog_config = configure_plugin_settings('blog:'.$obj->blog_id);
-  return if ($blog_config && $blog_config->{'blog_disabled'});
+  return if ($Notifier->get_config_value('blog_disabled', 'blog:'.$obj->blog_id));
   my $notify = 0;
   if ($obj->id) {
     my $comment = MT::Comment->load($obj->id);
@@ -321,11 +416,9 @@ sub check_comment {
 }
 
 sub check_entry {
-  my $app = MT->instance;
   my ($err, $obj) = @_;
   return unless ($obj->status == MT::Entry::RELEASE());
-  my $blog_config = configure_plugin_settings('blog:'.$obj->blog_id);
-  return if ($blog_config && $blog_config->{'blog_disabled'});
+  return if ($Notifier->get_config_value('blog_disabled', 'blog:'.$obj->blog_id));
   my $notify = 0;
   if ($obj->id) {
     my $entry = MT::Entry->load($obj->id);
@@ -342,21 +435,22 @@ sub check_entry {
 }
 
 sub notify_comment {
-  my $app = MT->instance;
   my ($err, $obj) = @_;
-  if ($app->{query}->param('subscribe')) {
+  if (MT->instance->param('subscribe')) {
     my $email = $obj->email;
     my $record = Notifier::SUBSCRIBE;
     my $blog_id = 0;
     my $category_id = 0;
     my $entry_id = $obj->entry_id;
-    Notifier::create_subscription($email, $record, $blog_id, $category_id, $entry_id);
+    if ($obj->is_not_junk) {
+      Notifier::create_subscription($email, $record, $blog_id, $category_id, $entry_id)
+    }
   }
   my $r = MT::Request->instance;
   return unless ($r->cache('mtn_notify_comment'));
   my $blog_id = $obj->blog_id;
   my $entry_id = $obj->entry_id;
-  use Notifier::Data;
+  require Notifier::Data;
   my @work_subs =
     map { $_ }
     Notifier::Data->load({
@@ -371,16 +465,38 @@ sub notify_comment {
 
 sub notify_entry {
   my ($err, $obj) = @_;
-  use MT::Request;
+  require MT::Request;
   my $r = MT::Request->instance;
   return unless ($r->cache('mtn_notify_entry'));
   my $notify_list = $r->stash('mtn_notify_list') || {};
   $notify_list->{$obj->id} = 1;
   $r->stash('mtn_notify_list', $notify_list);
-  unless ($EXECUTE) {
-    MT->add_callback('TakeDown', 5, $about, \&Notifier::entry_notifications);
-    $EXECUTE = 1;
+  unless ($TAKEDOWN) {
+    MT->add_callback('TakeDown', 5, $Notifier, \&Notifier::entry_notifications);
+    $TAKEDOWN = 1;
   }
+}
+
+# template tags
+
+sub notifier_category_id {
+  my ($ctx, $args) = @_;
+  my $cat_id = '';
+  if (my $cat = $ctx->stash('category') || $ctx->stash('archive_category')) {
+    $cat_id = $cat->id;
+  } elsif (my $entry = $ctx->stash('entry')) {
+    require MT::Placement;
+    my $placement = MT::Placement->load({
+      entry_id => $entry->id,
+      is_primary => 1
+    });
+    $cat_id = $placement->category_id if $placement;
+  }
+  $cat_id;
+}
+
+sub notifier_check {
+  return MT->instance->param('subscribe');
 }
 
 1;

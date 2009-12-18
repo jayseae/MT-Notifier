@@ -13,24 +13,9 @@
 # You should have received a copy of the Artistic License with this program.
 # If not, see <http://www.opensource.org/licenses/artistic-license-2.0.php>.
 # ===========================================================================
-package Notifier::Queue;
+package Notifier::L10N;
 
 use strict;
-
-use MT::Object;
-@Notifier::Queue::ISA = qw(MT::Object);
-__PACKAGE__->install_properties({
-    column_defs => {
-        'id' => 'integer not null auto_increment',
-        'head_content' => 'string(75)',
-        'head_from' => 'string(75) not null',
-        'head_to' => 'string(75) not null',
-        'head_subject' => 'text',
-        'body' => 'text',
-    },
-    audit => 1,
-    datasource => 'notifier_queue',
-    primary_key => 'id',
-});
+use base 'MT::Plugin::L10N';
 
 1;

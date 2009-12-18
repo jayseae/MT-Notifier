@@ -1,6 +1,6 @@
 # ===========================================================================
 # A Movable Type plugin with subscription options for your installation
-# Copyright 2003, 2004, 2005, 2006 Everitz Consulting <everitz.com>.
+# Copyright 2003, 2004, 2005, 2006, 2007 Everitz Consulting <everitz.com>.
 #
 # This program is free software:  You may redistribute it and/or modify it
 # it under the terms of the Artistic License version 2 as published by the
@@ -15,7 +15,7 @@
 # ===========================================================================
 package Notifier;
 
-use base qw(MT::App::CMS);
+use base qw(MT::App);
 use strict;
 
 use MT;
@@ -34,11 +34,8 @@ use constant TEMPORARY => 2;
 use constant BULK    => 1;
 
 # version
-use vars qw($SENTSRV1 $SENTSRV2 $SENTSRV3 $VERSION);
-$SENTSRV1 = 'http://www.everitz.com/sol/notifier/sentservice.html';
-$SENTSRV2 = 'http://www.everitz.com/sol/notifier/sent_service.html';
-$SENTSRV3 = 'http://www.everitz.com/sol/mt-notifier/sent_service.html';
-$VERSION = '3.4.6';
+use vars qw($VERSION);
+$VERSION = '3.5.0';
 
 sub init {
   my $app = shift;
@@ -46,8 +43,7 @@ sub init {
   $app->add_methods (
     default => \&notifier_request,
     import => \&notifier_import,
-    queued => \&send_queued,
-    update => \&notifier_loader
+    queued => \&send_queued
   );
   $app->{default_mode} = 'default';
   my $mode = $app->{query}->param('__mode');
@@ -70,14 +66,14 @@ sub notifier_import {
   my $message;
   if ($auth) {
     if ($from eq 'mt') { 
-      use MT::Notification;
+      require MT::Notification;
       foreach my $data (MT::Notification->load()) {
         next unless ($data && $data->blog_id && $data->email);
         create_subscription($data->email, SUBSCRIBE, $data->blog_id, 0, 0, BULK);
         $count++;
       }
     } elsif ($from eq 'n1x') {
-      use MT::PluginData;
+      require MT::PluginData;
       foreach my $data (MT::PluginData->load({ plugin => 'Notifier' })) {
         if ($data->key =~ /^([0-9]+):0$/) {
           my $blog_id = $1;
@@ -105,7 +101,7 @@ sub notifier_import {
         }
       }
     } elsif ($from eq 'n2x') {
-      use MT::PluginData;
+      require MT::PluginData;
       foreach my $data (MT::PluginData->load({ plugin => 'Notifier (n2x)' })) {
         next unless ($data->key =~ /:/);
         if ($data->key =~ /^([0-9]+):0$/) {
@@ -153,7 +149,7 @@ sub notifier_import {
   }
   $app->build_page($notifier->load_tmpl('notification_request.tmpl'), {
     message => $message,
-    notifier_version => version_number(),
+    notifier_version => notifier_version_number(),
     page_title => 'MT-Notifier '.$app->translate('Import Processing')
   });
 }
@@ -169,7 +165,6 @@ sub notifier_request {
   my ($email, $blog_id, $category_id, $entry_id);
   my ($confirm, $data, $message, $name, $url);
   if ($cipher) {
-    use Notifier::Data;
     $data = Notifier::Data->load({ cipher => $cipher });
     if ($data) {
       if ($o) {
@@ -179,7 +174,7 @@ sub notifier_request {
         $email = $data->email;
         my $record = OPT_OUT;
         if ($entry_id) {
-          use MT::Entry;
+          require MT::Entry;
           my $entry = MT::Entry->load($entry_id);
           if ($entry) {
             $blog_id = $entry->blog_id;
@@ -189,13 +184,13 @@ sub notifier_request {
             $message = 'No entry was found to match that subscription record!';
           }
         } elsif ($category_id) {
-          use MT::Category;
+          require MT::Category;
           my $category = MT::Category->load($category_id);
           if ($category) {
             $blog_id = $category->blog_id;
             $name = $category->label;
-            use MT::Blog;
-            use MT::Util;
+            require MT::Blog;
+            require MT::Util;
             my $blog = MT::Blog->load($category->blog_id);
             if ($blog) {
               $url = $blog->archive_url;
@@ -206,7 +201,7 @@ sub notifier_request {
             $message = 'No category was found to match that subscription record!';
           }
         } elsif ($blog_id) {
-          use MT::Blog;
+          require MT::Blog;
           my $blog = MT::Blog->load($blog_id);
           if ($blog) {
             $blog_id = $blog->id;
@@ -239,7 +234,7 @@ sub notifier_request {
       $entry_id = $app->{query}->param('entry_id');
       if ($blog_id || $category_id || $entry_id) {
         if ($entry_id) {
-          use MT::Entry;
+          require MT::Entry;
           my $entry = MT::Entry->load($entry_id);
           if ($entry) {
             $blog_id = $entry->blog_id;
@@ -247,12 +242,12 @@ sub notifier_request {
             $url = $entry->permalink;
           }
         } elsif ($category_id) {
-          use MT::Category;
+          require MT::Category;
           my $category = MT::Category->load($category_id);
           if ($category) {
             $blog_id = $category->blog_id;
             $name = $category->label;
-            use MT::Blog;
+            require MT::Blog;
             my $blog = MT::Blog->load($category->blog_id);
             if ($blog) {
               $url = $blog->archive_url;
@@ -261,7 +256,7 @@ sub notifier_request {
             }
           }
         } elsif ($blog_id) {
-          use MT::Blog;
+          require MT::Blog;
           my $blog = MT::Blog->load($blog_id);
           if ($blog) {
             $name = $blog->name;
@@ -278,7 +273,7 @@ sub notifier_request {
         } else {
           $confirm = 1 if
             $notifier->get_config_value('system_confirm') &&
-            $notifier->get_config_value('blog_confirm', $blog_id);
+            $notifier->get_config_value('blog_confirm', 'blog:'.$blog_id);
           $message = 'Your request has been processed successfully!';
         }
       } else {
@@ -297,7 +292,7 @@ sub notifier_request {
     link_name => ($r) ? $name : '',
     link_url => ($r) ? $url : '',
     message => $app->translate($message),
-    notifier_version => version_number(),
+    notifier_version => notifier_version_number(),
     page_title => 'MT-Notifier '.$app->translate('Request Processing')
   });
 }
@@ -309,8 +304,8 @@ sub create_subscription {
   my $app = MT->instance;
   my ($email, $record, $blog_id, $category_id, $entry_id, $bulk) = @_;
   my $blog;
-  use MT::Blog;
-  use MT::Util;
+  require MT::Blog;
+  require MT::Util;
   if (my $fixed = MT::Util::is_valid_email($email)) {
     $email = $fixed;
   } else {
@@ -318,16 +313,16 @@ sub create_subscription {
   }
   return unless ($record eq OPT_OUT || $record eq SUBSCRIBE);
   if ($entry_id) {
-    use MT::Entry;
+    require MT::Entry;
     my $entry = MT::Entry->load($entry_id) or return 2;
     $blog = MT::Blog->load($entry->blog_id) or return 2;
-    $blog_id = 0;
+    $blog_id = $blog->id;
     $category_id = 0;
   } elsif ($category_id) {
-    use MT::Category;
+    require MT::Category;
     my $category = MT::Category->load($category_id) or return 2;
     $blog = MT::Blog->load($category->blog_id) or return 2;
-    $blog_id = 0;
+    $blog_id = $blog->id;
     $entry_id = 0;
   } elsif ($blog_id) {
     $blog = MT::Blog->load($blog_id) or return 2;
@@ -353,9 +348,9 @@ sub create_subscription {
     $data->cipher(produce_cipher(
       'a'.$email.'b'.$blog_id.'c'.$category_id.'d'.$entry_id
     ));
-    my $config = $notifier->get_config_hash();
-    my $blog_config = $notifier->get_config_hash('blog:'.$blog->id);
-    if ($config->{'system_confirm'} && $blog_config->{'blog_confirm'}) {
+    my $system_confirm = $notifier->get_config_value('system_confirm');
+    my $blog_confirm = $notifier->get_config_value('blog_confirm', 'blog:'.$blog->id);
+    if ($system_confirm && $blog_confirm) {
       $data->status(PENDING) unless ($bulk);
       $data->status(RUNNING) if ($bulk);
     } else {
@@ -374,7 +369,7 @@ sub data_confirmation {
   my ($data) = @_;
   my ($category, $entry, $type);
   if ($data->entry_id) {
-    use MT::Entry;
+    require MT::Entry;
     $entry = MT::Entry->load($data->entry_id) or return;
     $type = $app->translate('Entry');
   } elsif ($data->category_id) {
@@ -397,19 +392,20 @@ sub data_confirmation {
     return;
   }
   my $blog = load_blog($data);
-  use MT::ConfigMgr;
+  require MT::ConfigMgr;
   my $cfg = MT::ConfigMgr->instance;
   $app->set_language($cfg->DefaultLanguage) unless ($lang);
   my $charset = $cfg->PublishCharset || 'iso-8859-1';
+  my $notifier_base =($cfg->CGIPath =~ /^http/) ? $cfg->CGIPath : $app->base.$cfg->CGIPath;
   my $record_text = ($data->record == SUBSCRIBE) ?
     $app->translate('subscribe to') :
     $app->translate('opt-out of');
   my %head = (
     'Content-Type' => qq(text/plain; charset="$charset"),
     'From' => $sender_address,
-    'Subject' => '['.$blog->name.'] '
+    'To' => $data->email
   );
-  use MT::Util;
+  require MT::Util;
   my %param = (
     'blog_id' => $blog->id,
     'blog_id_'.$blog->id => 1,
@@ -418,9 +414,8 @@ sub data_confirmation {
     'blog_url' => $blog->site_url,
     'notifier_home' => $notifier->author_link,
     'notifier_name' => $notifier->name,
-    'notifier_link' => $cfg->CGIPath.$notifier->envelope.'/mt-notifier.cgi',
-    'notifier_running' => $data->status,
-    'notifier_version' => version_number(),
+    'notifier_link' => $notifier_base.$notifier->envelope.'/mt-notifier.cgi',
+    'notifier_version' => notifier_version_number(),
     'record_cipher' => $data->cipher,
     'record_text' => $record_text
   );
@@ -438,40 +433,39 @@ sub data_confirmation {
     $param{'record_name'} = MT::Util::remove_html($blog->name);
   }
   $head{'Subject'} = load_email('confirmation-subject.tmpl', \%param);
-  $head{'To'} = $data->email;
   my $body = load_email('confirmation.tmpl', \%param);
   send_email(\%head, $body);
 }
 
 sub entry_notifications {
   my $app = MT->instance;
-  use MT::Request;
+  require MT::Request;
   my $r = MT::Request->instance;
   my $notify_list = $r->stash('mtn_notify_list') || {};
   return unless (scalar(keys(%$notify_list)));
   foreach my $entry_id (keys %$notify_list) {
-    use MT::Entry;
+    require MT::Entry;
     my $entry = MT::Entry->load($entry_id);
     next unless ($entry);
-    my $pinged = $entry->pinged_urls;
-    next if ($pinged && $pinged =~ m/$SENTSRV1/);
-    next if ($pinged && $pinged =~ m/$SENTSRV2/);
-    next if ($pinged && $pinged =~ m/$SENTSRV3/);
     my $blog_id = $entry->blog_id;
     my @work_subs =
       map { $_ }
       Notifier::Data->load({
         blog_id => $blog_id,
+        category_id => 0,
+        entry_id => 0,
         record => Notifier::SUBSCRIBE,
         status => Notifier::RUNNING
       });
-    use MT::Placement;
+    require MT::Placement;
     my @places = MT::Placement->load({
       entry_id => $entry_id
     });
     foreach my $place (@places) {
       my @category_subs = Notifier::Data->load({
+        blog_id => $blog_id,
         category_id => $place->category_id,
+        entry_id => 0,
         record => Notifier::SUBSCRIBE,
         status => Notifier::RUNNING
       });
@@ -482,10 +476,6 @@ sub entry_notifications {
     my $work_users = scalar @work_subs;
     next unless ($work_users);
     notify_users($entry, \@work_subs);
-    $pinged = $entry->pinged_url_list;
-    push @$pinged, $SENTSRV3;
-    $entry->pinged_urls(join("\n", @$pinged));
-    $entry->save;
   }
   $r->stash('mtn_notify_list', {});
 }
@@ -496,30 +486,35 @@ sub notify_users {
   my ($obj, $work_subs) = @_;
   my ($entry, $comment, $type);
   if (UNIVERSAL::isa($obj, 'MT::Comment')) {
-    use MT::Entry;
+    require MT::Entry;
     $entry = MT::Entry->load($obj->entry_id) or return;
     $comment = $obj;
     $type = $app->translate('Comment');
-  } else {
+  }
+  if (UNIVERSAL::isa($obj, 'MT::Entry')) {
     $entry = $obj;
     $type = $app->translate('Entry');
   }
-  use MT::Blog;
+  require MT::Blog;
   my $blog = MT::Blog->load($obj->blog_id) or return;
   my @work_opts =
     map { $_ }
     Notifier::Data->load({
       blog_id => $blog->id,
+      category_id => 0,
+      entry_id => 0,
       record => OPT_OUT,
       status => RUNNING
     });
-  use MT::Placement;
+  require MT::Placement;
   my @places = MT::Placement->load({
     entry_id => $entry->id
   });
   foreach my $place (@places) {
     my @category_opts = Notifier::Data->load({
+      blog_id => $blog->id,
       category_id => $place->category_id,
+      entry_id => 0,
       record => OPT_OUT,
       status => RUNNING
     });
@@ -536,10 +531,11 @@ sub notify_users {
   return unless ($sender_address);
   $app->set_language($author->preferred_language)
     if ($author && $author->preferred_language);
-  use MT::ConfigMgr;
+  require MT::ConfigMgr;
   my $cfg = MT::ConfigMgr->instance;
   my $charset = $cfg->PublishCharset || 'iso-8859-1';
-  use MT::Util;
+  my $notifier_base =($cfg->CGIPath =~ /^http/) ? $cfg->CGIPath : $app->base.$cfg->CGIPath;
+  require MT::Util;
   my %param = (
     'blog_id' => $blog->id,
     'blog_id_'.$blog->id => 1,
@@ -561,8 +557,8 @@ sub notify_users {
     'entry_title' => $entry->title,
     'notifier_home' => $notifier->author_link,
     'notifier_name' => $notifier->name,
-    'notifier_link' => $cfg->CGIPath.$notifier->envelope.'/mt-notifier.cgi',
-    'notifier_version' => version_number()
+    'notifier_link' => $notifier_base.$notifier->envelope.'/mt-notifier.cgi',
+    'notifier_version' => notifier_version_number()
   );
   if ($comment) {
     $param{'comment_author'} = $comment->author;
@@ -584,6 +580,13 @@ sub notify_users {
   my $system_queued = $notifier->get_config_value('system_queued');
   foreach my $sub (@subs) {
     next if ($comment && $sub->email eq $comment->email);
+    my %terms;
+    require Notifier::History;
+    $terms{'data_id'} = $sub->id;
+    $terms{'comment_id'} = (UNIVERSAL::isa($obj, 'MT::Comment')) ? $obj->id : 0;
+    $terms{'entry_id'} = (UNIVERSAL::isa($obj, 'MT::Entry')) ? $obj->id : 0;
+    my $history = Notifier::History->load(\%terms);
+    next if ($history);
     $head{'To'} = $sub->email;
     $param{'record_cipher'} = $sub->cipher;
     my $body = load_email('notification.tmpl', \%param);
@@ -592,12 +595,17 @@ sub notify_users {
     } else {
       send_email(\%head, $body);
     }
+    $history = Notifier::History->new;
+    $history->data_id($sub->id);
+    $history->comment_id((UNIVERSAL::isa($obj, 'MT::Comment')) ? $obj->id : 0);
+    $history->entry_id((UNIVERSAL::isa($obj, 'MT::Entry')) ? $obj->id : 0);
+    $history->save;
   }
 }
 
 sub queue_email {
   my ($hdrs, $body) = @_;
-  use Notifier::Queue;
+  require Notifier::Queue;
   my $queue = Notifier::Queue->new;
   $queue->head_content($hdrs->{'Content-Type'});
   $queue->head_from($hdrs->{'From'});
@@ -621,7 +629,7 @@ sub send_email {
   $body .= "\n\n--\n";
   $body .= $notifier->name.' v'.$notifier->version."\n";
   $body .= $notifier->author_link."\n";
-  use MT::Mail;    
+  require MT::Mail;    
   my $mgr = MT::ConfigMgr->instance;
   my $xfer = $mgr->MailTransfer;
   if ($xfer eq 'sendmail') {
@@ -643,12 +651,12 @@ sub send_queued {
   $args{'limit'} = $app->{query}->param('limit');
   $args{'sort'} = 'id';
   $args{'direction'} = 'ascend';
-  use Notifier::Queue;
+  require Notifier::Queue;
   my $iter = Notifier::Queue->load_iter(\%terms, \%args);
   my $count = 0;
   while (my $q = $iter->()) {
     my %head = (
-      'Content-Type' => $q->head_content_type,
+      'Content-Type' => $q->head_content,
       'From' => $q->head_from,
       'To' => $q->head_to,
       'Subject' => $q->head_subject
@@ -668,13 +676,13 @@ sub send_queued {
 sub load_blog {
   my ($obj) = @_;
   my $blog_id;
-  use MT::Blog;
+  require MT::Blog;
   if ($obj->entry_id) {
-    use MT::Entry;
+    require MT::Entry;
     my $entry = MT::Entry->load($obj->entry_id) or return;
     $blog_id = $entry->blog_id;
   } elsif ($obj->category_id) {
-    use MT::Category;
+    require MT::Category;
     my $category = MT::Category->load($obj->category_id) or return;
     $blog_id = $category->blog_id;
   } else {
@@ -717,34 +725,28 @@ sub load_sender_address {
   my $notifier = MT::Plugin::Notifier->instance;
   my $app = MT->instance;
   my ($obj, $author) = @_;
-  my $sender_address = $author->email if ($author);
-  my $config = $notifier->get_config_hash();
-  if ($config) {
-    $sender_address = $config->{'system_address'};
-  } else {
-    $app->log($app->translate('No system address - please configure one!'));
-  }
   my $entry;
   if (UNIVERSAL::isa($obj, 'MT::Comment')) {
-    use MT::Entry;
-    $entry = MT::Entry->load($obj->entry_id) or return;
+    require MT::Entry;
+    $entry = MT::Entry->load($obj->entry_id);
   } else {
     $entry = $obj;
   }
-  my $blog = MT::Blog->load($entry->blog_id) or return;
+  my $blog = MT::Blog->load($entry->blog_id);
   unless ($blog) {
     $app->log($app->translate('Specified blog unavailable - please check your data!'));
     return;
   }
-  my $blog_config = $notifier->get_config_hash('blog:'.$blog->id);
-  if ($blog_config) {
-    if ($blog_config->{'blog_address_type'} == 2) {
-      $sender_address = $author->email if ($author);
-    } elsif ($blog_config->{'blog_address_type'} == 3) {
-      $sender_address = $blog_config->{'blog_address'};
-    }
+  my $blog_address_type = $notifier->get_config_value('blog_address_type', 'blog:'.$blog->id);
+  my $sender_address;
+  if ($blog_address_type == 1) {
+    $sender_address = $notifier->get_config_value('system_address');
+  } elsif ($blog_address_type == 2) {
+    $sender_address = $author->email if ($author);
+  } elsif ($blog_address_type == 3) {
+    $sender_address = $notifier->get_config_value('blog_address', 'blog:'.$blog->id);
   }
-  use MT::Util;
+  require MT::Util;
   if (my $fixed = MT::Util::is_valid_email($sender_address)) {
     return $fixed;
   } else {
@@ -759,22 +761,25 @@ sub load_sender_address {
   }
 }
 
+sub notifier_schema_version {
+  (my $ver = $VERSION) =~ s/^([\d]+[\.]).*$/$1/;
+  (my $rel = $VERSION) =~ s/^[\d]+[\.](.*)$/$1/;
+  $rel =~ s/\.//g;
+  $ver = $ver.$rel;
+  $ver;
+}
+
+sub notifier_version_number {
+  (my $ver = $VERSION) =~ s/^([\d]+[\.]?[\d]*).*$/$1/;
+  $ver;
+}
+
 sub produce_cipher {
   my $key = shift;
   my $salt = join '', ('.', '/', 0..9, 'A'..'Z', 'a'..'z')[rand 64, rand 64];
   my $cipher = crypt ($key, $salt);
   $cipher =~ s/\.$/q/;
   $cipher;
-}
-
-sub schema_version {
-  (my $ver = $VERSION) =~ s/^([\d]+)[\.].*$/$1/;
-  $ver;
-}
-
-sub version_number {
-  (my $ver = $VERSION) =~ s/^([\d]+[\.]?[\d]*).*$/$1/;
-  $ver;
 }
 
 1;
