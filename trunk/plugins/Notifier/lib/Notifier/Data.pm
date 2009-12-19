@@ -21,6 +21,7 @@ __PACKAGE__->install_properties({
         'record' => 'smallint not null default 0',
         'status' => 'smallint not null default 0',
         'type' => 'smallint not null default 0',
+        'ip' => 'string(40) not null default 0.0.0.0',
     },
     indexes => {
         blog_id => 1,
@@ -31,6 +32,7 @@ __PACKAGE__->install_properties({
         record => 1,
         status => 1,
         type => 1,
+        ip => 1,
     },
     audit => 1,
     datasource => 'notifier_data',

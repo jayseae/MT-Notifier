@@ -93,4 +93,14 @@ sub _set_history {
   }
 }
 
+sub _set_ip {
+  require Notifier::Data;
+  my $iter = Notifier::Data->load_iter();
+  while (my $obj = $iter->()) {
+    next if ($obj->ip);
+    $obj->ip('0.0.0.0');
+    $obj->save;
+  }
+}
+
 1;

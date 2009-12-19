@@ -13,9 +13,6 @@ use MT;
 use Notifier;
 use Notifier::Upgrader;
 
-use vars qw($TAKEDOWN);
-$TAKEDOWN = 0;
-
 our $Notifier;
 MT->add_plugin($Notifier = __PACKAGE__->new({
   name => 'MT-Notifier',
@@ -60,6 +57,10 @@ MT->add_plugin($Notifier = __PACKAGE__->new({
     'set_history' => {
       code => \&Notifier::Upgrader::_set_history,
       version_limit => 3.5
+    },
+    'set_ip' => {
+      code => \&Notifier::Upgrader::_set_ip,
+      version_limit => 3.6
     }
   },
   schema_version => Notifier->notifier_schema_version,
@@ -151,7 +152,9 @@ sub init_app {
 
 # needed for xmlrpc
 
-sub END { Notifier::entry_notifications() }
+END { Notifier::entry_notifications() }
+
+# access to plugin
 
 sub instance { $Notifier }
 
@@ -391,67 +394,67 @@ sub check_comment {
   my ($err, $obj) = @_;
   return unless ($obj->visible);
   return if ($Notifier->get_config_value('blog_disabled', 'blog:'.$obj->blog_id));
-  my $notify = 0;
-  if ($obj->id) {
-    my $comment = MT::Comment->load($obj->id);
+  my ($comment_id, $notify);
+  if ($comment_id = $obj->id) {
+    my $comment = MT::Comment->load($comment_id);
     if ($comment && !$comment->visible) {
-      $notify = 1;
+      $notify = $comment_id;
+    } else {
+      $notify = 0;
     }
   } else {
     $notify = 1;
   }
-  if ($notify) {
-    my $r = MT::Request->instance;
-    $r->cache('mtn_notify_comment', 1);
-  }
+  my $r = MT::Request->instance;
+  $r->cache('mtn_notify_comment', $notify);
 }
 
 sub check_entry {
   my ($err, $obj) = @_;
   return unless ($obj->status == MT::Entry::RELEASE());
   return if ($Notifier->get_config_value('blog_disabled', 'blog:'.$obj->blog_id));
-  my $notify = 0;
-  if ($obj->id) {
-    my $entry = MT::Entry->load($obj->id);
+  my ($entry_id, $notify);
+  if ($entry_id = $obj->id) {
+    my $entry = MT::Entry->load($entry_id);
     if ($entry && $entry->status != MT::Entry::RELEASE()) {
-      $notify = 1;
+      $notify = $entry_id;
+    } else {
+      $notify = 0;
     }
   } else {
     $notify = 1;
   }
-  if ($notify) {
-    my $r = MT::Request->instance;
-    $r->cache('mtn_notify_entry', 1);
-  }
+  my $r = MT::Request->instance;
+  $r->cache('mtn_notify_entry', $notify);
 }
 
 sub notify_comment {
   my ($err, $obj) = @_;
-  if (MT->instance->param('subscribe')) {
-    my $email = $obj->email;
-    my $record = Notifier::SUBSCRIBE;
-    my $blog_id = 0;
-    my $category_id = 0;
-    my $entry_id = $obj->entry_id;
-    if ($obj->is_not_junk) {
+  if ($obj->is_not_junk) {
+    if (MT->instance->param('subscribe')) {
+      my $email = $obj->email;
+      my $record = Notifier::SUBSCRIBE;
+      my $blog_id = 0;
+      my $category_id = 0;
+      my $entry_id = $obj->entry_id;
       Notifier::create_subscription($email, $record, $blog_id, $category_id, $entry_id)
     }
+    my $r = MT::Request->instance;
+    return unless ($r->cache('mtn_notify_comment'));
+    my $blog_id = $obj->blog_id;
+    my $entry_id = $obj->entry_id;
+    require Notifier::Data;
+    my @work_subs =
+      map { $_ }
+      Notifier::Data->load({
+        entry_id => $entry_id,
+        record => Notifier::SUBSCRIBE,
+        status => Notifier::RUNNING
+      });
+    my $work_users = scalar @work_subs;
+    return unless ($work_users);
+    Notifier::notify_users($obj, \@work_subs);
   }
-  my $r = MT::Request->instance;
-  return unless ($r->cache('mtn_notify_comment'));
-  my $blog_id = $obj->blog_id;
-  my $entry_id = $obj->entry_id;
-  require Notifier::Data;
-  my @work_subs =
-    map { $_ }
-    Notifier::Data->load({
-      entry_id => $entry_id,
-      record => Notifier::SUBSCRIBE,
-      status => Notifier::RUNNING
-    });
-  my $work_users = scalar @work_subs;
-  return unless ($work_users);
-  Notifier::notify_users($obj, \@work_subs);
 }
 
 sub notify_entry {
@@ -459,13 +462,9 @@ sub notify_entry {
   require MT::Request;
   my $r = MT::Request->instance;
   return unless ($r->cache('mtn_notify_entry'));
-  my $notify_list = $r->stash('mtn_notify_list') || {};
+  my $notify_list = $r->cache('mtn_notify_list') || {};
   $notify_list->{$obj->id} = 1;
-  $r->stash('mtn_notify_list', $notify_list);
-  unless ($TAKEDOWN) {
-    MT->add_callback('TakeDown', 5, $Notifier, \&Notifier::entry_notifications);
-    $TAKEDOWN = 1;
-  }
+  $r->cache('mtn_notify_list', $notify_list);
 }
 
 # template tags

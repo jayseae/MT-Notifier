@@ -53,13 +53,14 @@ use vars qw( %Lexicon );
 	'Clear Subscription(s)' => 'Clear Subscription(s)',
 	'Verify Subscription(s)' => 'Verify Subscription(s)',
 
-	## Notifier.pl (Admin interface)
-	'subscription address' => 'subscription address',
-	'subscription addresses' => 'subscription addresses',
-	'Delete selected subscription addresses (x)' => 'Delete selected subscription addresses (x)',
+	## lib/Manager.pm (Admin interface)
+	'Edit Subscription List' => 'Edit Subscription List',
 	'Subscriptions' => 'Subscriptions',
+	'You did not select any [_1] to delete' => 'You did not select any [_1] to delete',
+	'Are you sure you want to delete this [_1]?' => 'Are you sure you want to delete this [_1]?',
+	'Are you sure you want to delete the [_1] selected [_2]?' => 'Are you sure you want to delete the [_1] selected [_2]?',
 	'Create New Blog Subscription' => 'Create New Blog Subscription',
-	'is currently providing this list. You may change this behavior from the plugins settings menu.' => 'is currently providing this list. You may change this behavior from the plugins settings menu.',
+	'[_1] is currently providing this list. You may change this behavior from the plugins settings menu.' => '[_1] is currently providing this list. You may change this behavior from the plugins settings menu.',
 	'Only show' => 'Only show',
 	'active' => 'active',
 	'blocked' => 'blocked',
@@ -73,8 +74,9 @@ use vars qw( %Lexicon );
 	'Showing only pending subscriptions.' => 'Showing only pending subscriptions.',
 	'Add Subscription' => 'Add Subscription',
 	'No subscriptions could be found.' => 'No subscriptions could be found.',
-	'Edit Subscription List' => 'Edit Subscription List',
-	'Subscriptions' => 'Subscriptions',
+	'subscription address' => 'subscription address',
+	'subscription addresses' => 'subscription addresses',
+	'Delete selected subscription addresses (x)' => 'Delete selected subscription addresses (x)',
 	'Only show blocked subscriptions' => 'Only show blocked subscriptions',
 	'Blocked' => 'Blocked',
 	'Only show active subscriptions' => 'Only show active subscriptions',
@@ -103,10 +105,9 @@ use vars qw( %Lexicon );
 	'No sender address available - aborting confirmation!' => 'No sender address available - aborting confirmation!',
 	'subscribe to' => 'subscribe to',
 	'opt-out of' => 'opt-out of',
-	'Unknown MailTransfer method \'[_1]\'' => 'Unknown MailTransfer method \'[_1]\'',
 	'[_1]: Sent [_2] queued notification[_3].' => '[_1]: Sent [_2] queued notification[_3].',
 	'Loading template \'[_1]\' failed: [_2]' => 'Loading template \'[_1]\' failed: [_2]',
-	# 'No system address - please configure one!' => 'No system address - please configure one!',
+	'No system address - please configure one!' => 'No system address - please configure one!',
 	'Specified blog unavailable - please check your data!' => 'Specified blog unavailable - please check your data!',
 	'Invalid sender address - please reconfigure it!' => 'Invalid sender address - please reconfigure it!',
 	'No sender address - please configure one!' => 'No sender address - please configure one!',
@@ -118,11 +119,9 @@ use vars qw( %Lexicon );
 	'You will receive an email to confirm your request momentarily.  If you do not, you may submit your request again.' => 'You will receive an email to confirm your request momentarily.  If you do not, you may submit your request again.',
 
 	## tmpl/notifier_start.tmpl
-	'Add Subscription(s)' => 'Add Subscription(s)',
 	'Enter the email addresses, one per line, that you would like to subscribe to the current selection.  Click the Add Subscription(s) button to process the addresses when your list is complete.' => 'Enter the email addresses, one per line, that you would like to subscribe to the current selection.  Click the Add Subscription(s) button to process the addresses when your list is complete.',
-	'Block Notification(s)' => 'Block Notification(s)',
-	'Enter the email addresses, one per line, that you would like to enter into the system in order to block notifications.  These records are used to prevent notifications from being sent to a specific address, and are used in the event that a particular user no longer wants to receive anything from your site.  Click the Block Notification(s) button to process the addresses when your list is complete.' => 'Enter the email addresses, one per line, that you would like to enter into the system in order to block notifications.  These records are used to prevent notifications from being sent to a specific address, and are used in the event that a particular user no longer wants to receive anything from your site.  Click the Block Notification(s) button to process the addresses when your list is complete.',
-	'Create Notification(s)' => 'Create Notification(s)',
+	'Enter the email addresses, one per line, that you would like to enter into the system in order to block subscriptions.  These records are used to prevent subscriptions from being sent to a specific address, and are used in the event that a particular user no longer wants to receive anything from your site.  Click the Subscription Block(s) button to process the addresses when your list is complete.' => 'Enter the email addresses, one per line, that you would like to enter into the system in order to block notifications.  These records are used to prevent notifications from being sent to a specific address, and are used in the event that a particular user no longer wants to receive anything from your site.  Click the Block Notification(s) button to process the addresses when your list is complete.',
+	'Create Subscription(s)' => 'Create Subscription(s)',
 
 	## tmpl/settings_blog.tmpl
 	'Disable MT-Notifier for This Blog' => 'Disable MT-Notifier for This Blog',
@@ -147,7 +146,6 @@ use vars qw( %Lexicon );
 	'Address to use when sending notifications and no other addresses are available:' => 'Address to use when sending notifications and no other addresses are available:',
 
 	## tmpl/subscription_view.tmpl
-	'View Subscription Count' => 'View Subscription Count',
 	'Total' => 'Total',
 	'Here is the count of current subscribers for your selected items.' => 'Here is the count of current subscribers for your selected items.',
 	'Blog Name' => 'Blog Name',
