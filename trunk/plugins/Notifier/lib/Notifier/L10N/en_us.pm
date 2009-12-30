@@ -137,7 +137,7 @@ use vars qw( %Lexicon );
       'Verify Subscription(s)' => 'Verify Subscription(s)',
 
       ## lib/Notifier/Util.pm
-      'Loading template '[_1]' failed: [_2]' => 'Loading template '[_1]' failed: [_2]',
+      'Loading template \'[_1]\' failed: [_2]' => 'Loading template \'[_1]\' failed: [_2]',
       'Specified blog unavailable - please check your data!' => 'Specified blog unavailable - please check your data!',
       'Invalid sender address - please reconfigure it!' => 'Invalid sender address - please reconfigure it!',
       'No sender address - please configure one!' => 'No sender address - please configure one!',

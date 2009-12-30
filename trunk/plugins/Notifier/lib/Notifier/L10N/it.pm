@@ -126,7 +126,7 @@ use vars qw( %Lexicon );
       'Verify Subscription(s)' => 'Verifica abbonamento',
 
       ## lib/Notifier/Util.pm
-      'Loading template '[_1]' failed: [_2]' => 'Caricamento del modello '[_1]' fallito: [_2]',
+      'Loading template \'[_1]\' failed: [_2]' => 'Caricamento del modello \'[_1]\' fallito: [_2]',
       'Specified blog unavailable - please check your data!' => 'Blog specificato non disponibile, controlla i tuoi dati!',
       'Invalid sender address - please reconfigure it!' => 'Indirizzo del mittente non valido, controlla la configurazione!',
       'No sender address - please configure one!' => 'Indirizzo del destinatario assente, controlla che sia presente!',

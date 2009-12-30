@@ -80,9 +80,8 @@ sub notify_entry {
   require MT::Request;
   my $r = MT::Request->instance;
   return unless ($r->cache('mtn_notify_entry'));
-  my $notify_list = $r->cache('mtn_notify_list') || {};
-  $notify_list->{$obj->id} = 1;
-  $r->cache('mtn_notify_list', $notify_list);
+  require Notifier;
+  Notifier::entry_notifications($obj->id);
 }
 
 # template tags

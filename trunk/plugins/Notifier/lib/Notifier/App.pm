@@ -353,18 +353,19 @@ sub _ui_vue {
 # user interaction
 
 sub list_subs {
-  my $app = shift;
-  my $blog  = $app->blog;
-  my $user  = $app->user;
-  my $perms = $app->permissions;
-  my $args  = {};
-  my $terms = {};
-  my $param = {
+  my $app    = shift;
+  my $blog   = $app->blog;
+  my $user   = $app->user;
+  my $perms  = $app->permissions;
+  my $plugin = MT->component('Notifier');
+  my $args   = {};
+  my $terms  = {};
+  my $param  = {
     list_noncron  => 0,
     saved         => $app->param('saved')         || 0,
     saved_deleted => $app->param('saved_deleted') || 0,
     screen_class  => 'list-notification',
-    search_label => $app->translate('Subscriptions'),
+    search_label  => $plugin->translate('Subscriptions'),
   };
   $args->{sort_order} = 'created_on';
   $args->{direction}  = 'descend';

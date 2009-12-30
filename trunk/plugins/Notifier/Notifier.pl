@@ -48,8 +48,8 @@ my $plugin = MT::Plugin::Notifier->new({
 MT->add_plugin($plugin);
 
 sub init_registry {
-	my $plugin = shift;
-	$plugin->registry({
+  my $plugin = shift;
+  $plugin->registry({
     applications => {
       'cms' => {
         list_actions => sub { Notifier::Plugin::list_actions },
@@ -229,9 +229,5 @@ sub settings_template_system {
 </fieldset>
 TMPL
 }
-
-# needed for xmlrpc
-
-END { Notifier::entry_notifications() }
 
 1;
