@@ -1,6 +1,6 @@
 # ===========================================================================
 # A Movable Type plugin with subscription options for your installation
-# Copyright 2003-2008 Everitz Consulting <everitz.com>.
+# Copyright 2003, 2004, 2005, 2006, 2007 Everitz Consulting <everitz.com>.
 #
 # This program may not be redistributed without permission.
 # ===========================================================================
@@ -26,5 +26,13 @@ __PACKAGE__->install_properties({
     datasource => 'notifier_history',
     primary_key => 'id',
 });
+
+sub class_label {
+    MT->translate('Subscription History');
+}
+
+sub class_label_plural {
+    MT->translate("Subscription History Records");
+}
 
 1;

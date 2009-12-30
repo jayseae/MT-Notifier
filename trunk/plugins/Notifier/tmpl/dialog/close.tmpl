@@ -1,0 +1,37 @@
+<mt:if name="status">
+    <mt:setvarblock name="page_title"><__trans phrase="Subscription Status"></mt:setvarblock>
+    <mt:include name="dialog/header.tmpl">
+
+    <div class="modal_width" id="dialog-notifier">
+        <div id="msg-container" style="height: 310px; overflow: scroll; overflow-x: auto">
+            <ul>
+                <li><__trans phrase="[_1] email address(es) added to [_2] selection(s)." params="<$mt:var name="valid_email"$>%%<$mt:var name="valid_id"$>"></li>
+            </ul>
+        </div>
+
+        <p><strong><__trans phrase="If the numbers don't match, you should check your data, wait a moment and try adding them again."></strong></p>
+
+        <form method="GET">
+            <div class="actions-bar">
+                <div class="actions-bar-inner pkg actions">
+                    <button
+                        onclick="closeDialog(); return false"
+                        type="submit"
+                        accesskey="x"
+                        class="primary-button"
+                        ><__trans phrase="Close"></button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <mt:include name="dialog/footer.tmpl">
+<mt:else>
+    <mt:include name="dialog/header.tmpl">
+    <script type="text/javascript">
+    <!--
+    closeDialog();
+    //-->
+    </script>
+    <mt:include name="dialog/footer.tmpl">
+</mt:if>

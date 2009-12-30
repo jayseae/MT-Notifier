@@ -1,0 +1,29 @@
+<mt:setvarblock name="page_title"><__trans phrase="Subscription Count"></mt:setvarblock>
+<mt:include name="dialog/header.tmpl">
+
+<div class="modal_width" id="dialog-notifier">
+    <div id="msg-container" style="height: 310px; overflow: scroll; overflow-x: auto">
+        <ul>
+            <mt:loop name="subs">
+                <li><__trans phrase="[_1] has [_2] subscriptions and [_3] subscription blocks." params="<$mt:var name="name"$>%%<$mt:var name="sub_count"$>%%<$mt:var name="opt_count"$>"></li>
+            </mt:loop>
+        </ul>
+    </div>
+
+    <p><strong><__trans phrase="There are [_1] subscriptions and [_2] subscription blocks in this list." params="<$mt:var name="total_subs"$>%%<$mt:var name="total_opts"$>"></strong></p>
+
+    <form method="GET">
+        <div class="actions-bar">
+            <div class="actions-bar-inner pkg actions">
+                <button
+                    onclick="closeDialog(); return false"
+                    type="submit"
+                    accesskey="x"
+                    class="primary-button"
+                    ><__trans phrase="Close"></button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<mt:include name="dialog/footer.tmpl">

@@ -2,12 +2,12 @@
 
 //# ===========================================================================
 //# A Movable Type plugin with subscription options for your installation
-//# Copyright 2003-2008 Everitz Consulting <everitz.com>.
+//# Copyright 2003, 2004, 2005, 2006, 2007 Everitz Consulting <everitz.com>.
 //#
 //# This program may not be redistributed without permission.
 //# ===========================================================================
 
-function smarty_function_MTNotifierCatID($args, &$ctx) {
+function smarty_function_mtnotifiercatid($args, &$ctx) {
   $cat_id = '';
   if ($cat = $ctx->stash('category')) {
     $cat_id = $cat->id;
