@@ -136,7 +136,7 @@ sub create_subs {
         $valid_email++ unless ($ec);
       }
     }
-    my $plugin = MT->component('Notifier');
+    my $plugin = $app->component('Notifier');
     $app->build_page($plugin->load_tmpl('dialog/close.tmpl'), {
       valid_email => $valid_email,
       valid_id    => $valid_id,
@@ -162,7 +162,7 @@ sub verify_subs {
     $app->return_args($return);
     $app->call_return;
   } else {
-    my $plugin = MT->component('Notifier');
+    my $plugin = $app->component('Notifier');
     my ($email, $blog_id, $category_id, $entry_id);
     my ($confirm, $data, $message, $name, $url);
     if (my $c = $app->param('c')) {
@@ -327,6 +327,39 @@ sub verify_subs {
   }
 }
 
+sub write_history {
+  my $app = shift;
+  $app->validate_magic or return;
+  my $return = $app->param('return_args');
+  my @ids = $app->param('id');
+  for my $id (@ids) {
+    require MT::Blog;
+    my $blog = MT::Blog->load({ id => $id });
+    next unless ($blog);
+    require MT::Entry;
+    my $entries = MT::Entry->load_iter({ blog_id => $blog->id });
+    while (my $e = $entries->()) {
+      require Notifier::Data;
+      my $iter = Notifier::Data->load_iter({ blog_id => $blog->id, entry_id => 0 });
+      while (my $data = $iter->()) {
+        require Notifier::History;
+        my $history = Notifier::History->load({
+          data_id => $data->id,
+          entry_id => $e->id,
+        });
+        next if ($history);
+        $history = Notifier::History->new;
+        $history->data_id($data->id);
+        $history->comment_id(0);
+        $history->entry_id($e->id);
+        $history->save;
+      }
+    }
+  }
+  $app->return_args($return);
+  $app->call_return;
+}
+
 # user redirection
 
 sub _sub_block {
@@ -337,6 +370,11 @@ sub _sub_block {
 sub _sub_clear {
   my $app = shift;
   clear_subs($app);
+}
+
+sub _sub_history {
+  my $app = shift;
+  write_history($app);
 }
 
 sub _sub_verify {
@@ -396,7 +434,7 @@ sub notifier_count {
       $total_subs += $subs;
     }
   }
-  my $plugin = MT->component('Notifier');
+  my $plugin = $app->component('Notifier');
   $app->build_page($plugin->load_tmpl('dialog/count.tmpl'), {
     subs          => \@subs,
     total_opts    => $total_opts,
@@ -411,7 +449,7 @@ sub notifier_start {
   my $app = shift;
   my $record = shift;
   my @ids = $app->param('id');
-  my $plugin = MT->component('Notifier');
+  my $plugin = $app->component('Notifier');
   $app->build_page($plugin->load_tmpl('dialog/start.tmpl'), {
     ids  => [ map { { id => $_ } } @ids ],
     record => $record,
@@ -442,7 +480,7 @@ sub install_widget {
   my $app = shift;
   my $type = shift;
   my $perms = $app->{perms};
-  my $plugin = MT->component('Notifier');
+  my $plugin = $app->component('Notifier');
   return $app->error($plugin->translate('Insufficient permissions for installing templates for this weblog.'))
     unless $perms->can_edit_templates() || $perms->can_administer_blog() || $app->user->is_superuser();
   my $blog_id = $app->param('blog_id');
@@ -469,7 +507,8 @@ sub install_widget {
 
 sub widget_template {
   my $type = shift;
-  my $plugin = MT->component('Notifier');
+  my $app = MT->instance->app;
+  my $plugin = $app->component('Notifier');
   my $message = $plugin->translate("Subscribe to $type");
   my $powered = $plugin->translate('Powered by [_1]', qq{<a href="http://everitz.com/mt/notifier.php">MT-Notifier</a>});
   my ($field, $value);

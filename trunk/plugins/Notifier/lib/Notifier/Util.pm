@@ -39,8 +39,9 @@ sub load_blog {
 }
 
 sub load_email {
-  my $app = MT->instance;
-  my $plugin = MT->component('Notifier');
+  require MT;
+  my $app = MT->instance->app;
+  my $plugin = $app->component('Notifier');
   my ($file, $param) = @_;
   my @paths;
   my $dir = File::Spec->catdir($app->mt_dir, $plugin->envelope, 'tmpl', 'email');
@@ -60,16 +61,17 @@ sub load_email {
       die_on_bad_params => 0,
       global_vars => 1);
   };
-  return MT->trans_error("Loading template '[_1]' failed: [_2]", $file, $@) if $@;
+  return $app->trans_error("Loading template '[_1]' failed: [_2]", $file, $@) if $@;
   for my $key (keys %$param) {
     $tmpl->param($key, $param->{$key});
   }
-  MT->translate_templatized($tmpl->output);
+  $app->translate_templatized($tmpl->output);
 }
 
 sub load_sender_address {
-  my $app = MT->instance;
-  my $plugin = MT->component('Notifier');
+  require MT;
+  my $app = MT->instance->app;
+  my $plugin = $app->component('Notifier');
   my ($obj, $author) = @_;
   my $entry;
   if (UNIVERSAL::isa($obj, 'MT::Comment')) {

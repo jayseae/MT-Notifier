@@ -35,7 +35,7 @@ use constant BULK => 1;
 
 # version
 use vars qw($VERSION);
-$VERSION = '4.0.3';
+$VERSION = '4.0.4';
 
 sub init {
   my $app = shift;
@@ -55,8 +55,8 @@ sub init {
 # subscription functions
 
 sub create_subscription {
-  my $app = MT->instance;
-  my $plugin = MT->component('Notifier');
+  my $app = MT->instance->app;
+  my $plugin = $app->component('Notifier');
   my ($email, $record, $blog_id, $category_id, $entry_id, $bulk) = @_;
   my $blog;
   require MT::Blog;
@@ -121,8 +121,8 @@ sub create_subscription {
 }
 
 sub data_confirmation {
-  my $app = MT->instance;
-  my $plugin = MT->component('Notifier');
+  my $app = MT->instance->app;
+  my $plugin = $app->component('Notifier');
   my ($data) = @_;
   my ($category, $entry, $type);
   if ($data->entry_id) {
@@ -234,8 +234,8 @@ sub entry_notifications {
 }
 
 sub notify_users {
-  my $app = MT->instance;
-  my $plugin = MT->component('Notifier');
+  my $app = MT->instance->app;
+  my $plugin = $app->component('Notifier');
   my ($obj, $work_subs) = @_;
   my ($entry, $comment, $type);
   if (UNIVERSAL::isa($obj, 'MT::Comment')) {
@@ -371,7 +371,8 @@ sub queue_email {
 }
 
 sub send_email {
-  my $plugin = MT->component('Notifier');
+  my $app = MT->instance->app;
+  my $plugin = $app->component('Notifier');
   my ($hdrs, $body) = @_;
   foreach my $h (keys %$hdrs) {
     if (ref($hdrs->{$h}) eq 'ARRAY') {
@@ -400,8 +401,8 @@ sub send_email {
 }
 
 sub send_queued {
-  my $app = shift;
-  my $plugin = MT->component('Notifier');
+  my $app = MT->instance->app;
+  my $plugin = $app->component('Notifier');
   my (%terms, %args);
   $args{'limit'} = $app->param('limit');
   $args{'direction'} = 'ascend';

@@ -144,6 +144,7 @@ use vars qw( %Lexicon );
       'Block Subscription(s)' => 'Block Subscription(s)',
       'Clear Subscription(s)' => 'Clear Subscription(s)',
       'Verify Subscription(s)' => 'Verify Subscription(s)',
+      'Write History Records' => 'Write History Records',
 
       ## lib/Notifier/Util.pm
       'Loading template \'[_1]\' failed: [_2]' => 'Loading template \'[_1]\' failed: [_2]',
