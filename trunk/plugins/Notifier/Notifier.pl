@@ -57,8 +57,8 @@ my $plugin = MT::Plugin::Notifier->new({
 MT->add_plugin($plugin);
 
 sub init_registry {
-	my $plugin = shift;
-	$plugin->registry({
+  my $plugin = shift;
+  $plugin->registry({
     applications => {
       'cms' => {
         list_actions => sub { Notifier::Plugin::list_actions },
