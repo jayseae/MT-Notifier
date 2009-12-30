@@ -1,6 +1,6 @@
 # ===========================================================================
 # A Movable Type plugin with subscription options for your installation
-# Copyright 2003, 2004, 2005, 2006, 2007 Everitz Consulting <everitz.com>.
+# Copyright 2003-2008 Everitz Consulting <everitz.com>.
 #
 # This program is free software:  You may redistribute it and/or modify it
 # it under the terms of the Artistic License version 2 as published by the
@@ -21,24 +21,14 @@ use strict;
 
 sub check_comment {
   my ($err, $obj) = @_;
-  return unless ($obj->visible);
+  my $id = 'blog:'.$obj->blog_id;
+  my $notify = 1;
+  $notify = 0 unless ($obj->visible);
   my $plugin = MT->component('Notifier');
-  return if ($plugin->get_config_value('blog_disabled', 'blog:'.$obj->blog_id));
-  my ($comment_id, $notify);
-  if ($comment_id = $obj->id) {
-    require MT::Comment;
-    my $comment = MT::Comment->load($comment_id);
-    if ($comment && !$comment->visible) {
-      $notify = $comment_id;
-    } else {
-      $notify = 0;
-    }
-  } else {
-    $notify = 1;
-  }
+  $notify = 0 if ($plugin->get_config_value('blog_disabled', $id));
   require MT::Request;
   my $r = MT::Request->instance;
-  $r->cache('mtn_notify_comment', $notify);
+  $r->cache('mtn_notify_comment_'.$id, $notify);
 }
 
 sub check_entry {
@@ -55,6 +45,7 @@ sub check_entry {
 
 sub notify_comment {
   my ($err, $obj) = @_;
+  my $id = 'blog:'.$obj->blog_id;
   if ($obj->is_not_junk) {
     if (MT->instance->param('subscribe')) {
       require Notifier;
@@ -67,13 +58,14 @@ sub notify_comment {
     }
     require MT::Request;
     my $r = MT::Request->instance;
-    return unless ($r->cache('mtn_notify_comment'));
+    return unless ($r->cache('mtn_notify_comment_'.$id));
     my $blog_id = $obj->blog_id;
     my $entry_id = $obj->entry_id;
     require Notifier::Data;
     my @work_subs =
       map { $_ }
       Notifier::Data->load({
+        blog_id => $blog_id,
         entry_id => $entry_id,
         record => Notifier::SUBSCRIBE,
         status => Notifier::RUNNING
