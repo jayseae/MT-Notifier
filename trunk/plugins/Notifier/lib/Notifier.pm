@@ -26,7 +26,7 @@ use constant BULK => 1;
 
 # version
 use vars qw($VERSION);
-$VERSION = '4.0.1';
+$VERSION = '4.0.2';
 
 sub init {
   my $app = shift;
