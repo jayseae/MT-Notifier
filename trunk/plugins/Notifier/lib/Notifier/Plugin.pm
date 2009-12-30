@@ -8,6 +8,8 @@ package Notifier::Plugin;
 
 use strict;
 
+use MT;
+
 # callbacks
 
 sub check_comment {
@@ -15,7 +17,7 @@ sub check_comment {
   my $id = 'blog:'.$obj->blog_id;
   my $notify = 1;
   $notify = 0 unless ($obj->visible);
-  my $plugin = MT->component('Notifier');
+  my $plugin = MT->instance->app->component('Notifier');
   $notify = 0 if ($plugin->get_config_value('blog_disabled', $id));
   require MT::Request;
   my $r = MT::Request->instance;
@@ -24,13 +26,15 @@ sub check_comment {
 
 sub check_entry {
   my ($err, $obj) = @_;
-  my $plugin = MT->component('Notifier');
+  my $plugin = MT->instance->app->component('Notifier');
   return if ($plugin->get_config_value('blog_disabled', 'blog:'.$obj->blog_id));
   require MT::Entry;
-  if (my $notify = $obj->id && $obj->status == MT::Entry::RELEASE()) {
-    require MT::Request;
-    my $r = MT::Request->instance;
-    $r->cache('mtn_notify_entry', $notify);
+  if ($obj->status == MT::Entry::RELEASE()) {
+    if (my $notify = $obj->id) {
+      require MT::Request;
+      my $r = MT::Request->instance;
+      $r->cache('mtn_notify_entry', $notify);
+    }
   }
 }
 
@@ -38,7 +42,7 @@ sub notify_comment {
   my ($err, $obj) = @_;
   my $id = 'blog:'.$obj->blog_id;
   if ($obj->is_not_junk) {
-    if (MT->instance->param('subscribe')) {
+    if (MT->instance->app->param('subscribe')) {
       require Notifier;
       my $email = $obj->email;
       my $record = Notifier::SUBSCRIBE;
@@ -68,12 +72,14 @@ sub notify_comment {
 }
 
 sub notify_entry {
-  my ($err, $obj) = @_;
+#  application callback
+  my ($err, $app) = @_;
   require MT::Request;
   my $r = MT::Request->instance;
-  return unless ($r->cache('mtn_notify_entry'));
+  my $notify = $r->cache('mtn_notify_entry');
+  return unless ($notify);
   require Notifier;
-  Notifier::entry_notifications($obj->id);
+  Notifier::entry_notifications($notify);
 }
 
 # template tags
@@ -95,15 +101,13 @@ sub notifier_category_id {
 }
 
 sub notifier_check {
-  require MT;
-  return MT->instance->param('subscribe');
+  return MT->instance->app->param('subscribe');
 }
 
 # plugin registration
 
 sub list_actions {
-  require MT;
-  my $app = MT->app;
+  my $app = MT->instance->app;
   return {
     'blog' => {
       'mtn_add_subscription' => {
@@ -131,6 +135,15 @@ sub list_actions {
         order      => 1200,
         code       => '$Notifier::Notifier::App::_ui_vue',
         dialog     => 1,
+        condition  => sub {
+          return 0 if $app->mode eq 'view';
+          return ( $app->user->is_superuser() ) ? 1 : 0;
+        }
+      },
+      'mtn_write_history_records' => {
+        label      => q(<MT_TRANS phrase="Write History Records">),
+        order      => 1400,
+        code       => '$Notifier::Notifier::App::_sub_history',
         condition  => sub {
           return 0 if $app->mode eq 'view';
           return ( $app->user->is_superuser() ) ? 1 : 0;
@@ -209,7 +222,6 @@ sub list_actions {
           return 0 if $app->mode eq 'view';
           return ( $app->user->is_superuser() ||
                    $app->permissions->can_administer_blog ||
-                   $app->permissions->can_edit_all_posts ||
                    $app->permissions->can_edit_notifications ) ? 1 : 0;
         }
       },
@@ -223,7 +235,6 @@ sub list_actions {
           return 0 if $app->mode eq 'view';
           return ( $app->user->is_superuser() ||
                    $app->permissions->can_administer_blog ||
-                   $app->permissions->can_edit_all_posts ||
                    $app->permissions->can_edit_notifications ) ? 1 : 0;
         }
       },
@@ -235,7 +246,6 @@ sub list_actions {
           return 0 if $app->mode eq 'view';
           return ( $app->user->is_superuser() ||
                    $app->permissions->can_administer_blog ||
-                   $app->permissions->can_edit_all_posts ||
                    $app->permissions->can_edit_notifications ) ? 1 : 0;
         }
       },
@@ -247,7 +257,6 @@ sub list_actions {
           return 0 if $app->mode eq 'view';
           return ( $app->user->is_superuser() ||
                    $app->permissions->can_administer_blog ||
-                   $app->permissions->can_edit_all_posts ||
                    $app->permissions->can_edit_notifications ) ? 1 : 0;
         }
       },
@@ -256,8 +265,7 @@ sub list_actions {
 }
 
 sub list_filters {
-  require MT;
-  my $app = MT->app;
+  my $app = MT->instance->app;
   return {
 		subscription => {
 			active => {
@@ -291,8 +299,7 @@ sub list_filters {
 }
 
 sub menus {
-  require MT;
-  my $app = MT->app;
+  my $app = MT->instance->app;
   return {
     'manage:notifier' => {
       label => 'Subscriptions',
@@ -310,8 +317,7 @@ sub menus {
 }
 
 sub methods {
-  require MT;
-  my $app = MT->app;
+  my $app = MT->instance->app;
   return {
     block_subs  => {
       code           => '$Notifier::Notifier::App::block_subs',

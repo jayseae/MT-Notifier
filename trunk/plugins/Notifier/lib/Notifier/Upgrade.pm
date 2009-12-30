@@ -8,9 +8,6 @@ package Notifier::Upgrade;
 
 use strict;
 
-use MT;
-my $mt = MT->instance;
-
 sub set_blog_id {
   require Notifier::Data;
   my $iter = Notifier::Data->load_iter();

@@ -62,7 +62,8 @@ sub init_registry {
       'MT::Comment::pre_save'  => '$Notifier::Notifier::Plugin::check_comment',
       'MT::Comment::post_save' => '$Notifier::Notifier::Plugin::notify_comment',
       'MT::Entry::pre_save'    => '$Notifier::Notifier::Plugin::check_entry',
-      'MT::Entry::post_save'   => '$Notifier::Notifier::Plugin::notify_entry',
+      'MT::App::CMS::cms_post_save.entry'     => '$Notifier::Notifier::Plugin::notify_entry',
+      'MT::XMLRPCServer::api_post_save.entry' => '$Notifier::Notifier::Plugin::notify_entry',
     },
     object_types => {
       'subscription'         => 'Notifier::Data',
@@ -96,8 +97,7 @@ sub init_registry {
 
 sub settings_template_blog {
   my ($plugin, $param) = @_;
-  my $app = MT->instance;
-  my $blog_id = $app->param('blog_id');
+  my $blog_id = MT->instance->app->param('blog_id');
   return <<TMPL;
 <script language="JavaScript">
   <!--
