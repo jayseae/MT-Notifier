@@ -1,0 +1,52 @@
+<mt:if name="record">
+    <mt:setvarblock name="page_title"><__trans phrase="Add Subscription(s)"></mt:setvarblock>
+    <mt:include name="dialog/header.tmpl">
+    <p><__trans phrase="Enter the email addresses, one per line, that you would like to subscribe to the current selection.  Click the Create Subscription(s) button to process the addresses when your list is complete."></p>
+<mt:else>
+    <mt:setvarblock name="page_title"><__trans phrase="Block Subscription(s)"></mt:setvarblock>
+    <mt:include name="dialog/header.tmpl">
+    <p><__trans phrase="Enter the email addresses, one per line, that you would like to enter into the system in order to block subscriptions.  These records are used to prevent subscriptions from being sent to a specific address, and are used in the event that a particular user no longer wants to receive anything from your site.  Click the Block Subscription(s) button to process the addresses when your list is complete."></p>
+</mt:if>
+
+<form method="post" action="<$mt:var name="script_url"$>">
+
+    <input type="hidden" name="__mode" value="create_subs" />
+    <input type="hidden" name="_type" value="<$mt:var name="type"$>" />
+    <input type="hidden" name="record" value="<$mt:var name="record"$>" />
+    <input type="hidden" name="magic_token" value="<mt:var name="magic_token">" />
+    <mt:loop name="ids">
+    <input type="hidden" name="id" value="<$mt:var name="id"$>" />
+    </mt:loop>
+
+    <mtapp:setting
+        id="addresses"
+        label="Addresses:">
+        <textarea id="addresses" name="addresses" rows="12" style="width: 100%;"></textarea>
+    </mtapp:setting>
+
+    <mtapp:setting
+        id="status"
+        label="Show Results:">
+        <input type="checkbox" id="status" name="status" checked="checked" />
+    </mtapp:setting>
+
+    <div class="actions-bar">
+        <div class="actions-bar-inner pkg actions">
+            <button
+                type="submit"
+                accesskey="x"
+                class="primary-button"
+                ><__trans phrase="<mt:if name="record"><__trans phrase="Create Subscription(s)"><mt:else><__trans phrase="Block Subscription(s)"></mt:if>"></button>
+            <button
+                onclick="closeDialog(); return false"
+                type="submit"
+                accesskey="x"
+                class="cancel"
+                title="<__trans phrase="Cancel (x)">"
+                ><__trans phrase="Cancel"></button>
+        </div>
+    </div>
+
+</form>
+
+<mt:include name="dialog/footer.tmpl">

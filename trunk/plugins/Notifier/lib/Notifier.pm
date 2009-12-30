@@ -1,6 +1,6 @@
 # ===========================================================================
 # A Movable Type plugin with subscription options for your installation
-# Copyright 2003-2008 Everitz Consulting <everitz.com>.
+# Copyright 2003, 2004, 2005, 2006, 2007 Everitz Consulting <everitz.com>.
 #
 # This program is free software:  You may redistribute it and/or modify it
 # it under the terms of the Artistic License version 2 as published by the
@@ -31,277 +31,32 @@ use constant SUBSCRIBE => 1;
 use constant TEMPORARY => 2;
 
 # other
-use constant BULK    => 1;
+use constant BULK => 1;
 
 # version
 use vars qw($VERSION);
-$VERSION = '3.5.3';
+$VERSION = '4.0.0';
 
 sub init {
   my $app = shift;
   $app->SUPER::init (@_) or return;
   $app->add_methods (
-    default => \&notifier_request,
-    import => \&notifier_import,
     queued => \&send_queued
   );
-  $app->{default_mode} = 'default';
-  my $mode = $app->{query}->param('__mode');
-  $app->{requires_login} = ($mode) ? 1 : 0;
+  $app->{requires_login} = 1;
   if ($ARGV[0] eq 'queued') {
-    $app->{query}->param('__mode', 'queued');
-    $app->{query}->param('limit', $ARGV[1]);
+    $app->param('__mode', 'queued');
+    $app->param('limit', $ARGV[1]);
     $app->{requires_login} = 0;
   }
   $app;
 }
 
-sub notifier_import {
-  my $notifier = MT::Plugin::Notifier->instance;
-  my $app = shift;
-  my $auth = ($app->user->is_superuser) ? 1 : 0;
-  my $from = $app->{query}->param('from');
-  my $d = $app->{query}->param('d');
-  my $count = 0;
-  my $message;
-  if ($auth) {
-    if ($from eq 'mt') { 
-      require MT::Notification;
-      foreach my $data (MT::Notification->load()) {
-        next unless ($data && $data->blog_id && $data->email);
-        create_subscription($data->email, SUBSCRIBE, $data->blog_id, 0, 0, BULK);
-        $count++;
-      }
-    } elsif ($from eq 'n1x') {
-      require MT::PluginData;
-      foreach my $data (MT::PluginData->load({ plugin => 'Notifier' })) {
-        if ($data->key =~ /^([0-9]+):0$/) {
-          my $blog_id = $1;
-          my $scope = 'blog:'.$blog_id if ($blog_id);
-          if (my $from = $data->data->{'senderaddress'}) {
-            $notifier->set_config_value('system_address', $from, $scope);
-          }
-          next unless ($blog_id);
-          if (my $subs = $data->data->{'subscriptions'}) {
-            foreach my $sub (split(';', $subs)) {
-              my ($email) = split(':', $sub);
-              create_subscription($email, OPT_OUT, $blog_id, 0, 0, BULK);
-              $count++;
-            }
-          }
-        } elsif ($data->key =~ /^([1-9][0-9]*):([1-9][0-9]*)$/) {
-          my $entry_id = $2;
-          if (my $subs = $data->data->{'subscriptions'}) {
-            foreach my $sub (split(';', $subs)) {
-              my ($email) = split(':', $sub);
-              create_subscription($email, SUBSCRIBE, 0, 0, $entry_id, BULK);
-              $count++;
-            }
-          }
-        }
-      }
-    } elsif ($from eq 'n2x') {
-      require MT::PluginData;
-      foreach my $data (MT::PluginData->load({ plugin => 'Notifier (n2x)' })) {
-        next unless ($data->key =~ /:/);
-        if ($data->key =~ /^([0-9]+):0$/) {
-          my $blog_id = $1;
-          my $scope = 'blog:'.$blog_id if ($blog_id);
-          if (my $from = $data->data->{'from'}) {
-            $notifier->set_config_value('system_address', $from, $scope);
-          }
-          next unless ($blog_id);
-          if (my $subs = $data->data->{'subs'}) {
-            foreach my $sub (split(';', $subs)) {
-              my ($email, $type) = split(':', $sub);
-              $type = ($type eq 'opt') ? OPT_OUT : SUBSCRIBE;
-              create_subscription($email, $type, $blog_id, 0, 0, BULK);
-              $count++;
-            }
-          }
-        } elsif ($data->key =~ /^([1-9][0-9]*):C$/) {
-          my $category_id = $1;
-          if (my $subs = $data->data->{'subs'}) {
-            foreach my $sub (split(';', $subs)) {
-              my ($email, $type) = split(':', $sub);
-              $type = ($type eq 'opt') ? OPT_OUT : SUBSCRIBE;
-              create_subscription($email, $type, 0, $category_id, 0, BULK);
-              $count++;
-            }
-          }
-        } elsif ($data->key =~ /^0:([1-9][0-9]*)$/) {
-          my $entry_id = $1;
-          if (my $subs = $data->data->{'subs'}) {
-            foreach my $sub (split(';', $subs)) {
-              my ($email, $type) = split(':', $sub);
-              next if ($type eq 'opt');
-              create_subscription($email, SUBSCRIBE, 0, 0, $entry_id, BULK);
-              $count++;
-            }
-          }
-        }
-      }
-    }
-    my $s = ($count eq 1) ? '' : 's';
-    $message = $app->translate("You have successfully converted [_1] record[_2]!", $count, $s);
-  } else {
-    $message = $app->translate('You are not authorized to run this process!');
-  }
-  $app->build_page($notifier->load_tmpl('notification_request.tmpl'), {
-    message => $message,
-    notifier_version => notifier_version_number(),
-    page_title => 'MT-Notifier '.$app->translate('Import Processing')
-  });
-}
-
-sub notifier_request {
-  my $notifier = MT::Plugin::Notifier->instance;
-  my $app = shift;
-  my $cipher = $app->{query}->param('c');
-  my $n = $app->{query}->param('n');                  # redirect name
-  my $o = $app->{query}->param('o');                  # opt-out
-  my $r = $app->{query}->param('r');                  # redirect link
-  my $u = $app->{query}->param('u');                  # unsubscribe
-  my ($email, $blog_id, $category_id, $entry_id);
-  my ($confirm, $data, $message, $name, $url);
-  if ($cipher) {
-    $data = Notifier::Data->load({ cipher => $cipher });
-    if ($data) {
-      if ($o) {
-        $blog_id = $data->blog_id;
-        $category_id = $data->category_id;
-        $entry_id = $data->entry_id;
-        $email = $data->email;
-        my $record = OPT_OUT;
-        if ($entry_id) {
-          require MT::Entry;
-          my $entry = MT::Entry->load($entry_id);
-          if ($entry) {
-            $blog_id = $entry->blog_id;
-            $name = $entry->title;
-            $url = $entry->permalink;
-          } else {
-            $message = 'No entry was found to match that subscription record!';
-          }
-        } elsif ($category_id) {
-          require MT::Category;
-          my $category = MT::Category->load($category_id);
-          if ($category) {
-            $blog_id = $category->blog_id;
-            $name = $category->label;
-            require MT::Blog;
-            require MT::Util;
-            my $blog = MT::Blog->load($category->blog_id);
-            if ($blog) {
-              $url = $blog->archive_url;
-              $url .= '/' unless $url =~ m/\/$/;
-              $url .= MT::Util::archive_file_for ('',  $blog, 'Category', $category);
-            }
-          } else {
-            $message = 'No category was found to match that subscription record!';
-          }
-        } elsif ($blog_id) {
-          require MT::Blog;
-          my $blog = MT::Blog->load($blog_id);
-          if ($blog) {
-            $blog_id = $blog->id;
-            $name = $blog->name;
-            $url = $blog->site_url;
-          } else {
-            $message = 'No blog was found to match that subscription record!';
-          }
-        }
-        $category_id = 0;
-        $entry_id = 0;
-        create_subscription($email, $record, $blog_id, $category_id, $entry_id);
-        $message = 'Your opt-out record has been created!';
-      } elsif ($u) {
-        $data->remove;
-        $message = 'Your subscription has been cancelled!';
-      }
-    } else {
-      $message = 'No subscription record was found to match that locator!';
-    }
-    unless ($message) {
-      $message = 'Your request has been processed successfully!';
-      $data->status(RUNNING);
-      $data->save;
-    }
-  } else {
-    if ($email = $app->{query}->param('email')) {
-      $blog_id = $app->{query}->param('blog_id');
-      $category_id = $app->{query}->param('category_id');
-      $entry_id = $app->{query}->param('entry_id');
-      if ($blog_id || $category_id || $entry_id) {
-        if ($entry_id) {
-          require MT::Entry;
-          my $entry = MT::Entry->load($entry_id);
-          if ($entry) {
-            $blog_id = $entry->blog_id;
-            $name = $entry->title;
-            $url = $entry->permalink;
-          }
-        } elsif ($category_id) {
-          require MT::Category;
-          my $category = MT::Category->load($category_id);
-          if ($category) {
-            $blog_id = $category->blog_id;
-            $name = $category->label;
-            require MT::Blog;
-            my $blog = MT::Blog->load($category->blog_id);
-            if ($blog) {
-              $url = $blog->archive_url;
-              $url .= '/' unless $url =~ m/\/$/;
-              $url .= MT::Util::archive_file_for ('',  $blog, 'Category', $category);
-            }
-          }
-        } elsif ($blog_id) {
-          require MT::Blog;
-          my $blog = MT::Blog->load($blog_id);
-          if ($blog) {
-            $name = $blog->name;
-            $url = $blog->site_url;
-          }
-        }
-        my $error = create_subscription($email, SUBSCRIBE, $blog_id, $category_id, $entry_id);
-        if ($error == 1) {
-          $message = 'The specified email address is not valid!';
-        } elsif ($error == 2) {
-          $message = 'The requested record key is not valid!';
-        } elsif ($error == 3) {
-          $message = 'That record already exists!';
-        } else {
-          $confirm = 1 if
-            $notifier->get_config_value('system_confirm') &&
-            $notifier->get_config_value('blog_confirm', 'blog:'.$blog_id);
-          $message = 'Your request has been processed successfully!';
-        }
-      } else {
-        $message = 'Your request did not include a record key!';
-      }
-    } else {
-      $message = 'Your request must include an email address!';
-    }
-  }
-  if ($r && $r ne '1') {
-    $name = ($n) ? $n : $r;
-    $url = $r;
-  }
-  $app->build_page($notifier->load_tmpl('notification_request.tmpl'), {
-    confirm => $confirm,
-    link_name => ($r) ? $name : '',
-    link_url => ($r) ? $url : '',
-    message => $app->translate($message),
-    notifier_version => notifier_version_number(),
-    page_title => 'MT-Notifier '.$app->translate('Request Processing')
-  });
-}
-
 # subscription functions
 
 sub create_subscription {
-  my $notifier = MT::Plugin::Notifier->instance;
   my $app = MT->instance;
+  my $plugin = MT->component('Notifier');
   my ($email, $record, $blog_id, $category_id, $entry_id, $bulk) = @_;
   my $blog;
   require MT::Blog;
@@ -311,7 +66,7 @@ sub create_subscription {
   } else {
     return 1;
   }
-  return unless ($record eq OPT_OUT || $record eq SUBSCRIBE);
+  return unless ($record eq Notifier::OPT_OUT || $record eq Notifier::SUBSCRIBE);
   if ($entry_id) {
     require MT::Entry;
     my $entry = MT::Entry->load($entry_id) or return 2;
@@ -345,11 +100,12 @@ sub create_subscription {
     $data->entry_id($entry_id);
     $data->email($email);
     $data->record($record);
-    $data->cipher(produce_cipher(
+  	require Notifier::Util;
+    $data->cipher(Notifier::Util::produce_cipher(
       'a'.$email.'b'.$blog_id.'c'.$category_id.'d'.$entry_id
     ));
-    my $system_confirm = $notifier->get_config_value('system_confirm');
-    my $blog_confirm = $notifier->get_config_value('blog_confirm', 'blog:'.$blog->id);
+    my $system_confirm = $plugin->get_config_value('system_confirm');
+    my $blog_confirm = $plugin->get_config_value('blog_confirm', 'blog:'.$blog->id);
     if ($system_confirm && $blog_confirm) {
       $data->status(PENDING) unless ($bulk);
       $data->status(RUNNING) if ($bulk);
@@ -359,14 +115,14 @@ sub create_subscription {
     $data->ip($app->remote_ip);
     $data->type(0); # 4.0
     $data->save;
-    data_confirmation($data) if ($data->status == PENDING);
+    data_confirmation($data) if ($data->status == Notifier::PENDING);
   }
   return 0;
 }
 
 sub data_confirmation {
-  my $notifier = MT::Plugin::Notifier->instance;
   my $app = MT->instance;
+  my $plugin = MT->component('Notifier');
   my ($data) = @_;
   my ($category, $entry, $type);
   if ($data->entry_id) {
@@ -374,6 +130,7 @@ sub data_confirmation {
     $entry = MT::Entry->load($data->entry_id) or return;
     $type = $app->translate('Entry');
   } elsif ($data->category_id) {
+  	require MT::Category;
     $category = MT::Category->load($data->category_id) or return;
     $type = $app->translate('Category');
   } else {
@@ -387,18 +144,20 @@ sub data_confirmation {
       $app->set_language($lang);
     }
   }
-  my $sender_address = load_sender_address($data, $author);
+  require Notifier::Util;
+  my $sender_address = Notifier::Util::load_sender_address($data, $author);
   unless ($sender_address) {
     $app->log($app->translate('No sender address available - aborting confirmation!'));
     return;
   }
-  my $blog = load_blog($data);
+  my $blog = Notifier::Util::load_blog($data);
   require MT::ConfigMgr;
   my $cfg = MT::ConfigMgr->instance;
   $app->set_language($cfg->DefaultLanguage) unless ($lang);
   my $charset = $cfg->PublishCharset || 'iso-8859-1';
   my $notifier_base =($cfg->CGIPath =~ /^http/) ? $cfg->CGIPath : $app->base.$cfg->CGIPath;
-  my $record_text = ($data->record == SUBSCRIBE) ?
+  my $notifier_link = $notifier_base.$cfg->AdminScript;
+  my $record_text = ($data->record == Notifier::SUBSCRIBE) ?
     $app->translate('subscribe to') :
     $app->translate('opt-out of');
   my %head = (
@@ -413,10 +172,10 @@ sub data_confirmation {
     'blog_description' => MT::Util::remove_html($blog->description),
     'blog_name' => MT::Util::remove_html($blog->name),
     'blog_url' => $blog->site_url,
-    'notifier_home' => $notifier->author_link,
-    'notifier_name' => $notifier->name,
-    'notifier_link' => $notifier_base.$notifier->envelope.'/mt-notifier.cgi',
-    'notifier_version' => notifier_version_number(),
+    'notifier_home' => $plugin->author_link,
+    'notifier_name' => $plugin->name,
+    'notifier_link' => $notifier_link,
+    'notifier_version' => Notifier->version_number,
     'record_cipher' => $data->cipher,
     'record_text' => $record_text
   );
@@ -433,8 +192,8 @@ sub data_confirmation {
     $param{'record_link'} = $blog->site_url;
     $param{'record_name'} = MT::Util::remove_html($blog->name);
   }
-  $head{'Subject'} = load_email('confirmation-subject.tmpl', \%param);
-  my $body = load_email('confirmation.tmpl', \%param);
+  $head{'Subject'} = Notifier::Util::load_email('confirmation-subject.tmpl', \%param);
+  my $body = Notifier::Util::load_email('confirmation.tmpl', \%param);
   send_email(\%head, $body);
 }
 
@@ -475,7 +234,6 @@ sub entry_notifications {
       }
     }
     my $work_users = scalar @work_subs;
-    $mt->log("notifying $work_users user(s) for blog $blog_id");
     next unless ($work_users);
     notify_users($entry, \@work_subs);
   }
@@ -483,8 +241,8 @@ sub entry_notifications {
 }
 
 sub notify_users {
-  my $notifier = MT::Plugin::Notifier->instance;
   my $app = MT->instance;
+  my $plugin = MT->component('Notifier');
   my ($obj, $work_subs) = @_;
   my ($entry, $comment, $type);
   if (UNIVERSAL::isa($obj, 'MT::Comment')) {
@@ -505,8 +263,8 @@ sub notify_users {
       blog_id => $blog->id,
       category_id => 0,
       entry_id => 0,
-      record => OPT_OUT,
-      status => RUNNING
+      record => Notifier::OPT_OUT,
+      status => Notifier::RUNNING
     });
   require MT::Placement;
   my @places = MT::Placement->load({
@@ -517,8 +275,8 @@ sub notify_users {
       blog_id => $blog->id,
       category_id => $place->category_id,
       entry_id => 0,
-      record => OPT_OUT,
-      status => RUNNING
+      record => Notifier::OPT_OUT,
+      status => Notifier::RUNNING
     });
     foreach (@category_opts) {
       push @work_opts, $_;
@@ -529,7 +287,8 @@ sub notify_users {
   my $users = scalar @subs;
   return unless ($users);
   my $author = $entry->author;
-  my $sender_address = load_sender_address($obj, $author);
+  require Notifier::Util;
+  my $sender_address = Notifier::Util::load_sender_address($obj, $author);
   return unless ($sender_address);
   $app->set_language($author->preferred_language)
     if ($author && $author->preferred_language);
@@ -537,6 +296,7 @@ sub notify_users {
   my $cfg = MT::ConfigMgr->instance;
   my $charset = $cfg->PublishCharset || 'iso-8859-1';
   my $notifier_base =($cfg->CGIPath =~ /^http/) ? $cfg->CGIPath : $app->base.$cfg->CGIPath;
+  my $notifier_link = $notifier_base.$cfg->AdminScript;
   require MT::Util;
   my %param = (
     'blog_id' => $blog->id,
@@ -557,10 +317,10 @@ sub notify_users {
     'entry_more' => $entry->text_more,
     'entry_status' => $entry->status,
     'entry_title' => $entry->title,
-    'notifier_home' => $notifier->author_link,
-    'notifier_name' => $notifier->name,
-    'notifier_link' => $notifier_base.$notifier->envelope.'/mt-notifier.cgi',
-    'notifier_version' => notifier_version_number()
+    'notifier_home' => $plugin->author_link,
+    'notifier_name' => $plugin->name,
+    'notifier_link' => $notifier_link,
+    'notifier_version' => Notifier->version_number
   );
   if ($comment) {
     $param{'comment_author'} = $comment->author;
@@ -576,10 +336,10 @@ sub notify_users {
   my %head = (
     'Content-Type' => qq(text/plain; charset="$charset"),
     'From' => $sender_address,
-    'Subject' => load_email('notification-subject.tmpl', \%param)
+    'Subject' => Notifier::Util::load_email('notification-subject.tmpl', \%param)
   );
-  my $blog_queued = $notifier->get_config_value('blog_queued', 'blog:'.$blog->id);
-  my $system_queued = $notifier->get_config_value('system_queued');
+  my $blog_queued = $plugin->get_config_value('blog_queued', 'blog:'.$blog->id);
+  my $system_queued = $plugin->get_config_value('system_queued');
   foreach my $sub (@subs) {
     next if ($comment && $sub->email eq $comment->email);
     my %terms;
@@ -591,7 +351,7 @@ sub notify_users {
     next if ($history);
     $head{'To'} = $sub->email;
     $param{'record_cipher'} = $sub->cipher;
-    my $body = load_email('notification.tmpl', \%param);
+    my $body = Notifier::Util::load_email('notification.tmpl', \%param);
     if ($system_queued && $blog_queued) {
       queue_email(\%head, $body);
     } else {
@@ -618,8 +378,8 @@ sub queue_email {
 }
 
 sub send_email {
-  my $notifier = MT::Plugin::Notifier->instance;
   my $app = MT->instance;
+  my $plugin = MT->component('Notifier');
   my ($hdrs, $body) = @_;
   foreach my $h (keys %$hdrs) {
     if (ref($hdrs->{$h}) eq 'ARRAY') {
@@ -629,9 +389,10 @@ sub send_email {
     }
   }
   $body .= "\n\n--\n";
-  $body .= $notifier->name.' v'.$notifier->version."\n";
-  $body .= $notifier->author_link."\n";
-  require MT::Mail;    
+  $body .= $plugin->name.' v'.$plugin->version."\n";
+  $body .= $plugin->author_link."\n";
+  require MT::Mail;
+  require MT::ConfigMgr;
   my $mgr = MT::ConfigMgr->instance;
   my $xfer = $mgr->MailTransfer;
   if ($xfer eq 'sendmail') {
@@ -647,12 +408,11 @@ sub send_email {
 }
 
 sub send_queued {
-  my $notifier = MT::Plugin::Notifier->instance;
   my $app = shift;
   my (%terms, %args);
-  $args{'limit'} = $app->{query}->param('limit');
-  $args{'sort'} = 'id';
+  $args{'limit'} = $app->param('limit');
   $args{'direction'} = 'ascend';
+  $args{'sort'} = 'id';
   require Notifier::Queue;
   my $iter = Notifier::Queue->load_iter(\%terms, \%args);
   my $count = 0;
@@ -673,97 +433,9 @@ sub send_queued {
   );
 }
 
-# shared functions
+# version routines
 
-sub load_blog {
-  my ($obj) = @_;
-  my $blog_id;
-  require MT::Blog;
-  if ($obj->entry_id) {
-    require MT::Entry;
-    my $entry = MT::Entry->load($obj->entry_id) or return;
-    $blog_id = $entry->blog_id;
-  } elsif ($obj->category_id) {
-    require MT::Category;
-    my $category = MT::Category->load($obj->category_id) or return;
-    $blog_id = $category->blog_id;
-  } else {
-    $blog_id = $obj->blog_id;
-  }
-  my $blog = MT::Blog->load($blog_id) or return;
-  $blog;
-}
-
-sub load_email {
-  my $notifier = MT::Plugin::Notifier->instance;
-  my $app = MT->instance;
-  my ($file, $param) = @_;
-  my @paths;
-  my $dir = File::Spec->catdir($app->mt_dir, $notifier->envelope, 'tmpl', 'email');
-  push @paths, $dir if -d $dir;
-  $dir = File::Spec->catdir($app->mt_dir, $notifier->envelope, 'tmpl');
-  push @paths, $dir if -d $dir;
-  $dir = File::Spec->catdir($app->mt_dir, $notifier->envelope);
-  push @paths, $dir if -d $dir;
-  require HTML::Template;
-  my $tmpl;
-  eval {
-    local $1; ## This seems to fix a utf8 bug (of course).
-    $tmpl = HTML::Template->new_file(
-      $file,
-      path => \@paths,
-      search_path_on_include => 1,
-      die_on_bad_params => 0,
-      global_vars => 1);
-  };
-  return MT->trans_error("Loading template '[_1]' failed: [_2]", $file, $@) if $@;
-  for my $key (keys %$param) {
-    $tmpl->param($key, $param->{$key});
-  }
-  MT->translate_templatized($tmpl->output);
-}
-
-sub load_sender_address {
-  my $notifier = MT::Plugin::Notifier->instance;
-  my $app = MT->instance;
-  my ($obj, $author) = @_;
-  my $entry;
-  if (UNIVERSAL::isa($obj, 'MT::Comment')) {
-    require MT::Entry;
-    $entry = MT::Entry->load($obj->entry_id);
-  } else {
-    $entry = $obj;
-  }
-  my $blog = MT::Blog->load($entry->blog_id);
-  unless ($blog) {
-    $app->log($app->translate('Specified blog unavailable - please check your data!'));
-    return;
-  }
-  my $blog_address_type = $notifier->get_config_value('blog_address_type', 'blog:'.$blog->id);
-  my $sender_address;
-  if ($blog_address_type == 1) {
-    $sender_address = $notifier->get_config_value('system_address');
-  } elsif ($blog_address_type == 2) {
-    $sender_address = $author->email if ($author);
-  } elsif ($blog_address_type == 3) {
-    $sender_address = $notifier->get_config_value('blog_address', 'blog:'.$blog->id);
-  }
-  require MT::Util;
-  if (my $fixed = MT::Util::is_valid_email($sender_address)) {
-    return $fixed;
-  } else {
-    my $message;
-    if ($sender_address) {
-      $message .= $app->translate('Invalid sender address - please reconfigure it!');
-    } else {
-      $message .= $app->translate('No sender address - please configure one!');
-    }
-    $app->log($message);
-    return;
-  }
-}
-
-sub notifier_schema_version {
+sub schema_version {
   (my $ver = $VERSION) =~ s/^([\d]+[\.]).*$/$1/;
   (my $rel = $VERSION) =~ s/^[\d]+[\.](.*)$/$1/;
   $rel =~ s/\.//g;
@@ -771,17 +443,9 @@ sub notifier_schema_version {
   $ver;
 }
 
-sub notifier_version_number {
+sub version_number {
   (my $ver = $VERSION) =~ s/^([\d]+[\.]?[\d]*).*$/$1/;
   $ver;
-}
-
-sub produce_cipher {
-  my $key = shift;
-  my $salt = join '', ('.', '/', 0..9, 'A'..'Z', 'a'..'z')[rand 64, rand 64];
-  my $cipher = crypt ($key, $salt);
-  $cipher =~ s/\.$/q/;
-  $cipher;
 }
 
 1;

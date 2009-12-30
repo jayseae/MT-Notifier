@@ -1,0 +1,502 @@
+# ===========================================================================
+# A Movable Type plugin with subscription options for your installation
+# Copyright 2003, 2004, 2005, 2006, 2007 Everitz Consulting <everitz.com>.
+#
+# This program is free software:  You may redistribute it and/or modify it
+# it under the terms of the Artistic License version 2 as published by the
+# Open Source Initiative.
+#
+# This program is distributed in the hope that it will be useful but does
+# NOT INCLUDE ANY WARRANTY; Without even the implied warranty of FITNESS
+# FOR A PARTICULAR PURPOSE.
+#
+# You should have received a copy of the Artistic License with this program.
+# If not, see <http://www.opensource.org/licenses/artistic-license-2.0.php>.
+# ===========================================================================
+package Notifier::App;
+
+use strict;
+
+# methods
+
+sub block_subs {
+  my $app = shift;
+  $app->validate_magic or return;
+  my $return = $app->param('return_args');
+  my @ids = $app->param('id');
+  for my $id (@ids) {
+    require Notifier::Data;
+    my $obj = Notifier::Data->get_by_key({
+      id => $id
+    });
+    if ($obj) {
+      require Notifier::Queue;
+      my @queue = Notifier::Queue->load({
+        head_to => $obj->email
+      });
+      foreach my $queue (@queue) {
+        $queue->remove;
+      }
+      $obj->record(0);
+      $obj->save;
+    }
+  }
+  $app->return_args($return);
+  $app->call_return;
+}
+
+sub clear_subs {
+  my $app = shift;
+  $app->validate_magic or return;
+  my $return = $app->param('return_args');
+  my @ids = $app->param('id');
+  for my $id (@ids) {
+    require Notifier::Data;
+    my $obj = Notifier::Data->get_by_key({
+      id => $id
+    });
+    if ($obj) {
+      $obj->record(1);
+      $obj->save;
+    }
+  }
+  $app->return_args($return);
+  $app->call_return;
+}
+
+sub create_subs {
+  my $app = shift;
+  $app->validate_magic or return;
+  my $record = $app->param('record');
+  my $blog_id;
+  if ($blog_id = $app->param('blog_id')) {
+    my $id = $app->param('id');
+    my $email = $app->param('email');
+    my $return = $app->param('return_args');
+    my $obj;
+    if ($id) {
+      require Notifier::Data;
+      $obj = Notifier::Data->get_by_key({
+        id => $id
+      });
+    }
+    if ($obj) {
+      $obj->email($email);
+      require Notifier::Util;
+      $obj->cipher(Notifier::Util::produce_cipher(
+        'a'.$email.'b'.$blog_id.'c'.'0'.'d'.'0'
+      ));
+      $obj->save;
+    } else {
+      Notifier::create_subscription($email, $record, $blog_id, 0, 0);
+    }
+    # TODO: convert this to use $app->call_return();
+    # then templates can determine the page flow.
+    #$app->return_args($return);
+    #$app->call_return;
+    return $app->redirect(
+      $app->uri(
+        'mode' => 'list_subs',
+        args   => {
+          blog_id => $blog_id,
+          saved   => $email
+        }
+      )
+    );
+  } else {
+    my $type = $app->param('_type');
+    my @ids = $app->param('id');
+    my ($category_id, $entry_id);
+    my ($valid_email, $valid_id);
+    foreach my $id (@ids) {
+      if ($type eq 'blog') {
+        require MT::Blog;
+        my $blog = MT::Blog->load($id);
+        $blog_id = $blog->id if ($blog);
+        next unless ($blog);
+        $valid_id++;
+      } elsif ($type eq 'category') {
+        require MT::Category;
+        my $category = MT::Category->load($id);
+        $blog_id = $category->blog_id if ($category);
+        next unless ($category);
+        $valid_id++;
+      } elsif ($type eq 'entry') {
+        require MT::Entry;
+        my $entry = MT::Entry->load($id);
+        $blog_id = $entry->blog_id if ($entry);
+        next unless ($entry);
+        $valid_id++;
+      }
+      foreach my $email (split(/\r\n/, $app->param('addresses'))) {
+        $blog_id = ($type eq 'blog') ? $id : 0;
+        $category_id = ($type eq 'category') ? $id : 0;
+        $entry_id = ($type eq 'entry') ? $id : 0;
+        my $ec = Notifier::create_subscription($email, $record, $blog_id, $category_id, $entry_id);
+        $valid_email++ unless ($ec);
+      }
+    }
+    my $plugin = MT->component('Notifier');
+    $app->build_page($plugin->load_tmpl('dialog/close.tmpl'), {
+      valid_email => $valid_email,
+      valid_id    => $valid_id,
+    });
+  }
+}
+
+sub verify_subs {
+  my $app = shift;
+  require Notifier;
+  require Notifier::Data;
+  if (my $return = $app->param('return_args')) {
+    my @ids = $app->param('id');
+    for my $id (@ids) {
+      my $obj = Notifier::Data->get_by_key({
+        id => $id
+      });
+      if ($obj) {
+        $obj->status(1);
+        $obj->save;
+      }
+    }
+    $app->return_args($return);
+    $app->call_return;
+  } else {
+    my $plugin = MT->component('Notifier');
+    my ($email, $blog_id, $category_id, $entry_id);
+    my ($confirm, $data, $message, $name, $url);
+    if (my $c = $app->param('c')) {
+      # user cipher found - load data for processing!
+      $data = Notifier::Data->load({ cipher => $c });
+      if ($data) {
+        if (my $o = $app->param('o')) {
+          # opt-out/block requested!
+          $blog_id = $data->blog_id;
+          $category_id = $data->category_id;
+          $entry_id = $data->entry_id;
+          $email = $data->email;
+          if ($data->entry_id) {
+            require MT::Entry;
+            my $entry = MT::Entry->get_by_key({
+              id => $entry_id
+            });
+            if ($entry) {
+              $blog_id = $entry->blog_id;
+              $name = $entry->title;
+              $url = $entry->permalink;
+            } else {
+              $message = 'No entry was found to match that subscription record!';
+            }
+          } elsif ($category_id) {
+            require MT::Category;
+            my $category = MT::Category->get_by_key({
+              id => $category_id
+            });
+            if ($category) {
+              $blog_id = $category->blog_id;
+              $name = $category->label;
+              require MT::Blog;
+              require MT::Util;
+              my $blog = MT::Blog->get_by_key({
+                id => $category->blog_id
+              });
+              if ($blog) {
+                $url = $blog->archive_url;
+                $url .= '/' unless $url =~ m/\/$/;
+                $url .= MT::Util::archive_file_for ('',  $blog, 'Category', $category);
+              }
+            } else {
+              $message = 'No category was found to match that subscription record!';
+            }
+          } elsif ($blog_id) {
+            require MT::Blog;
+            my $blog = MT::Blog->get_by_key({
+              id => $blog_id
+            });
+            if ($blog) {
+              $blog_id = $blog->id;
+              $name = $blog->name;
+              $url = $blog->site_url;
+            } else {
+              $message = 'No blog was found to match that subscription record!';
+            }
+          }
+          $category_id = 0;
+          $entry_id = 0;
+          my $error = Notifier::create_subscription($email, Notifier::OPT_OUT, $blog_id, $category_id, $entry_id);
+          if ($error == 1) {
+            $message = 'The specified email address is not valid!';
+          } elsif ($error == 2) {
+            $message = 'The requested record key is not valid!';
+          } elsif ($error == 3) {
+            $message = 'That record already exists!';
+          } else {
+            $message = 'Your request has been processed successfully!';
+          }
+        } elsif (my $u = $app->param('u')) {
+          # unsubscribe requested!
+          $data->remove;
+          $message = 'Your subscription has been cancelled!';
+        }
+      } else {
+        $message = 'No subscription record was found to match that locator!';
+      }
+      unless ($message) {
+        $message = 'Your request has been processed successfully!';
+        $data->status(Notifier::RUNNING);
+        $data->save;
+      }
+    } else {
+      if ($email = $app->param('email')) {
+        $blog_id = $app->param('blog_id');
+        $category_id = $app->param('category_id');
+        $entry_id = $app->param('entry_id');
+        if ($blog_id || $category_id || $entry_id) {
+          if ($entry_id) {
+            require MT::Entry;
+            my $entry = MT::Entry->get_by_key({
+              id => $entry_id
+            });
+            if ($entry) {
+              $blog_id = $entry->blog_id;
+              $name = $entry->title;
+              $url = $entry->permalink;
+            }
+          } elsif ($category_id) {
+            require MT::Category;
+            my $category = MT::Category->get_by_key({
+              id => $category_id
+            });
+            if ($category) {
+              $blog_id = $category->blog_id;
+              $name = $category->label;
+              require MT::Blog;
+              my $blog = MT::Blog->get_by_key({
+                id => $category->blog_id
+              });
+              if ($blog) {
+                $url = $blog->archive_url;
+                $url .= '/' unless $url =~ m/\/$/;
+                $url .= MT::Util::archive_file_for ('',  $blog, 'Category', $category);
+              }
+            }
+          } elsif ($blog_id) {
+            require MT::Blog;
+            my $blog = MT::Blog->get_by_key({
+              id => $blog_id
+            });
+            if ($blog) {
+              $name = $blog->name;
+              $url = $blog->site_url;
+            }
+          }
+          my $error = Notifier::create_subscription($email, Notifier::SUBSCRIBE, $blog_id, $category_id, $entry_id);
+          if ($error == 1) {
+            $message = 'The specified email address is not valid!';
+          } elsif ($error == 2) {
+            $message = 'The requested record key is not valid!';
+          } elsif ($error == 3) {
+            $message = 'That record already exists!';
+          } else {
+            $confirm = 1 if
+              $plugin->get_config_value('system_confirm') &&
+              $plugin->get_config_value('blog_confirm', 'blog:'.$blog_id);
+            $message = 'Your request has been processed successfully!';
+          }
+        } else {
+          $message = 'Your request did not include a record key!';
+        }
+      } else {
+        $message = 'Your request must include an email address!';
+      }
+    }
+    my $n = $app->param('n'); # redirect name
+    my $r = $app->param('r'); # redirect link
+    if ($r && $r ne '1') {
+      $name = ($n) ? $n : $r;
+      $url = $r;
+    }
+    $app->build_page($plugin->load_tmpl('request.tmpl'), {
+      confirm          => $confirm,
+      link_name        => ($r) ? $name : '',
+      link_url         => ($r) ? $url : '',
+      message          => $plugin->translate($message),
+      notifier_version => $plugin->version,
+      page_title       => $plugin->name.' '.$plugin->translate('Request Processing')
+    });
+  }
+}
+
+# user redirection
+
+sub _sub_block {
+  my $app = shift;
+  block_subs($app);
+}
+
+sub _sub_clear {
+  my $app = shift;
+  clear_subs($app);
+}
+
+sub _sub_verify {
+  my $app = shift;
+  verify_subs($app);
+}
+
+sub _ui_opt {
+  my $app = shift;
+  notifier_start($app, Notifier::OPT_OUT);
+}
+
+sub _ui_sub {
+  my $app = shift;
+  notifier_start($app, Notifier::SUBSCRIBE);
+}
+
+sub _ui_vue {
+  my $app = shift;
+  notifier_count($app);
+}
+
+# user interaction
+
+sub notifier_count {
+  my $app = shift;
+  my @ids = $app->param('id');
+  my $type = $app->param('_type');
+  my $total_opts = 0;
+  my $total_subs = 0;
+  my @subs;
+  require Notifier::Data;
+  foreach my $id (@ids) {
+    if ($type eq 'blog') {
+      require MT::Blog;
+      my $blog = MT::Blog->load($id);
+      my $opts = Notifier::Data->count({ blog_id => $id, record => Notifier::OPT_OUT });
+      my $subs = Notifier::Data->count({ blog_id => $id, record => Notifier::SUBSCRIBE });
+      push @subs, { name => $blog->name, opt_count => $opts, sub_count => $subs };
+      $total_opts += $opts;
+      $total_subs += $subs;
+    } elsif ($type eq 'category') {
+      require MT::Category;
+      my $category = MT::Category->load($id);
+      my $opts = Notifier::Data->count({ category_id => $id, record => Notifier::OPT_OUT });
+      my $subs = Notifier::Data->count({ category_id => $id, record => Notifier::SUBSCRIBE });
+      push @subs, { name => $category->label, opt_count => $opts, sub_count => $subs };
+      $total_opts += $opts;
+      $total_subs += $subs;
+    } elsif ($type eq 'entry') {
+      require MT::Entry;
+      my $entry = MT::Entry->load($id);
+      my $opts = Notifier::Data->count({ entry_id => $id, record => Notifier::OPT_OUT });
+      my $subs = Notifier::Data->count({ entry_id => $id, record => Notifier::SUBSCRIBE });
+      push @subs, { name => $entry->title, opt_count => $opts, sub_count => $subs };
+      $total_opts += $opts;
+      $total_subs += $subs;
+    }
+  }
+  my $plugin = MT->component('Notifier');
+  $app->build_page($plugin->load_tmpl('dialog/count.tmpl'), {
+    subs          => \@subs,
+    total_opts    => $total_opts,
+    total_subs    => $total_subs,
+    type_blog     => ($type eq 'blog') ? 1 : 0,
+    type_category => ($type eq 'category') ? 1 : 0,
+    type_entry    => ($type eq 'entry') ? 1 : 0,
+  });
+}
+
+sub notifier_start {
+  my $app = shift;
+  my $record = shift;
+  my @ids = $app->param('id');
+  my $plugin = MT->component('Notifier');
+  $app->build_page($plugin->load_tmpl('dialog/start.tmpl'), {
+    ids  => [ map { { id => $_ } } @ids ],
+    record => $record,
+    type => $app->param('_type')
+  });
+}
+
+# widget redirection
+
+sub _widget_blog {
+  my $app = shift;
+  install_widget($app, 'Blog');
+}
+
+sub _widget_category {
+  my $app = shift;
+  install_widget($app, 'Category');
+}
+
+sub _widget_entry {
+  my $app = shift;
+  install_widget($app, 'Entry');
+}
+
+# widget creation
+
+sub install_widget {
+  my $app = shift;
+  my $type = shift;
+  my $perms = $app->{perms};
+  my $plugin = MT->component('Notifier');
+  return $app->error($plugin->translate('Insufficient permissions for installing templates for this weblog.'))
+    unless $perms->can_edit_templates() || $perms->can_administer_blog() || $app->user->is_superuser();
+  my $blog_id = $app->param('blog_id');
+  my $terms = {};
+  $terms->{blog_id} = $blog_id;
+  $terms->{name} = $plugin->translate($plugin->name." $type Widget");
+  require MT::Template;
+  my $tmpl = MT::Template->load($terms);
+  if ($tmpl) {
+    return $app->error($plugin->translate("[_1] $type Widget: Template already exists.", $plugin->name));
+  } else {
+    my $val = {};
+    $val->{name} = $terms->{name};
+    $val->{text} = $app->translate_templatized(widget_template($type));
+    my $at = 'widget';
+    my $tmpl = new MT::Template;
+    $tmpl->set_values($val);
+    $tmpl->type($at);
+    $tmpl->blog_id($blog_id);
+    $tmpl->save or return $app->error($plugin->translate('Error creating new template: [_1]', $tmpl->errstr));
+    $app->redirect($app->uri( 'mode' => 'view', args => { 'blog_id' => $blog_id, '_type' => 'template', 'id' => $tmpl->id } ));
+  }
+}
+
+sub widget_template {
+  my $type = shift;
+  my $plugin = MT->component('Notifier');
+  my $message = $plugin->translate("Subscribe to $type");
+  my $powered = $plugin->translate('Powered by [_1]', qq{<a href="http://everitz.com/mt/notifier.php">MT-Notifier</a>});
+  my ($field, $value);
+  if ($type eq 'Blog') {
+    $field = 'blog_id';
+    $value = '<mt:blogid>';
+  } elsif ($type eq 'Category') {
+    $field = 'category_id';
+    $value = '<mt:notifiercatid>';
+  } else {
+    $field = 'entry_id';
+    $value = '<mt:entryid>';
+  }
+  return <<TMPL;
+        <div class="widget-subscribe widget">
+            <h3 class="widget-header">$message</h3>
+            <div class="widget-content">
+                <form method="get" action="<mt:cgipath><mt:adminscript>">
+                    <input type="hidden" name="__mode" value="verify_subs" />
+                    <input type="hidden" name="$field" value="$value" />
+                    <input id="email" name="email" size="16" />
+                    <input type="submit" class="button" value="<__trans phrase="Go">" />
+                </form>
+                <p>$powered</p>
+            </div>
+        </div>
+TMPL
+}
+
+1;

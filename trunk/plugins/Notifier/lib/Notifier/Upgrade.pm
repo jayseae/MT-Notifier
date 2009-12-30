@@ -1,6 +1,6 @@
 # ===========================================================================
 # A Movable Type plugin with subscription options for your installation
-# Copyright 2003-2008 Everitz Consulting <everitz.com>.
+# Copyright 2003, 2004, 2005, 2006, 2007 Everitz Consulting <everitz.com>.
 #
 # This program is free software:  You may redistribute it and/or modify it
 # it under the terms of the Artistic License version 2 as published by the
@@ -13,42 +13,51 @@
 # You should have received a copy of the Artistic License with this program.
 # If not, see <http://www.opensource.org/licenses/artistic-license-2.0.php>.
 # ===========================================================================
-package Notifier::Upgrader;
+package Notifier::Upgrade;
 
 use strict;
 
-use Notifier;
+use MT;
+my $mt = MT->instance;
 
-sub _set_blog_id {
+sub set_blog_id {
   require Notifier::Data;
   my $iter = Notifier::Data->load_iter();
   while (my $obj = $iter->()) {
     next if ($obj->blog_id);
     if (my $entry_id = $obj->entry_id()) {
       require MT::Entry;
-      if (my $entry = MT::Entry->load($entry_id)) {
+      my $entry = MT::Entry->get_by_key({
+        id => $entry_id
+      });
+      if ($entry) {
         $obj->blog_id($entry->blog_id);
       }
     }
     if (my $category_id = $obj->category_id()) {
       require MT::Category;
-      if (my $category = MT::Category->load($category_id)) {
+      my $category = MT::Category->get_by_key({
+        id => $category_id
+      });
+      if ($category) {
         $obj->blog_id($category->blog_id);
       }
     }
-    $obj->cipher(Notifier::produce_cipher(
+    require Notifier::Util;
+    $obj->cipher(Notifier::Util::produce_cipher(
       'a'.$obj->email.'b'.$obj->blog_id.'c'.$obj->category_id.'d'.$obj->entry_id
     ));
     $obj->save;
   }
 }
 
-sub _set_history {
+sub set_history {
   my $set;
   require MT::Entry;
   my $iter = MT::Entry->load_iter();
   while (my $entry = $iter->()) {
     my $pinged = $entry->pinged_urls;
+    require Notifier;
     $set = 0;
     $set = 1 if ($pinged && $pinged =~ m/$Notifier::SENTSRV1/);
     $set = 1 if ($pinged && $pinged =~ m/$Notifier::SENTSRV2/);
@@ -80,7 +89,6 @@ sub _set_history {
     }
     my $users = scalar @subs;
     next unless ($users);
-    require Notifier::History;
     foreach my $sub (@subs) {
       my $data = Notifier::Data->load({
         email => $sub->email,
@@ -88,6 +96,7 @@ sub _set_history {
       });
       next unless ($data);
       next if ($data->entry_id);
+      require Notifier::History;
       my $history = Notifier::History->load({
         data_id => $data->id,
         entry_id => $entry_id
@@ -102,7 +111,7 @@ sub _set_history {
   }
 }
 
-sub _set_ip {
+sub set_ip {
   require Notifier::Data;
   my $iter = Notifier::Data->load_iter();
   while (my $obj = $iter->()) {
