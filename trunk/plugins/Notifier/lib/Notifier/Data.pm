@@ -49,11 +49,13 @@ __PACKAGE__->install_properties({
 });
 
 sub class_label {
-    MT->translate('Subscription');
+    my $plugin = MT->component('Notifier');
+    $plugin->translate('Subscription');
 }
 
 sub class_label_plural {
-    MT->translate("Subscriptions");
+    my $plugin = MT->component('Notifier');
+    $plugin->translate('Subscriptions');
 }
 
 1;

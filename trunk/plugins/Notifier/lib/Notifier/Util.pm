@@ -81,7 +81,7 @@ sub load_sender_address {
   require MT::Blog;
   my $blog = MT::Blog->load($entry->blog_id);
   unless ($blog) {
-    $app->log($app->translate('Specified blog unavailable - please check your data!'));
+    $app->log($plugin->translate('Specified blog unavailable - please check your data!'));
     return;
   }
   my $blog_address_type = $plugin->get_config_value('blog_address_type', 'blog:'.$blog->id);
@@ -99,9 +99,9 @@ sub load_sender_address {
   } else {
     my $message;
     if ($sender_address) {
-      $message .= $app->translate('Invalid sender address - please reconfigure it!');
+      $message .= $plugin->translate('Invalid sender address - please reconfigure it!');
     } else {
-      $message .= $app->translate('No sender address - please configure one!');
+      $message .= $plugin->translate('No sender address - please configure one!');
     }
     $app->log($message);
     return;

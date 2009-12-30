@@ -35,7 +35,7 @@ use constant BULK => 1;
 
 # version
 use vars qw($VERSION);
-$VERSION = '4.0.0';
+$VERSION = '4.0.1';
 
 sub init {
   my $app = shift;
@@ -128,13 +128,13 @@ sub data_confirmation {
   if ($data->entry_id) {
     require MT::Entry;
     $entry = MT::Entry->load($data->entry_id) or return;
-    $type = $app->translate('Entry');
+    $type = $plugin->translate('Entry');
   } elsif ($data->category_id) {
   	require MT::Category;
     $category = MT::Category->load($data->category_id) or return;
-    $type = $app->translate('Category');
+    $type = $plugin->translate('Category');
   } else {
-    $type = $app->translate('Blog');
+    $type = $plugin->translate('Blog');
   }
   my ($author, $lang);
   if ($entry) {
@@ -147,7 +147,7 @@ sub data_confirmation {
   require Notifier::Util;
   my $sender_address = Notifier::Util::load_sender_address($data, $author);
   unless ($sender_address) {
-    $app->log($app->translate('No sender address available - aborting confirmation!'));
+    $app->log($plugin->translate('No sender address available - aborting confirmation!'));
     return;
   }
   my $blog = Notifier::Util::load_blog($data);
@@ -158,8 +158,8 @@ sub data_confirmation {
   my $notifier_base =($cfg->CGIPath =~ /^http/) ? $cfg->CGIPath : $app->base.$cfg->CGIPath;
   my $notifier_link = $notifier_base.$cfg->AdminScript;
   my $record_text = ($data->record == Notifier::SUBSCRIBE) ?
-    $app->translate('subscribe to') :
-    $app->translate('opt-out of');
+    $plugin->translate('subscribe to') :
+    $plugin->translate('opt-out of');
   my %head = (
     'Content-Type' => qq(text/plain; charset="$charset"),
     'From' => $sender_address,
@@ -198,46 +198,39 @@ sub data_confirmation {
 }
 
 sub entry_notifications {
-  my $app = MT->instance;
-  require MT::Request;
-  my $r = MT::Request->instance;
-  my $notify_list = $r->cache('mtn_notify_list') || {};
-  return unless (scalar(keys(%$notify_list)));
-  foreach my $entry_id (keys %$notify_list) {
-    require MT::Entry;
-    my $entry = MT::Entry->load($entry_id);
-    next unless ($entry);
-    my $blog_id = $entry->blog_id;
-    my @work_subs =
-      map { $_ }
-      Notifier::Data->load({
-        blog_id => $blog_id,
-        category_id => 0,
-        entry_id => 0,
-        record => Notifier::SUBSCRIBE,
-        status => Notifier::RUNNING
-      });
-    require MT::Placement;
-    my @places = MT::Placement->load({
-      entry_id => $entry_id
+  my $entry_id = shift;
+  require MT::Entry;
+  my $entry = MT::Entry->load($entry_id);
+  next unless ($entry);
+  my $blog_id = $entry->blog_id;
+  my @work_subs =
+    map { $_ }
+    Notifier::Data->load({
+      blog_id => $blog_id,
+      category_id => 0,
+      entry_id => 0,
+      record => Notifier::SUBSCRIBE,
+      status => Notifier::RUNNING
     });
-    foreach my $place (@places) {
-      my @category_subs = Notifier::Data->load({
-        blog_id => $blog_id,
-        category_id => $place->category_id,
-        entry_id => 0,
-        record => Notifier::SUBSCRIBE,
-        status => Notifier::RUNNING
-      });
-      foreach (@category_subs) {
-        push @work_subs, $_;
-      }
+  require MT::Placement;
+  my @places = MT::Placement->load({
+    entry_id => $entry_id
+  });
+  foreach my $place (@places) {
+    my @category_subs = Notifier::Data->load({
+      blog_id => $blog_id,
+      category_id => $place->category_id,
+      entry_id => 0,
+      record => Notifier::SUBSCRIBE,
+      status => Notifier::RUNNING
+    });
+    foreach (@category_subs) {
+      push @work_subs, $_;
     }
-    my $work_users = scalar @work_subs;
-    next unless ($work_users);
-    notify_users($entry, \@work_subs);
   }
-  $r->cache('mtn_notify_list', {});
+  my $work_users = scalar @work_subs;
+  next unless ($work_users);
+  notify_users($entry, \@work_subs);
 }
 
 sub notify_users {
@@ -249,11 +242,11 @@ sub notify_users {
     require MT::Entry;
     $entry = MT::Entry->load($obj->entry_id) or return;
     $comment = $obj;
-    $type = $app->translate('Comment');
+    $type = $plugin->translate('Comment');
   }
   if (UNIVERSAL::isa($obj, 'MT::Entry')) {
     $entry = $obj;
-    $type = $app->translate('Entry');
+    $type = $plugin->translate('Entry');
   }
   require MT::Blog;
   my $blog = MT::Blog->load($obj->blog_id) or return;
@@ -378,7 +371,6 @@ sub queue_email {
 }
 
 sub send_email {
-  my $app = MT->instance;
   my $plugin = MT->component('Notifier');
   my ($hdrs, $body) = @_;
   foreach my $h (keys %$hdrs) {
@@ -402,13 +394,14 @@ sub send_email {
   } elsif ($xfer eq 'debug') {
     return MT::Mail->_send_mt_debug($hdrs, $body, $mgr);
   } else {
-    return MT::Mail->error(MT->translate(
+    return MT::Mail->error($plugin->translate(
       "Unknown MailTransfer method '[_1]'", $xfer ));
   }
 }
 
 sub send_queued {
   my $app = shift;
+  my $plugin = MT->component('Notifier');
   my (%terms, %args);
   $args{'limit'} = $app->param('limit');
   $args{'direction'} = 'ascend';
@@ -428,7 +421,7 @@ sub send_queued {
     $count++;
   }
   my $s = ($count != 1) ? 's' : '';
-  $app->log($app->translate(
+  $app->log($plugin->translate(
     "[_1]: Sent [_2] queued notification[_3].", 'MT-Notifier', $count, $s)
   );
 }

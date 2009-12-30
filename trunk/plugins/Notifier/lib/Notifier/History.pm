@@ -37,11 +37,13 @@ __PACKAGE__->install_properties({
 });
 
 sub class_label {
-    MT->translate('Subscription History');
+    my $plugin = MT->component('Notifier');
+    $plugin->translate('Subscription History');
 }
 
 sub class_label_plural {
-    MT->translate("Subscription History Records");
+    my $plugin = MT->component('Notifier');
+    $plugin->translate('Subscription History Records');
 }
 
 1;

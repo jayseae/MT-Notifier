@@ -237,8 +237,4 @@ sub settings_template_system {
 TMPL
 }
 
-# needed for xmlrpc
-
-END { Notifier::entry_notifications() }
-
 1;

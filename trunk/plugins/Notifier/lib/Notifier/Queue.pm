@@ -34,11 +34,13 @@ __PACKAGE__->install_properties({
 });
 
 sub class_label {
-    MT->translate('Subscription Queue');
+    my $plugin = MT->component('Notifier');
+    $plugin->translate('Subscription Queue');
 }
 
 sub class_label_plural {
-    MT->translate("Subscription Queue Records");
+    my $plugin = MT->component('Notifier');
+    $plugin->translate('Subscription Queue Records');
 }
 
 1;
