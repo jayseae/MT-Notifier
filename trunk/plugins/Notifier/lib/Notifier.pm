@@ -1,6 +1,6 @@
 # ===========================================================================
 # A Movable Type plugin with subscription options for your installation
-# Copyright 2003-2008 Everitz Consulting <everitz.com>.
+# Copyright 2003-2009 Everitz Consulting <everitz.com>.
 #
 # This program may not be redistributed without permission.
 # ===========================================================================
@@ -14,12 +14,12 @@ use Notifier::Data;
 
 # version
 use vars qw($VERSION);
-$VERSION = '4.1.0';
+$VERSION = '4.2.0';
 
 # subscription functions
 
 sub create_subscription {
-  my $app = MT->instance->app;
+  my $app = MT->app;
   my $plugin = MT::Plugin::Notifier->instance;
   my ($email, $record, $blog_id, $category_id, $entry_id, $bulk) = @_;
   my $blog;
@@ -120,7 +120,7 @@ sub data_confirmation {
     'blog_url' => $blog->site_url,
     'notifier_home' => $plugin->author_link,
     'notifier_name' => $plugin->name,
-    'notifier_link' => Notifier::Util::script_name(),
+    'notifier_link' => Notifier::Util::script_name($blog->id),
     'notifier_version' => version_number(),
     'record_cipher' => $data->cipher,
     'record_text' => $record_text
@@ -143,7 +143,7 @@ sub data_confirmation {
   require MT::Mail;
   my $mail = MT::Mail->send(\%head, $body);
   unless ($mail) {
-    my $app = MT->instance->app;
+    my $app = MT->app;
     $app->log($plugin->translate(
       'Error sending confirmation message to [_1], error [_2]',
       $head{'To'},
@@ -262,7 +262,7 @@ sub notify_users {
     'entry_title' => $entry->title,
     'notifier_home' => $plugin->author_link,
     'notifier_name' => $plugin->name,
-    'notifier_link' => Notifier::Util::script_name(),
+    'notifier_link' => Notifier::Util::script_name($blog->id),
     'notifier_version' => version_number()
   );
   if ($comment) {
@@ -310,10 +310,17 @@ sub notify_users {
 # version routines
 
 sub schema_version {
+  (my $ver = $VERSION) =~ s/^([\d]+[\.][\d]).*$/$1/;
+  # returns x.y
+  $ver;
+}
+
+sub schema_version_old {
   (my $ver = $VERSION) =~ s/^([\d]+[\.]).*$/$1/;
   (my $rel = $VERSION) =~ s/^[\d]+[\.](.*)$/$1/;
   $rel =~ s/\.//g;
   $ver = $ver.$rel;
+  # returns x.yz
   $ver;
 }
 

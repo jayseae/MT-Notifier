@@ -1,6 +1,6 @@
 # ===========================================================================
 # A Movable Type plugin with subscription options for your installation
-# Copyright 2003-2008 Everitz Consulting <everitz.com>.
+# Copyright 2003-2009 Everitz Consulting <everitz.com>.
 #
 # This program may not be redistributed without permission.
 # ===========================================================================
@@ -43,7 +43,7 @@ sub notify_comment {
   my $id = 'blog:'.$obj->blog_id;
   if ($obj->is_not_junk) {
     require Notifier::Data;
-    if (MT->instance->app->param('subscribe')) {
+    if (MT->app->param('subscribe')) {
       require Notifier;
       Notifier::create_subscription($obj->email, Notifier::Data::SUBSCRIBE(), 0, 0, $obj->entry_id)
     }
@@ -89,8 +89,7 @@ sub notify_comment {
 }
 
 sub notify_entry {
-#  application callback
-  my ($err, $app) = @_;
+  my ($err, $obj) = @_;
   require MT::Request;
   my $r = MT::Request->instance;
   my $notify = $r->cache('mtn_notify_entry');
@@ -118,13 +117,13 @@ sub notifier_category_id {
 }
 
 sub notifier_check {
-  return MT->instance->app->param('subscribe');
+  return MT->app->param('subscribe');
 }
 
 # plugin registration
 
 sub list_actions {
-  my $app = MT->instance->app;
+  my $app = MT->app;
   return {
     'blog' => {
       'mtn_add_subscription' => {
@@ -282,7 +281,7 @@ sub list_actions {
 }
 
 sub list_filters {
-  my $app = MT->instance->app;
+  my $app = MT->app;
   return {
 		subscription => {
 			active => {
@@ -316,7 +315,7 @@ sub list_filters {
 }
 
 sub menus {
-  my $app = MT->instance->app;
+  my $app = MT->app;
   return {
     'manage:notifier' => {
       label => 'Subscriptions',
@@ -334,7 +333,7 @@ sub menus {
 }
 
 sub methods {
-  my $app = MT->instance->app;
+  my $app = MT->app;
   return {
     block_subs  => {
       code           => '$Notifier::Notifier::App::block_subs',

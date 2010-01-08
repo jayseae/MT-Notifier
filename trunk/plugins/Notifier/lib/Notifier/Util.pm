@@ -1,6 +1,6 @@
 # ===========================================================================
 # A Movable Type plugin with subscription options for your installation
-# Copyright 2003-2008 Everitz Consulting <everitz.com>.
+# Copyright 2003-2009 Everitz Consulting <everitz.com>.
 #
 # This program may not be redistributed without permission.
 # ===========================================================================
@@ -11,7 +11,6 @@ use strict;
 
 use File::Spec;
 use MT;
-use MT::ConfigMgr;
 
 # shared functions
 
@@ -35,14 +34,14 @@ sub load_blog {
 }
 
 sub load_email {
-	my ($tmpl, $param) = @_;
+  my ($tmpl, $param) = @_;
   my $out = MT->build_email("email/$tmpl", $param);
   return($out);
 }
 
 sub load_sender_address {
   my ($obj, $author) = @_;
-  my $app = MT->instance->app;
+  my $app = MT->app;
   my $plugin = MT::Plugin::Notifier->instance;
   my $entry;
   if (UNIVERSAL::isa($obj, 'MT::Comment')) {
@@ -90,13 +89,43 @@ sub produce_cipher {
 }
 
 sub script_name {
-  my $app = MT->instance->app;
+  my ($blog_id) = shift;
+  my $app = MT->app;
+  require MT::ConfigMgr;
   my $mgr = MT::ConfigMgr->instance;
   my $plugin = MT::Plugin::Notifier->instance;
-  my $mt4 = ($app->version_number >= 4) ? 1 : 0;
-  my $notifier_base = ($mgr->CGIPath =~ /^http/) ? $mgr->CGIPath : $app->base.$mgr->CGIPath;
-  my $notifier_link = ($mt4) ? $mgr->AdminScript : $plugin->envelope.'/mt-notifier.cgi';
-  $notifier_base.$notifier_link;
+  require MT::Blog;
+  my $blog = MT::Blog->load($blog_id);
+  unless ($blog) {
+    $app->log($plugin->translate('Specified blog unavailable - please check your data!'));
+    return;
+  }
+  my $url_base;
+  my $url_type = $plugin->get_config_value('blog_url_type', 'blog:'.$blog->id);
+  if ($url_type == 1) {
+  	# use system setting (default)
+    $url_type = $plugin->get_config_value('system_url_type');
+    if ($url_type == 2) {
+      $url_base = $mgr->CGIPath;
+    } elsif ($url_type == 3) {
+      $url_base = $blog->site_url;
+    } elsif ($url_type == 4) {
+      $url_base = $plugin->get_config_value('system_url_base');
+    }
+  } elsif ($url_type == 2) {
+    $url_base = $mgr->CGIPath;
+  } elsif ($url_type == 3) {
+    $url_base = $blog->site_url;
+  } elsif ($url_type == 4) {
+    $url_base = $plugin->get_config_value('blog_url_base');
+  }
+  $url_base .= '/' unless $url_base =~ m!/$!;
+  unless ($url_base =~ /^http/) {
+    $app->log($plugin->translate('Invalid URL base value - please check your data ([_1])!', qq{$url_base}));
+    return;
+  }
+  return $url_base.$mgr->AdminScript;
+  }
 }
 
 1;
