@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<plugin version="4.0.5">
+<plugin version="4.0.6">
   <name>MT-Notifier</name>
   <version_url>http://everitz.com/mt/notifier/version.xml</version_url>
   <sig>Notifier/Notifier.pl</sig>
@@ -30,9 +30,9 @@
       <destination>plugins/Notifier</destination>
     </file>
     <file>
-      <src>plugins/Notifier/mt-notifier.cgi</src>
+      <src>plugins/Notifier/mt-notifier-queue.cgi</src>
       <permissions>0755</permissions>
-      <destination>plugins/Notifier/mt-notifier.cgi</destination>
+      <destination>plugins/Notifier/mt-notifier-queue.cgi</destination>
     </file>
     <file>
       <src>plugins/Notifier/Notifier.html</src>
@@ -95,8 +95,8 @@
       <destination>plugins/Notifier/lib/Notifier/L10N/en_us.pm</destination>
     </file>
     <file>
-      <src>plugins/Notifier/lib/Notifier/L10N/it.pm</src>
-      <destination>plugins/Notifier/lib/Notifier/L10N/it.pm</destination>
+      <src>plugins/Notifier/php</src>
+      <destination>plugins/Notifier/php</destination>
     </file>
     <file>
       <src>plugins/Notifier/php/function.mtnotifiercatid.php</src>
@@ -111,12 +111,16 @@
       <destination>plugins/Notifier/tmpl/request.tmpl</destination>
     </file>
     <file>
-      <src>plugins/Notifier/tmpl/dialog/count.tmpl</src>
-      <destination>plugins/Notifier/tmpl/dialog/count.tmpl</destination>
+      <src>plugins/Notifier/tmpl/dialog</src>
+      <destination>plugins/Notifier/tmpl/dialog</destination>
     </file>
     <file>
       <src>plugins/Notifier/tmpl/dialog/close.tmpl</src>
       <destination>plugins/Notifier/tmpl/dialog/close.tmpl</destination>
+    </file>
+    <file>
+      <src>plugins/Notifier/tmpl/dialog/count.tmpl</src>
+      <destination>plugins/Notifier/tmpl/dialog/count.tmpl</destination>
     </file>
     <file>
       <src>plugins/Notifier/tmpl/dialog/start.tmpl</src>
@@ -135,12 +139,28 @@
       <destination>plugins/Notifier/tmpl/email/confirmation-subject.tmpl</destination>
     </file>
     <file>
-      <src>plugins/Notifier/tmpl/email/notification.tmpl</src>
-      <destination>plugins/Notifier/tmpl/email/notification.tmpl</destination>
+      <src>plugins/Notifier/tmpl/email/new-comment.tmpl</src>
+      <destination>plugins/Notifier/tmpl/email/new-comment.tmpl</destination>
+    </file>
+    <file>
+      <src>plugins/Notifier/tmpl/email/new-entry.tmpl</src>
+      <destination>plugins/Notifier/tmpl/email/new-entry.tmpl</destination>
     </file>
     <file>
       <src>plugins/Notifier/tmpl/email/notification-subject.tmpl</src>
       <destination>plugins/Notifier/tmpl/email/notification-subject.tmpl</destination>
+    </file>
+    <file>
+      <src>plugins/Notifier/tmpl/settings</src>
+      <destination>plugins/Notifier/tmpl/settings</destination>
+    </file>
+    <file>
+      <src>plugins/Notifier/tmpl/settings/blog.tmpl</src>
+      <destination>plugins/Notifier/tmpl/settings/blog.tmpl</destination>
+    </file>
+    <file>
+      <src>plugins/Notifier/tmpl/settings/email.tmpl</src>
+      <destination>plugins/Notifier/tmpl/settings/email.tmpl</destination>
     </file>
   </files>
   <uninstall>

@@ -23,7 +23,7 @@ use Notifier::Data;
 
 # version
 use vars qw($VERSION);
-$VERSION = '4.0.5';
+$VERSION = '4.0.6';
 
 # subscription functions
 

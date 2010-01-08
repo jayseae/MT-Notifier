@@ -72,6 +72,7 @@ sub init_registry {
       'MT::Comment::post_save'                => '$Notifier::Notifier::Plugin::notify_comment',
       'MT::Entry::pre_save'                   => '$Notifier::Notifier::Plugin::check_entry',
       'MT::App::CMS::cms_post_save.entry'     => '$Notifier::Notifier::Plugin::notify_entry',
+      'MT::AtomServer::api_post_save.entry'   => '$Notifier::Notifier::Plugin::notify_entry',
       'MT::XMLRPCServer::api_post_save.entry' => '$Notifier::Notifier::Plugin::notify_entry',
     },
     object_types => {
