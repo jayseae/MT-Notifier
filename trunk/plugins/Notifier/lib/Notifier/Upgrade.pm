@@ -39,18 +39,25 @@ sub set_blog_id {
   }
 }
 
+sub set_blog_status {
+  require MT::Blog;
+  my $iter = MT::Blog->load_iter();
+  while (my $obj = $iter->()) {
+    my $blog_id = $obj->id;
+    next unless ($blog_id);
+    my $plugin = MT::Plugin::Notifier->instance;
+    my $blog_status = $plugin->get_config_value('blog_disabled', 'blog:'.$blog_id);
+    $plugin->set_config_value('blog_status', ($blog_status == 1) ? 0 : 1, 'blog:'.$blog_id);
+  }
+}
+
 sub set_history {
   my $set;
   require MT::Entry;
   my $iter = MT::Entry->load_iter();
   while (my $entry = $iter->()) {
     my $pinged = $entry->pinged_urls;
-    require Notifier;
-    $set = 0;
-    $set = 1 if ($pinged && $pinged =~ m/$Notifier::SENTSRV1/);
-    $set = 1 if ($pinged && $pinged =~ m/$Notifier::SENTSRV2/);
-    $set = 1 if ($pinged && $pinged =~ m/$Notifier::SENTSRV3/);
-    return unless ($set);
+    next unless ($pinged && $pinged =~ m/everitz\.com\/sol\/(mt-)?notifier\/sent(_)?service\.html/);
     require Notifier::Data;
     my $blog_id = $entry->blog_id;
     my $entry_id = $entry->id;
@@ -58,8 +65,8 @@ sub set_history {
       map { $_ }
       Notifier::Data->load({
         blog_id => $blog_id,
-        record => Notifier::SUBSCRIBE,
-        status => Notifier::RUNNING
+        record => Notifier::Data::SUBSCRIBE(),
+        status => Notifier::Data::RUNNING(),
       });
     require MT::Placement;
     my @places = MT::Placement->load({
@@ -68,8 +75,8 @@ sub set_history {
     foreach my $place (@places) {
       my @category_subs = Notifier::Data->load({
         category_id => $place->category_id,
-        record => Notifier::SUBSCRIBE,
-        status => Notifier::RUNNING
+        record => Notifier::Data::SUBSCRIBE(),
+        status => Notifier::Data::RUNNING(),
       });
       foreach (@category_subs) {
         push @subs, $_;
@@ -80,7 +87,7 @@ sub set_history {
     foreach my $sub (@subs) {
       my $data = Notifier::Data->load({
         email => $sub->email,
-        record => Notifier::SUBSCRIBE
+        record => Notifier::Data::SUBSCRIBE(),
       });
       next unless ($data);
       next if ($data->entry_id);

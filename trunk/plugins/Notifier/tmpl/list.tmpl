@@ -42,6 +42,9 @@
     <$mt:include name="include/display_options.tmpl"$>
     <$mtapp:PageActions$>
 </mt:setvarblock>
+<mt:setvarblock name="html_body_footer">
+    <$mt:include name="include/display_options.tmpl"$>
+</mt:setvarblock>
 <mt:setvarblock name="html_head" append="1">
     <script type="text/javascript" src="<mt:var name="static_uri">js/tc/client.js"></script>
 
@@ -269,8 +272,6 @@
 
 <mt:include name="include/header.tmpl">
 <$mt:var name="list_filter_form"$>
-
-<p id="create-contact" style="padding-top: 10px;"><a href="javascript:void(0)" onclick="setCreateMode()" class="icon-left icon-create"><__trans phrase="Create [_1]" params="<$mt:var name="object_label"$>"></a></p>
 
 <div class="create-inline" id="create-inline-notification">
 <form method="post" action="<mt:var name="script_url">" id="create-inline-notification-form">

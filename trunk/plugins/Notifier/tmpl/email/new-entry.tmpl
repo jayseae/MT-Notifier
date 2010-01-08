@@ -1,0 +1,11 @@
+<TMPL_IF name="entry_excerpt"><MT_TRANS phrase="Summary: "></TMPL_IF>
+<TMPL_IF name="entry_excerpt"><TMPL_VAR name="entry_excerpt"></TMPL_IF>
+
+<MT_TRANS phrase="View the entire entry:">
+<TMPL_VAR name="entry_link">
+
+<MT_TRANS phrase="Cancel this subscription:">
+<TMPL_VAR name="notifier_link">?__mode=verify_subs&c=<TMPL_VAR name="record_cipher">&u=1
+
+<MT_TRANS phrase="Block all notifications from this site:">
+<TMPL_VAR name="notifier_link">?__mode=verify_subs&c=<TMPL_VAR name="record_cipher">&o=1

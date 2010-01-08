@@ -39,15 +39,25 @@ __PACKAGE__->install_properties({
     primary_key => 'id',
 });
 
+# record status
+use constant PENDING => 0;
+use constant RUNNING => 1;
+
+# record type
+use constant OPT_OUT   => 0;
+use constant SUBSCRIBE => 1;
+use constant TEMPORARY => 2;
+
+# other
+use constant BULK => 1;
+
 sub class_label {
-    my $app = MT->instance->app;
-    my $plugin = $app->component('Notifier');
+    my $plugin = MT::Plugin::Notifier->instance;
     $plugin->translate('Subscription');
 }
 
 sub class_label_plural {
-    my $app = MT->instance->app;
-    my $plugin = $app->component('Notifier');
+    my $plugin = MT::Plugin::Notifier->instance;
     $plugin->translate('Subscriptions');
 }
 

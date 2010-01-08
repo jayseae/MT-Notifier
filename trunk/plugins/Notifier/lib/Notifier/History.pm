@@ -28,15 +28,20 @@ __PACKAGE__->install_properties({
 });
 
 sub class_label {
-    my $app = MT->instance->app;
-    my $plugin = $app->component('Notifier');
+    my $plugin = MT::Plugin::Notifier->instance;
     $plugin->translate('Subscription History');
 }
 
 sub class_label_plural {
-    my $app = MT->instance->app;
-    my $plugin = $app->component('Notifier');
+    my $plugin = MT::Plugin::Notifier->instance;
     $plugin->translate('Subscription History Records');
+}
+
+sub create {
+    my ($app, $cols) = @_;
+    my $h = Notifier::History->new;
+    $h->set_values($cols);
+    $h->save or return $app->error($h->errstr);
 }
 
 1;

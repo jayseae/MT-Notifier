@@ -1,0 +1,32 @@
+<fieldset>
+    <mtapp:setting
+        id="mtn_confirm"
+        label="<__trans phrase="Confirmation">"
+        hint=""
+        show_hint="0">
+        <p>
+            <input type="radio" name="system_confirm" id="system_confirm_0" value="0" <mt:if name="system_confirm_0">checked="checked"</mt:if> /> <__trans phrase="Do not Send any Confirmation Messages"><br />
+            <input type="radio" name="system_confirm" id="system_confirm_1" value="1" <mt:if name="system_confirm_1">checked="checked"</mt:if> /> <__trans phrase="Send Confirmation for New Subscriptions (Default)">
+        </p>
+    </mtapp:setting>
+    <mtapp:setting
+        id="mtn_queued"
+        label="<__trans phrase="Queue">"
+        hint=""
+        show_hint="0">
+        <p>
+            <input type="radio" name="system_queued" id="system_queued_0" value="0" <mt:if name="system_queued_0">checked="checked"</mt:if> /> <__trans phrase="Do not Submit any Notifications to Delivery Queue (Default)"><br />
+            <input type="radio" name="system_queued" id="system_queued_1" value="1" <mt:if name="system_queued_1">checked="checked"</mt:if> /> <__trans phrase="Submit Notifications to Queue for Later Delivery">
+        </p>
+    </mtapp:setting>
+    <mtapp:setting
+        id="mtn_address"
+        label="<__trans phrase="Sender">"
+        hint=""
+        show_hint="0">
+        <p>
+            <__trans phrase="Address to use when sending notifications and no other addresses are available:"><br /><br />
+            <input id="system_address" name="system_address" maxlength="75" size="75" <mt:if name="system_address">value="<mt:var name="system_address">"</mt:if> />
+        </p>
+    </mtapp:setting>
+</fieldset>

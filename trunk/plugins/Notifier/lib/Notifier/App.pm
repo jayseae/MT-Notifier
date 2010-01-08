@@ -6,13 +6,13 @@
 # ===========================================================================
 package Notifier::App;
 
+use base qw(MT::App);
 use strict;
 
 # methods
 
 sub block_subs {
   my $app = shift;
-  $app->validate_magic or return;
   my $return = $app->param('return_args');
   my @ids = $app->param('id');
   for my $id (@ids) {
@@ -38,7 +38,6 @@ sub block_subs {
 
 sub clear_subs {
   my $app = shift;
-  $app->validate_magic or return;
   my $return = $app->param('return_args');
   my @ids = $app->param('id');
   for my $id (@ids) {
@@ -57,7 +56,6 @@ sub clear_subs {
 
 sub create_subs {
   my $app = shift;
-  $app->validate_magic or return;
   my $record = $app->param('record');
   my $blog_id;
   if ($blog_id = $app->param('blog_id')) {
@@ -127,7 +125,7 @@ sub create_subs {
         $valid_email++ unless ($ec);
       }
     }
-    my $plugin = $app->component('Notifier');
+    my $plugin = MT::Plugin::Notifier->instance;
     $app->build_page($plugin->load_tmpl('dialog/close.tmpl'), {
       valid_email => $valid_email,
       valid_id    => $valid_id,
@@ -153,7 +151,7 @@ sub verify_subs {
     $app->return_args($return);
     $app->call_return;
   } else {
-    my $plugin = $app->component('Notifier');
+    my $plugin = MT::Plugin::Notifier->instance;
     my ($email, $blog_id, $category_id, $entry_id);
     my ($confirm, $data, $message, $name, $url);
     if (my $c = $app->param('c')) {
@@ -214,7 +212,7 @@ sub verify_subs {
           }
           $category_id = 0;
           $entry_id = 0;
-          my $error = Notifier::create_subscription($email, Notifier::OPT_OUT, $blog_id, $category_id, $entry_id);
+          my $error = Notifier::create_subscription($email, Notifier::Data::OPT_OUT(), $blog_id, $category_id, $entry_id);
           if ($error == 1) {
             $message = 'The specified email address is not valid!';
           } elsif ($error == 2) {
@@ -234,7 +232,7 @@ sub verify_subs {
       }
       unless ($message) {
         $message = 'Your request has been processed successfully!';
-        $data->status(Notifier::RUNNING);
+        $data->status(Notifier::Data::RUNNING());
         $data->save;
       }
     } else {
@@ -281,7 +279,7 @@ sub verify_subs {
               $url = $blog->site_url;
             }
           }
-          my $error = Notifier::create_subscription($email, Notifier::SUBSCRIBE, $blog_id, $category_id, $entry_id);
+          my $error = Notifier::create_subscription($email, Notifier::Data::SUBSCRIBE(), $blog_id, $category_id, $entry_id);
           if ($error == 1) {
             $message = 'The specified email address is not valid!';
           } elsif ($error == 2) {
@@ -320,7 +318,6 @@ sub verify_subs {
 
 sub write_history {
   my $app = shift;
-  $app->validate_magic or return;
   my $return = $app->param('return_args');
   my @ids = $app->param('id');
   for my $id (@ids) {
@@ -375,12 +372,14 @@ sub _sub_verify {
 
 sub _ui_opt {
   my $app = shift;
-  notifier_start($app, Notifier::OPT_OUT);
+  require Notifier::Data;
+  notifier_start($app, Notifier::Data::OPT_OUT());
 }
 
 sub _ui_sub {
   my $app = shift;
-  notifier_start($app, Notifier::SUBSCRIBE);
+  require Notifier::Data;
+  notifier_start($app, Notifier::Data::SUBSCRIBE());
 }
 
 sub _ui_vue {
@@ -392,10 +391,8 @@ sub _ui_vue {
 
 sub list_subs {
   my $app    = shift;
-  my $blog   = $app->blog;
-  my $user   = $app->user;
-  my $perms  = $app->permissions;
-  my $plugin = $app->component('Notifier');
+  my $blog   = $app->param('blog_id') || $app->blog;
+  my $plugin = MT::Plugin::Notifier->instance;
   my $args   = {};
   my $terms  = {};
   my $param  = {
@@ -423,6 +420,13 @@ sub list_subs {
     if ($filter_val eq 'pending') {
       $terms->{status} = 0;
     }
+  }
+  # look for user cipher, load by email if present
+  my $cipher = $param->{c} = $app->param('c') || '';
+  if ($cipher) {
+    require Notifier::Data;
+    my $sub = Notifier::Data->load({ cipher => $cipher });
+    $terms->{email} = $sub->email if (ref $sub);
   }
   # load data for processing
   my @data;
@@ -472,30 +476,30 @@ sub notifier_count {
     if ($type eq 'blog') {
       require MT::Blog;
       my $blog = MT::Blog->load($id);
-      my $opts = Notifier::Data->count({ blog_id => $id, record => Notifier::OPT_OUT });
-      my $subs = Notifier::Data->count({ blog_id => $id, record => Notifier::SUBSCRIBE });
+      my $opts = Notifier::Data->count({ blog_id => $id, record => Notifier::Data::OPT_OUT() });
+      my $subs = Notifier::Data->count({ blog_id => $id, record => Notifier::Data::SUBSCRIBE() });
       push @subs, { name => $blog->name, opt_count => $opts, sub_count => $subs };
       $total_opts += $opts;
       $total_subs += $subs;
     } elsif ($type eq 'category') {
       require MT::Category;
       my $category = MT::Category->load($id);
-      my $opts = Notifier::Data->count({ category_id => $id, record => Notifier::OPT_OUT });
-      my $subs = Notifier::Data->count({ category_id => $id, record => Notifier::SUBSCRIBE });
+      my $opts = Notifier::Data->count({ category_id => $id, record => Notifier::Data::OPT_OUT() });
+      my $subs = Notifier::Data->count({ category_id => $id, record => Notifier::Data::SUBSCRIBE() });
       push @subs, { name => $category->label, opt_count => $opts, sub_count => $subs };
       $total_opts += $opts;
       $total_subs += $subs;
     } elsif ($type eq 'entry') {
       require MT::Entry;
       my $entry = MT::Entry->load($id);
-      my $opts = Notifier::Data->count({ entry_id => $id, record => Notifier::OPT_OUT });
-      my $subs = Notifier::Data->count({ entry_id => $id, record => Notifier::SUBSCRIBE });
+      my $opts = Notifier::Data->count({ entry_id => $id, record => Notifier::Data::OPT_OUT() });
+      my $subs = Notifier::Data->count({ entry_id => $id, record => Notifier::Data::SUBSCRIBE() });
       push @subs, { name => $entry->title, opt_count => $opts, sub_count => $subs };
       $total_opts += $opts;
       $total_subs += $subs;
     }
   }
-  my $plugin = $app->component('Notifier');
+  my $plugin = MT::Plugin::Notifier->instance;
   $app->build_page($plugin->load_tmpl('dialog/count.tmpl'), {
     subs          => \@subs,
     total_opts    => $total_opts,
@@ -510,7 +514,7 @@ sub notifier_start {
   my $app = shift;
   my $record = shift;
   my @ids = $app->param('id');
-  my $plugin = $app->component('Notifier');
+  my $plugin = MT::Plugin::Notifier->instance;
   $app->build_page($plugin->load_tmpl('dialog/start.tmpl'), {
     ids  => [ map { { id => $_ } } @ids ],
     record => $record,
@@ -541,13 +545,13 @@ sub install_widget {
   my $app = shift;
   my $type = shift;
   my $perms = $app->{perms};
-  my $plugin = $app->component('Notifier');
+  my $plugin = MT::Plugin::Notifier->instance;
   return $app->error($plugin->translate('Insufficient permissions for installing templates for this weblog.'))
     unless $perms->can_edit_templates() || $perms->can_administer_blog() || $app->user->is_superuser();
   my $blog_id = $app->param('blog_id');
   my $terms = {};
   $terms->{blog_id} = $blog_id;
-  $terms->{name} = $plugin->translate($plugin->name." $type Widget");
+  $terms->{name} = $plugin->translate("[_1] $type Widget", $plugin->name);
   require MT::Template;
   my $tmpl = MT::Template->load($terms);
   if ($tmpl) {
@@ -568,20 +572,22 @@ sub install_widget {
 
 sub widget_template {
   my $type = shift;
-  my $app = MT->instance->app;
-  my $plugin = $app->component('Notifier');
+  my $plugin = MT::Plugin::Notifier->instance;
+  my $plugin_link = $plugin->plugin_link;
+  my $plugin_name = $plugin->name;
+  my $plugin = MT::Plugin::Notifier->instance;
   my $message = $plugin->translate("Subscribe to $type");
-  my $powered = $plugin->translate('Powered by [_1]', qq{<a href="http://everitz.com/mt/notifier.php">MT-Notifier</a>});
+  my $powered = $plugin->translate('Powered by [_1]', qq{<a href="$plugin_link">$plugin_name</a>});
   my ($field, $value);
   if ($type eq 'Blog') {
     $field = 'blog_id';
-    $value = '<mt:blogid>';
+    $value = '<$MTBlogID$>';
   } elsif ($type eq 'Category') {
     $field = 'category_id';
-    $value = '<mt:notifiercatid>';
+    $value = '<$MTNotifierCatID$>';
   } else {
     $field = 'entry_id';
-    $value = '<mt:entryid>';
+    $value = '<$MTEntryID$>';
   }
   return <<TMPL;
         <div class="widget-subscribe widget">

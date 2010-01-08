@@ -1,16 +1,23 @@
-<TMPL_INCLUDE NAME="include/header.tmpl">
+<mt:include name="include/header.tmpl">
 
-<h2><TMPL_VAR NAME=MESSAGE></h2>
+<h2><mt:var name="message"></h2>
 
-<TMPL_IF NAME=CONFIRM>
-<p><MT_TRANS phrase="You will receive an email to confirm your request momentarily.  If you do not, you may submit your request again."></p>
-</TMPL_IF>
+<mt:if name="link_url">
+    <mt:if name="link_name">
+        <p><a href="<mt:var name="link_url">"><__trans phrase="Return to"> <mt:var name="link_name"></a></p>
+    <mt:else>
+        <p><a href="<mt:var name="link_url">"><__trans phrase="Return to"> <mt:var name="link_url"></a></p>
+    </mt:if>
+</mt:if>
+
+<mt:if name="confirm">
+<p><__trans phrase="You will receive an email to confirm your request momentarily.  If you do not, you may submit your request again."></p>
+</mt:if>
 
 </div>
 </div>
 <div id="copyright">
-<b>MT-Notifier Version <TMPL_VAR NAME=NOTIFIER_VERSION></b> Copyright &copy; <a href="http://everitz.com">Everitz Consulting</a>. All Rights Reserved.
+    <strong>MT-Notifier <__trans phrase="version"> <mt:var name="notifier_version"></strong> <__trans phrase="Copyright"> &copy; <a href="http://everitz.com/">Everitz Consulting</a>. <__trans phrase="All Rights Reserved">.
 </div>
-
 </body>
 </html>

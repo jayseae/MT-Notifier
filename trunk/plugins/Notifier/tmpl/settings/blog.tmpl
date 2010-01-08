@@ -1,0 +1,69 @@
+<fieldset>
+    <mtapp:setting
+        id="mtn_status"
+        label="<__trans phrase="Status">"
+        hint=""
+        show_hint="0">
+        <p>
+            <input type="radio" name="blog_status" id="blog_status_1" onclick="toggleSubPrefs(this)" value="1" <mt:if name="blog_status_1">checked="checked"</mt:if> /> <__trans phrase="Enable MT-Notifier for This Blog (Default)"><br />
+            <input type="radio" name="blog_status" id="blog_status_0" onclick="toggleSubPrefs(this)" value="0" <mt:if name="blog_status_0">checked="checked"</mt:if> /> <__trans phrase="Disable MT-Notifier for This Blog">
+        </p>
+    </mtapp:setting>
+    <div id="blog_status-prefs" style="display:<mt:if name="blog_status_1">block<mt:else>none</mt:if>;">
+        <mtapp:setting
+            id="mtn_confirm"
+            label="<__trans phrase="Confirmation">"
+            hint=""
+            show_hint="0">
+            <p>
+                <input type="radio" name="blog_confirm" id="blog_confirm_0" value="0" <mt:if name="blog_confirm_0">checked="checked"</mt:if> /> <__trans phrase="Do not Send Any Confirmation Messages"><br />
+                <input type="radio" name="blog_confirm" id="blog_confirm_1" value="1" <mt:if name="blog_confirm_1">checked="checked"</mt:if> /> <__trans phrase="Send Confirmation for New Subscriptions (Default)">
+            </p>
+        </mtapp:setting>
+        <mtapp:setting
+            id="mtn_override"
+            label="<__trans phrase="Override">"
+            hint=""
+            show_hint="0">
+            <p>
+                <input type="radio" name="blog_all_comments" id="blog_all_comments_0" value="0" <mt:if name="blog_all_comments_0">checked="checked"</mt:if> /> <__trans phrase="Only Send Comments for Entry Subscriptions (Default)"><br />
+                <input type="radio" name="blog_all_comments" id="blog_all_comments_1" value="1" <mt:if name="blog_all_comments_1">checked="checked"</mt:if> /> <__trans phrase="Allow Blog and Category Subscription Comment Override">
+            </p>
+        </mtapp:setting>
+        <mtapp:setting
+            id="mtn_queued"
+            label="<__trans phrase="Queue">"
+            hint=""
+            show_hint="0">
+            <p>
+                <input type="radio" name="blog_queued" id="blog_queued_0" value="0" <mt:if name="blog_queued_0">checked="checked"</mt:if> /> <__trans phrase="Do not Submit any Notifications to Delivery Queue (Default)"><br />
+                <input type="radio" name="blog_queued" id="blog_queued_1" value="1" <mt:if name="blog_queued_1">checked="checked"</mt:if> /> <__trans phrase="Submit Notifications to Queue for Later Delivery">
+            </p>
+        </mtapp:setting>
+        <mtapp:setting
+            id="mtn_address"
+            label="<__trans phrase="Sender">"
+            hint=""
+            show_hint="0">
+            <p>
+                <input type="radio" name="blog_address_type" id="blog_address_type_1" value="1" <mt:if name="blog_address_type_1">checked="checked"</mt:if> /> <__trans phrase="Use System Address for Sender Address (Default)"><br />
+                <input type="radio" name="blog_address_type" id="blog_address_type_2" value="2" <mt:if name="blog_address_type_2">checked="checked"</mt:if> /> <__trans phrase="Use Author Address for Sending Notifications"><br />
+                <input type="radio" name="blog_address_type" id="blog_address_type_3" value="3" <mt:if name="blog_address_type_3">checked="checked"</mt:if> /> <__trans phrase="Specify Another Address for Sending Notifications"> (<a href="<a href="#" onclick="return toggleAdvancedPrefs(event,'blog_address_type')"><__trans phrase="Set Address"></a>)<br />
+                <span id="blog_address_type-advanced" class="setting-advanced">
+                    <input id="blog_address" name="blog_address" size="75" <mt:if name="blog_address">value="<mt:var name="blog_address">"</mt:if> />
+                </span>
+            </p>
+        </mtapp:setting>
+        <mtapp:setting
+            id="mtn_widgets"
+            label="<__trans phrase="Widgets">"
+            hint=""
+            show_hint="0">
+            <p>
+                <a href="<mt:var name="script_url">?__mode=widget_sub_blog&blog_id=<mt:var name="blog_id">"><__trans phrase="Click here to install the [_1] Blog Subscription Widget" params="MT-Notifier"></a><br />
+                <a href="<mt:var name="script_url">?__mode=widget_sub_category&blog_id=<mt:var name="blog_id">"><__trans phrase="Click here to install the [_1] Category Subscription Widget" params="MT-Notifier"></a><br />
+                <a href="<mt:var name="script_url">?__mode=widget_sub_entry&blog_id=<mt:var name="blog_id">"><__trans phrase="Click here to install the [_1] Entry Subscription Widget" params="MT-Notifier"></a>
+            </p>
+        </mtapp:setting>
+    </div>
+</fieldset>

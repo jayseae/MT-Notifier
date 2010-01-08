@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<plugin version="4.0.4">
+<plugin version="4.0.5">
   <name>MT-Notifier</name>
   <version_url>http://everitz.com/mt/notifier/version.xml</version_url>
   <sig>Notifier/Notifier.pl</sig>
@@ -33,6 +33,11 @@
       <src>plugins/Notifier/mt-notifier.cgi</src>
       <permissions>0755</permissions>
       <destination>plugins/Notifier/mt-notifier.cgi</destination>
+    </file>
+    <file>
+      <src>plugins/Notifier/mt-notifier-queue.cgi</src>
+      <permissions>0755</permissions>
+      <destination>plugins/Notifier/mt-notifier-queue.cgi</destination>
     </file>
     <file>
       <src>plugins/Notifier/Notifier.html</src>

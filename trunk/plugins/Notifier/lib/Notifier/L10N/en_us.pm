@@ -194,6 +194,10 @@ use vars qw( %Lexicon );
 
       ## tmpl/request.tmpl
       'You will receive an email to confirm your request momentarily.  If you do not, you may submit your request again.' => 'You will receive an email to confirm your request momentarily.  If you do not, you may submit your request again.',
+      'Return to' => 'Return to',
+      'version' => 'version',
+      'Copyright' => 'Copyright',
+      'All Rights Reserved' => 'All Rights Reserved',
 
       ## tmpl/dialog/close.tmpl
       'Subscription Status' => 'Subscription Status',

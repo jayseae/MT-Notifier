@@ -1,0 +1,13 @@
+<mt:var name="comment_body">
+
+<mt:if name="comment_author"><__trans phrase="Author: "><mt:var name="comment_author"></mt:if>
+<mt:if name="comment_url"><__trans phrase="Website: "><mt:var name="comment_url"></mt:if>
+
+<__trans phrase="View the entire entry:">
+<mt:var name="entry_link">
+
+<__trans phrase="Cancel this subscription:">
+<mt:var name="notifier_link">?__mode=verify_subs&c=<mt:var name="record_cipher">&u=1
+
+<__trans phrase="Block all notifications from this site:">
+<mt:var name="notifier_link">?__mode=verify_subs&c=<mt:var name="record_cipher">&o=1
