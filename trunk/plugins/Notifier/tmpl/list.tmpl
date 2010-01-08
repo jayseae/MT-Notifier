@@ -330,6 +330,7 @@
                 </mt:if>
             </td>
             <td><a href="javascript:void(0)" title="<__trans phrase="Click to edit contact">" class="edit-link" id="note-email-link-<mt:var name="id">" onmouseover="highlight_note(<mt:var name="id">)" onmouseout="unhighlight_note(<mt:var name="id">)" onclick="edit_note(<mt:var name="id">); return false;"><mt:var name="email" escape="html"></a>
+                <mt:if name="url_target"><a href="<mt:var name="url_target">" target="_blank" title="<__trans phrase="View"> <mt:if name="entry_record"><__trans phrase="Entry"><mt:else><mt:if name="category_record"><__trans phrase="Category"><mt:else><__trans phrase="Blog"></mt:if></mt:if>"><img src="<mt:var name="static_uri">images/status_icons/view.gif" /></a></mt:if>
                 <span id="note-email-field-<mt:var name="id">" style="display: none">
                     <input type="text" name="note-email-<mt:var name="id">" id="note-email-<mt:var name="id">" value="<mt:var name="email" escape="html">" />
                     <span class="buttons">

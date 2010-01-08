@@ -181,6 +181,7 @@ use vars qw( %Lexicon );
       'Click to show only pending [_1]' => 'Click to show only pending [_1]',
       'Pending' => 'Pending',
       'Click to edit contact' => 'Click to edit contact',
+      'View' => 'View',
       'Save changes' => 'Save changes',
       'Save' => 'Save',
       ## already defined

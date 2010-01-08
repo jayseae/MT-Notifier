@@ -391,7 +391,7 @@ sub _ui_vue {
 
 sub list_subs {
   my $app    = shift;
-  my $blog   = $app->param('blog_id') || $app->blog;
+  my $blog   = $app->blog;
   my $plugin = MT::Plugin::Notifier->instance;
   my $args   = {};
   my $terms  = {};
@@ -439,15 +439,32 @@ sub list_subs {
   # hasher for data presentation
   my $hasher = sub {
     my ($obj, $row) = @_;
-    $row->{category_record} = 1 if ( $row->{category_id} );
-    $row->{entry_record} = 1 if ( $row->{entry_id} );
+    if ( $row->{category_id} ) {
+      $row->{category_record} = 1;
+      require MT::Category;
+      my $category = MT::Category->load( $row->{category_id} );
+      if ($category) {
+        require MT::Util;
+        my $link = $blog->archive_url;
+        $link .= '/' unless $link =~ m/\/$/;
+        $link .= MT::Util::archive_file_for ('',  $blog, 'Category', $category);
+        $row->{url_target} = $link;
+      }
+    } elsif ( $row->{entry_id} ) {
+      $row->{entry_record} = 1 ;
+      require MT::Entry;
+      my $entry = MT::Entry->load( $row->{entry_id} );
+      $row->{url_target} = $entry->permalink if ($entry);
+    } else {
+      $row->{url_target} = $blog->site_url;
+    }
     $row->{url_block} = !$row->{record};
     $row->{visible} = $row->{status};
 
     require MT::Util;
     if (my $ts = $row->{created_on} ) {
-      $row->{created_on_formatted} = MT::Util::format_ts("%Y.%m.%d", $ts);
-      $row->{created_on_time_formatted} = MT::Util::format_ts("%Y.%m.%d %H:%M:%S", $ts);
+      $row->{created_on_formatted} = MT::Util::format_ts("%Y.%m.%d", $ts, $blog);
+      $row->{created_on_time_formatted} = MT::Util::format_ts("%Y.%m.%d %H:%M:%S", $ts, $blog);
       $row->{created_on_relative} = MT::Util::relative_date($ts, time, $blog);
     }
   };
