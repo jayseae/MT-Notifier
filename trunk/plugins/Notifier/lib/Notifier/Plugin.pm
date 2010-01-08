@@ -26,7 +26,7 @@ sub check_comment {
   my $id = 'blog:'.$obj->blog_id;
   my $notify = 1;
   $notify = 0 unless ($obj->visible);
-  my $plugin = MT->instance->app->component('Notifier');
+  my $plugin = MT::Plugin::Notifier->instance;
   $notify = 0 if ($plugin->get_config_value('blog_disabled', $id));
   require MT::Request;
   my $r = MT::Request->instance;
@@ -35,7 +35,7 @@ sub check_comment {
 
 sub check_entry {
   my ($err, $obj) = @_;
-  my $plugin = MT->instance->app->component('Notifier');
+  my $plugin = MT::Plugin::Notifier->instance;
   return if ($plugin->get_config_value('blog_disabled', 'blog:'.$obj->blog_id));
   require MT::Entry;
   if ($obj->status == MT::Entry::RELEASE()) {
@@ -51,29 +51,46 @@ sub notify_comment {
   my ($err, $obj) = @_;
   my $id = 'blog:'.$obj->blog_id;
   if ($obj->is_not_junk) {
+    require Notifier::Data;
     if (MT->instance->app->param('subscribe')) {
       require Notifier;
-      my $email = $obj->email;
-      my $record = Notifier::SUBSCRIBE;
-      my $blog_id = 0;
-      my $category_id = 0;
-      my $entry_id = $obj->entry_id;
-      Notifier::create_subscription($email, $record, $blog_id, $category_id, $entry_id)
+      Notifier::create_subscription($obj->email, Notifier::Data::SUBSCRIBE(), 0, 0, $obj->entry_id)
     }
     require MT::Request;
     my $r = MT::Request->instance;
     return unless ($r->cache('mtn_notify_comment_'.$id));
-    my $blog_id = $obj->blog_id;
-    my $entry_id = $obj->entry_id;
-    require Notifier::Data;
     my @work_subs =
       map { $_ }
       Notifier::Data->load({
-        blog_id => $blog_id,
-        entry_id => $entry_id,
-        record => Notifier::SUBSCRIBE,
-        status => Notifier::RUNNING
+        blog_id => $obj->blog_id,
+        entry_id => $obj->entry_id,
+        record => Notifier::Data::SUBSCRIBE(),
+        status => Notifier::Data::RUNNING()
       });
+    my $plugin = MT::Plugin::Notifier->instance;
+    if ($plugin->get_config_value('blog_all_comments', $id)) {
+      my @blog_subs =
+        map { $_ }
+        Notifier::Data->load({
+            blog_id => $obj->blog_id,
+            record => Notifier::Data::SUBSCRIBE(),
+            status => Notifier::Data::RUNNING()
+        });
+      push @work_subs, @blog_subs;
+      foreach my $c ($obj->entry->categories) {
+        require MT::Category;
+        my $cat = MT::Category->load($c);
+        next unless (ref $cat);
+        my @cat_subs =
+          map { $_ }
+          Notifier::Data->load({
+            cat_id => $cat->id,
+            record => Notifier::Data::SUBSCRIBE(),
+            status => Notifier::Data::RUNNING()
+          });
+        push @work_subs, @cat_subs;
+      }
+    }
     my $work_users = scalar @work_subs;
     return unless ($work_users);
     Notifier::notify_users($obj, \@work_subs);

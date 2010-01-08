@@ -1,1 +1,1 @@
-[<TMPL_VAR NAME=BLOG_NAME>] <TMPL_IF NAME=NOTIFIER_ENTRY><MT_TRANS phrase="New Entry from"> <TMPL_VAR NAME=ENTRY_AUTHOR>: <TMPL_VAR NAME=ENTRY_TITLE ESCAPE=HTML><TMPL_ELSE><MT_TRANS phrase="New Comment on"> <TMPL_VAR NAME=ENTRY_TITLE ESCAPE=HTML></TMPL_IF>
+[<mt:var name="blog_name">] <mt:if name="notifier_entry"><__trans phrase="New Entry from"> <mt:var name="entry_author">: <mt:var name="entry_title" escape="html"><mt:else><__trans phrase="New Comment on"> <mt:var name="entry_title" escape="html"></mt:if>

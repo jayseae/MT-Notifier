@@ -34,15 +34,50 @@ __PACKAGE__->install_properties({
 });
 
 sub class_label {
-    my $app = MT->instance->app;
-    my $plugin = $app->component('Notifier');
+    my $plugin = MT::Plugin::Notifier->instance;
     $plugin->translate('Subscription Queue');
 }
 
 sub class_label_plural {
-    my $app = MT->instance->app;
-    my $plugin = $app->component('Notifier');
+    my $plugin = MT::Plugin::Notifier->instance;
     $plugin->translate('Subscription Queue Records');
+}
+
+sub create {
+    my ($app, $hdrs, $body) = @_;
+    my $q = Notifier::Queue->new;
+    $q->head_from($hdrs->{'From'});
+    $q->head_to($hdrs->{'To'});
+    $q->head_subject($hdrs->{'Subject'});
+    $q->body($body);
+    $q->save or return $app->error($q->errstr);
+}
+
+sub send {
+    my ($app, $limit) = @_;
+    my $plugin = MT::Plugin::Notifier->instance;
+    my (%terms, %args);
+    $args{'limit'} = $limit;
+    $args{'direction'} = 'ascend';
+    $args{'sort'} = 'id';
+    require Notifier::Queue;
+    my $iter = Notifier::Queue->load_iter(\%terms, \%args);
+    my $count = 0;
+    while (my $q = $iter->()) {
+        my %head = (
+            'From' => $q->head_from,
+            'To' => $q->head_to,
+            'Subject' => $q->head_subject
+        );
+        require MT::Mail;
+        MT::Mail->send(\%head, $q->body);
+        $q->remove;
+        $count++;
+    }
+    my $s = ($count != 1) ? 'Records' : 'Record';
+    $app->log($plugin->translate(
+        "[_1]: Sent [_2] Subscription Queue $s.", $plugin->name, $count)
+    );
 }
 
 1;

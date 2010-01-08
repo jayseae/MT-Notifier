@@ -15,7 +15,12 @@
 # ===========================================================================
 package Notifier::Util;
 
+use base qw(MT::App);
 use strict;
+
+use File::Spec;
+use MT;
+use MT::ConfigMgr;
 
 # shared functions
 
@@ -39,40 +44,15 @@ sub load_blog {
 }
 
 sub load_email {
-  require MT;
-  my $app = MT->instance->app;
-  my $plugin = $app->component('Notifier');
-  my ($file, $param) = @_;
-  my @paths;
-  my $dir = File::Spec->catdir($app->mt_dir, $plugin->envelope, 'tmpl', 'email');
-  push @paths, $dir if -d $dir;
-  $dir = File::Spec->catdir($app->mt_dir, $plugin->envelope, 'tmpl');
-  push @paths, $dir if -d $dir;
-  $dir = File::Spec->catdir($app->mt_dir, $plugin->envelope);
-  push @paths, $dir if -d $dir;
-  require HTML::Template;
-  my $tmpl;
-  eval {
-    local $1; ## This seems to fix a utf8 bug (of course).
-    $tmpl = HTML::Template->new_file(
-      $file,
-      path => \@paths,
-      search_path_on_include => 1,
-      die_on_bad_params => 0,
-      global_vars => 1);
-  };
-  return $app->trans_error("Loading template '[_1]' failed: [_2]", $file, $@) if $@;
-  for my $key (keys %$param) {
-    $tmpl->param($key, $param->{$key});
-  }
-  $app->translate_templatized($tmpl->output);
+	my ($tmpl, $param) = @_;
+  my $out = MT->build_email("email/$tmpl", $param);
+  return($out);
 }
 
 sub load_sender_address {
-  require MT;
-  my $app = MT->instance->app;
-  my $plugin = $app->component('Notifier');
   my ($obj, $author) = @_;
+  my $app = MT->instance->app;
+  my $plugin = MT::Plugin::Notifier->instance;
   my $entry;
   if (UNIVERSAL::isa($obj, 'MT::Comment')) {
     require MT::Entry;
@@ -116,6 +96,16 @@ sub produce_cipher {
   my $cipher = crypt ($key, $salt);
   $cipher =~ s/\.$/q/;
   $cipher;
+}
+
+sub script_name {
+  my $app = MT->instance->app;
+  my $mgr = MT::ConfigMgr->instance;
+  my $plugin = MT::Plugin::Notifier->instance;
+  my $mt4 = ($app->version_number >= 4) ? 1 : 0;
+  my $notifier_base = ($mgr->CGIPath =~ /^http/) ? $mgr->CGIPath : $app->base.$mgr->CGIPath;
+  my $notifier_link = ($mt4) ? $mgr->AdminScript : $plugin->envelope.'/mt-notifier.cgi';
+  $notifier_base.$notifier_link;
 }
 
 1;

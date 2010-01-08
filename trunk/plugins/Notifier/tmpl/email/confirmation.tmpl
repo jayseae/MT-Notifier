@@ -1,14 +1,14 @@
-'<TMPL_VAR NAME=BLOG_NAME>' <MT_TRANS phrase="requires you to use a double-opt system for making any changes to your subscription information.">
+'<mt:var name="blog_name">' <__trans phrase="requires you to use a double-opt system for making any changes to your subscription information.">
 
-<MT_TRANS phrase="Because you, or someone using your email address, recently submitted a request at"> '<TMPL_VAR NAME=BLOG_NAME>' <MT_TRANS phrase=", you are being sent this confirmation to verify that the request is genuine.">
+<__trans phrase="Because you, or someone using your email address, recently submitted a request at"> '<mt:var name="blog_name">'<__trans phrase=", you are being sent this confirmation to verify that the request is genuine.">
 
-<MT_TRANS phrase="The request is to"> <TMPL_VAR NAME=RECORD_TEXT>:
-<TMPL_VAR NAME=RECORD_NAME>
+<__trans phrase="The request is to"> <mt:var name="record_text">:
+<mt:var name="record_name">
 
-<MT_TRANS phrase="Please confirm your request by clicking this link">:
-<TMPL_VAR NAME=NOTIFIER_LINK>?__mode=verify_subs&c=<TMPL_VAR NAME=RECORD_CIPHER>
+<__trans phrase="Please confirm your request by clicking this link">:
+<mt:var name="notifier_link">?__mode=verify_subs&c=<mt:var name="record_cipher">
 
-<MT_TRANS phrase="Use this link if you would like to visit before confirming this request">:
-<TMPL_VAR NAME=RECORD_LINK>
+<__trans phrase="Use this link if you would like to visit before confirming this request">:
+<mt:var name="record_link">
 
-<MT_TRANS phrase="If you did not make this request, do nothing.  You will receive no further reminders of this request.  If you did make this request, but there are errors in the request, you can simply submit a new one to correct any problems.  Confirmation of that request will follow your re-submission.">
+<__trans phrase="If you did not make this request, do nothing.  You will receive no further reminders of this request.  If you did make this request, but there are errors in the request, you can simply submit a new one to correct any problems.  Confirmation of that request will follow your re-submission.">
