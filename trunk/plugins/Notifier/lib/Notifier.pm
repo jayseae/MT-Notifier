@@ -14,7 +14,7 @@ use Notifier::Data;
 
 # version
 use vars qw($VERSION);
-$VERSION = '4.0.6';
+$VERSION = '4.1.0';
 
 # subscription functions
 
@@ -77,7 +77,7 @@ sub create_subscription {
       $data->status(Notifier::Data::RUNNING());
     }
     $data->ip($app->remote_ip);
-    $data->type(0); # 4.0
+    $data->type(0); # 5.0?
     $data->save;
     data_confirmation($data) if ($data->status == Notifier::Data::PENDING());
   }
@@ -99,7 +99,7 @@ sub data_confirmation {
     $type = $plugin->translate('Category');
   } else {
     $type = $plugin->translate('Blog');
-    }
+  }
   require Notifier::Util;
   my $sender_address = Notifier::Util::load_sender_address($data, $author);
   return unless ($sender_address);
@@ -141,7 +141,15 @@ sub data_confirmation {
   $head{'Subject'} = Notifier::Util::load_email('confirmation-subject.tmpl', \%param);
   my $body = Notifier::Util::load_email('confirmation.tmpl', \%param);
   require MT::Mail;
-  MT::Mail->send(\%head, $body);
+  my $mail = MT::Mail->send(\%head, $body);
+  unless ($mail) {
+    my $app = MT->instance->app;
+    $app->log($plugin->translate(
+      'Error sending confirmation message to [_1], error [_2]',
+      $head{'To'},
+      MT::Mail->errstr
+      ));
+  }
 }
 
 sub entry_notifications {

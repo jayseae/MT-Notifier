@@ -79,19 +79,8 @@ sub create_subs {
     } else {
       Notifier::create_subscription($email, $record, $blog_id, 0, 0);
     }
-    # TODO: convert this to use $app->call_return();
-    # then templates can determine the page flow.
-    #$app->return_args($return);
-    #$app->call_return;
-    return $app->redirect(
-      $app->uri(
-        'mode' => 'list_subs',
-        args   => {
-          blog_id => $blog_id,
-          saved   => $email
-        }
-      )
-    );
+    $app->return_args($return);
+    $app->call_return;
   } else {
     my $type = $app->param('_type');
     my @ids = $app->param('id');
@@ -389,6 +378,71 @@ sub _ui_vue {
 
 # user interaction
 
+sub build_sub_data {
+  my $app = shift;
+  my $iter = shift;
+  my $blog = $app->blog;
+  my @data;
+  while (my $data = $iter->()) {
+    my $row = $data->column_values;
+    if ( $data->category_id ) {
+      $row->{category_record} = 1;
+      require MT::Category;
+      my $category = MT::Category->load( $data->category_id );
+      if ($category) {
+        require MT::Util;
+        my $link = $blog->archive_url;
+        $link .= '/' unless $link =~ m/\/$/;
+        $link .= MT::Util::archive_file_for ('',  $blog, 'Category', $category);
+        $row->{url_target} = $link;
+      }
+    } elsif ( $data->entry_id ) {
+      $row->{entry_record} = 1 ;
+      require MT::Entry;
+      my $entry = MT::Entry->load( $data->entry_id );
+      $row->{url_target} = $entry->permalink if ($entry);
+    } else {
+      $row->{url_target} = $blog->site_url;
+    }
+    $row->{url_block} = !$data->record;
+    $row->{visible} = $data->status;
+    require MT::Util;
+    if (my $ts = $data->created_on ) {
+      $row->{created_on_formatted} = MT::Util::format_ts("%Y.%m.%d", $ts, $blog);
+      $row->{created_on_time_formatted} = MT::Util::format_ts("%Y.%m.%d %H:%M:%S", $ts, $blog);
+      $row->{created_on_relative} = MT::Util::relative_date($ts, time, $blog);
+    }
+    push @data, $row;
+  }
+  return \@data;
+}
+
+sub build_sub_table {
+  my $app = shift;
+  my $blog = $app->blog;
+  my (%args) = @_;
+  my $type = $args{type};
+  my $class = $app->model($type);
+  my $list_pref = $app->list_pref($type);
+  my $iter;
+  if ( $args{load_args} ) {
+    $iter = $class->load_iter( @{ $args{load_args} } );
+  } elsif ( $args{iter} ) {
+    $iter = $args{iter};
+  } elsif ( $args{items} ) {
+    $iter = sub { pop @{ $args{items} } };
+  }
+  return [] unless $iter;
+  my $limit = $args{limit};
+  my $param = $args{param} || {};
+  my $data = build_sub_data($app, $iter);
+  return [] unless @$data;
+  $param->{subscription_table}[0]{object_loop} = $data;
+  $app->load_list_actions( 'subscription', \%$param );
+  $param->{object_loop} = $param->{subscription_table}[0]{object_loop};
+  $data;
+}
+
 sub list_subs {
   my $app    = shift;
   my $blog   = $app->blog;
@@ -428,55 +482,17 @@ sub list_subs {
     my $sub = Notifier::Data->load({ cipher => $cipher });
     $terms->{email} = $sub->email if (ref $sub);
   }
-  # load data for processing
-  my @data;
   require Notifier::Data;
   my $iter = Notifier::Data->load_iter($terms, $args);
-  while (my $data = $iter->()) {
-    push @data, $data->column_values;
-  }
-  $param->{subscriber_loop} = \@data;
-  # hasher for data presentation
-  my $hasher = sub {
-    my ($obj, $row) = @_;
-    if ( $row->{category_id} ) {
-      $row->{category_record} = 1;
-      require MT::Category;
-      my $category = MT::Category->load( $row->{category_id} );
-      if ($category) {
-        require MT::Util;
-        my $link = $blog->archive_url;
-        $link .= '/' unless $link =~ m/\/$/;
-        $link .= MT::Util::archive_file_for ('',  $blog, 'Category', $category);
-        $row->{url_target} = $link;
-      }
-    } elsif ( $row->{entry_id} ) {
-      $row->{entry_record} = 1 ;
-      require MT::Entry;
-      my $entry = MT::Entry->load( $row->{entry_id} );
-      $row->{url_target} = $entry->permalink if ($entry);
-    } else {
-      $row->{url_target} = $blog->site_url;
-    }
-    $row->{url_block} = !$row->{record};
-    $row->{visible} = $row->{status};
-
-    require MT::Util;
-    if (my $ts = $row->{created_on} ) {
-      $row->{created_on_formatted} = MT::Util::format_ts("%Y.%m.%d", $ts, $blog);
-      $row->{created_on_time_formatted} = MT::Util::format_ts("%Y.%m.%d %H:%M:%S", $ts, $blog);
-      $row->{created_on_relative} = MT::Util::relative_date($ts, time, $blog);
-    }
-  };
-  # data listing
+  my $data = build_sub_data($app, $iter);
+  $param->{subscriber_loop} = $data;
   return $app->listing(
     {
       type     => 'subscription',
-      template => 'list.tmpl',
+      template => 'list_subscription.tmpl',
       terms    => $terms,
       params   => $param,
       args     => $args,
-      code     => $hasher,
     }
   );
 }

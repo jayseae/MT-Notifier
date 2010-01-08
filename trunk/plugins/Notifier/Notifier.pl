@@ -67,11 +67,39 @@ sub init_registry {
       'MT::App::CMS::cms_post_save.entry'     => '$Notifier::Notifier::Plugin::notify_entry',
       'MT::AtomServer::api_post_save.entry'   => '$Notifier::Notifier::Plugin::notify_entry',
       'MT::XMLRPCServer::api_post_save.entry' => '$Notifier::Notifier::Plugin::notify_entry',
+      # transformer to set quicksearch value to 0 on subscription quicksearches...
+      # - can remove once there is an edit_subscription.tmpl in place (one day)
+      'MT::App::CMS::template_output.search_replace'    => \&_output_search_replace,
+      'MT::App::CMS::template_output.list_subscription' => \&_output_search_replace,
     },
     object_types => {
       'subscription'         => 'Notifier::Data',
       'subscription.history' => 'Notifier::History',
       'subscription.queue'   => 'Notifier::Queue',
+    },
+    search_apis => {
+        'subscription' => {
+          'order'              => 1000,
+          'permission'         => 'edit_notifications',
+          'handler'            => '$Notifier::Notifier::App::build_sub_table',
+          'label'              => 'Subscriptions',
+          'perm_check'         => sub { 1; },
+          'search_cols'        => {
+            'email'            => sub { $plugin->translate('Email') },
+            'ip'               => sub { $plugin->translate('IP Address') },
+          },
+          'replace_cols'       => [qw(email)],
+          'can_replace'        => 1,
+          'can_search_by_date' => 1,
+          'date_column'        => 'created_on',
+          'view'               => 'blog',
+          'setup_terms_args'   => sub {
+             my ($terms, $args, $blog_id) = @_;
+             $args->{sort}      = 'created_on';
+             $args->{direction} = 'descend';
+          },
+          'results_table_template' => '<mt:include name="include/subscription_table.tmpl" component="notifier">',
+      },
     },
     tags => {
       function => {
@@ -119,5 +147,22 @@ sub load_config {
 # access to plugin
 
 sub instance { $plugin; }
+
+# transformer to set quicksearch value to 0 on subscription searches...
+
+sub _output_search_replace {
+  my ($cb, $app, $template) = @_;
+  my $plugin = $cb->plugin;
+  my ($chk, $new, $old);
+
+  $chk = qq{<input type="hidden" name="_type" value="subscription" />};
+  $chk = quotemeta($chk);
+  return unless ($$template =~ m/$chk/);
+
+  $old = qq{<input type="hidden" name="quicksearch" value="1" />};
+  $old = quotemeta($old);
+  $new = qq{<input type="hidden" name="quicksearch" value="0" />};
+  $$template =~ s/$old/$new/;
+}
 
 1;
