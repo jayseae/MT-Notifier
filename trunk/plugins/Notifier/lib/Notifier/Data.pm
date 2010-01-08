@@ -70,4 +70,15 @@ sub class_label_plural {
     $plugin->translate('Subscriptions');
 }
 
+sub save {
+    my $sub = shift;
+    if (ref $sub) {
+        my @ts = gmtime(time);
+        my $ts = sprintf '%04d%02d%02d%02d%02d%02d',
+                 $ts[5]+1900, $ts[4]+1, @ts[3,2,1,0];
+        $sub->modified_on($ts);
+    }
+    $sub->SUPER::save(@_);
+}
+
 1;

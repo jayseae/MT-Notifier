@@ -88,19 +88,8 @@ sub create_subs {
     } else {
       Notifier::create_subscription($email, $record, $blog_id, 0, 0);
     }
-    # TODO: convert this to use $app->call_return();
-    # then templates can determine the page flow.
-    #$app->return_args($return);
-    #$app->call_return;
-    return $app->redirect(
-      $app->uri(
-        'mode' => 'list_subs',
-        args   => {
-          blog_id => $blog_id,
-          saved   => $email
-        }
-      )
-    );
+    $app->return_args($return);
+    $app->call_return;
   } else {
     my $type = $app->param('_type');
     my @ids = $app->param('id');

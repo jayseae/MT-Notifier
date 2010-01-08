@@ -1,12 +1,12 @@
 <mt:include name="include/header.tmpl">
 
-<h2><mt:var name="message"></h2>
+<h2><$mt:var name="message"$></h2>
 
 <mt:if name="link_url">
     <mt:if name="link_name">
-        <p><a href="<mt:var name="link_url">"><__trans phrase="Return to"> <mt:var name="link_name"></a></p>
+        <p><a href="<$mt:var name="link_url"$>"><__trans phrase="Return to"> <$mt:var name="link_name"$></a></p>
     <mt:else>
-        <p><a href="<mt:var name="link_url">"><__trans phrase="Return to"> <mt:var name="link_url"></a></p>
+        <p><a href="<$mt:var name="link_url"$>"><__trans phrase="Return to"> <$mt:var name="link_url"$></a></p>
     </mt:if>
 </mt:if>
 
@@ -17,7 +17,7 @@
 </div>
 </div>
 <div id="copyright">
-    <strong>MT-Notifier <__trans phrase="version"> <mt:var name="notifier_version"></strong> <__trans phrase="Copyright"> &copy; <a href="http://everitz.com/">Everitz Consulting</a>. <__trans phrase="All Rights Reserved">.
+    <strong>MT-Notifier <__trans phrase="version"> <$mt:var name="notifier_version"$></strong> <__trans phrase="Copyright"> &copy; <a href="http://everitz.com/">Everitz Consulting</a>. <__trans phrase="All Rights Reserved">.
 </div>
 </body>
 </html>
