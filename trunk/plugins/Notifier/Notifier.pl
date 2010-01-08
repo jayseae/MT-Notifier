@@ -61,12 +61,12 @@ sub init_registry {
       }
     },
     callbacks => {
-      'MT::Comment::pre_save'                 => '$Notifier::Notifier::Plugin::check_comment',
-      'MT::Comment::post_save'                => '$Notifier::Notifier::Plugin::notify_comment',
-      'MT::Entry::pre_save'                   => '$Notifier::Notifier::Plugin::check_entry',
-      'MT::App::CMS::cms_post_save.entry'     => '$Notifier::Notifier::Plugin::notify_entry',
-      'MT::AtomServer::api_post_save.entry'   => '$Notifier::Notifier::Plugin::notify_entry',
-      'MT::XMLRPCServer::api_post_save.entry' => '$Notifier::Notifier::Plugin::notify_entry',
+      'MT::Comment::pre_save'                           => '$Notifier::Notifier::Plugin::check_comment',
+      'MT::Comment::post_save'                          => '$Notifier::Notifier::Plugin::notify_comment',
+      'MT::Entry::pre_save'                             => '$Notifier::Notifier::Plugin::check_entry',
+      'MT::App::CMS::cms_post_save.entry'               => '$Notifier::Notifier::Plugin::notify_entry',
+      'MT::AtomServer::api_post_save.entry'             => '$Notifier::Notifier::Plugin::notify_entry',
+      'MT::XMLRPCServer::api_post_save.entry'           => '$Notifier::Notifier::Plugin::notify_entry',
       # transformer to set quicksearch value to 0 on subscription quicksearches...
       # - can remove once there is an edit_subscription.tmpl in place (one day)
       'MT::App::CMS::template_output.search_replace'    => \&_output_search_replace,
