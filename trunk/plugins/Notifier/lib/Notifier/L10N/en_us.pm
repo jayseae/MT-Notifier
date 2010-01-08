@@ -1,6 +1,6 @@
 # ===========================================================================
 # A Movable Type plugin with subscription options for your installation
-# Copyright 2003-2008 Everitz Consulting <everitz.com>.
+# Copyright 2003-2009 Everitz Consulting <everitz.com>.
 #
 # This program is free software:  You may redistribute it and/or modify it
 # it under the terms of the Artistic License version 2 as published by the
@@ -132,10 +132,10 @@ use vars qw( %Lexicon );
       ## 'IP Address' => 'IP Address',
 
       ## lib/Notifier/Util.pm
-      'Loading template \'[_1]\' failed: [_2]' => 'Loading template \'[_1]\' failed: [_2]',
       'Specified blog unavailable - please check your data!' => 'Specified blog unavailable - please check your data!',
       'Invalid sender address - please reconfigure it!' => 'Invalid sender address - please reconfigure it!',
       'No sender address - please configure one!' => 'No sender address - please configure one!',
+      'Invalid URL base value - please check your data ([_1])!' => 'Invalid URL base value - please check your data ([_1])!',
 
       ## templates
 

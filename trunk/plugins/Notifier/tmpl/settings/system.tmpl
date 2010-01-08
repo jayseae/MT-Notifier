@@ -1,5 +1,19 @@
 <fieldset>
     <mtapp:setting
+        id="mtn_url_base"
+        label="<__trans phrase="Base URL">"
+        hint=""
+        show_hint="0">
+        <p>
+            <input type="radio" name="system_url_type" id="system_url_type_2" value="2" <mt:if name="system_url_type_2">checked="checked"</mt:if> /> <__trans phrase="Use Config File for Base URL (Default)"><br />
+            <input type="radio" name="system_url_type" id="system_url_type_3" value="3" <mt:if name="system_url_type_3">checked="checked"</mt:if> /> <__trans phrase="Use Each Blog Site URL for Base URL"><br />
+            <input type="radio" name="system_url_type" id="system_url_type_4" value="4" <mt:if name="system_url_type_4">checked="checked"</mt:if> /> <__trans phrase="Specify Another Address for Base URL"> (<a href="<a href="#" onclick="return toggleAdvancedPrefs(event,'system_url_type')"><__trans phrase="Set Base URL"></a>)<br />
+            <span id="system_url_type-advanced" class="setting-advanced">
+                <br /><input id="system_url_base" name="system_url_base" size="75" <mt:if name="system_url_base">value="<$mt:var name="system_url_base"$>"</mt:if> />
+            </span>
+        </p>
+    </mtapp:setting>
+    <mtapp:setting
         id="mtn_confirm"
         label="<__trans phrase="Confirmation">"
         hint=""

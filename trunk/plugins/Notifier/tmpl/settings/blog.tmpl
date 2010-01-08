@@ -11,6 +11,21 @@
     </mtapp:setting>
     <div id="blog_status-prefs" style="display:<mt:if name="blog_status_1">block<mt:else>none</mt:if>;">
         <mtapp:setting
+            id="mtn_url_base"
+            label="<__trans phrase="Base URL">"
+            hint=""
+            show_hint="0">
+            <p>
+                <input type="radio" name="blog_url_type" id="blog_url_type_1" value="1" <mt:if name="blog_url_type_1">checked="checked"</mt:if> /> <__trans phrase="Use System Setting for Base URL (Default)"><br />
+                <input type="radio" name="blog_url_type" id="blog_url_type_2" value="2" <mt:if name="blog_url_type_2">checked="checked"</mt:if> /> <__trans phrase="Use Config File for Base URL"><br />
+                <input type="radio" name="blog_url_type" id="blog_url_type_3" value="3" <mt:if name="blog_url_type_3">checked="checked"</mt:if> /> <__trans phrase="Use This Blog Site URL for Base URL"><br />
+                <input type="radio" name="blog_url_type" id="blog_url_type_4" value="4" <mt:if name="blog_url_type_4">checked="checked"</mt:if> /> <__trans phrase="Specify Another Address for Base URL"> (<a href="<a href="#" onclick="return toggleAdvancedPrefs(event,'blog_url_type')"><__trans phrase="Set Base URL"></a>)<br />
+                <span id="blog_url_type-advanced" class="setting-advanced">
+                    <br /><input id="blog_url_base" name="blog_url_base" size="75" <mt:if name="blog_url_base">value="<$mt:var name="blog_url_base"$>"</mt:if> />
+                </span>
+            </p>
+        </mtapp:setting>
+        <mtapp:setting
             id="mtn_confirm"
             label="<__trans phrase="Confirmation">"
             hint=""
@@ -50,7 +65,7 @@
                 <input type="radio" name="blog_address_type" id="blog_address_type_2" value="2" <mt:if name="blog_address_type_2">checked="checked"</mt:if> /> <__trans phrase="Use Author Address for Sending Notifications"><br />
                 <input type="radio" name="blog_address_type" id="blog_address_type_3" value="3" <mt:if name="blog_address_type_3">checked="checked"</mt:if> /> <__trans phrase="Specify Another Address for Sending Notifications"> (<a href="<a href="#" onclick="return toggleAdvancedPrefs(event,'blog_address_type')"><__trans phrase="Set Address"></a>)<br />
                 <span id="blog_address_type-advanced" class="setting-advanced">
-                    <input id="blog_address" name="blog_address" size="75" <mt:if name="blog_address">value="<$mt:var name="blog_address"$>"</mt:if> />
+                    <br /><input id="blog_address" name="blog_address" size="75" <mt:if name="blog_address">value="<$mt:var name="blog_address"$>"</mt:if> />
                 </span>
             </p>
         </mtapp:setting>

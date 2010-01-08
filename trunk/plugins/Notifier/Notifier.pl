@@ -1,6 +1,6 @@
 # ===========================================================================
 # A Movable Type plugin with subscription options for your installation
-# Copyright 2003-2008 Everitz Consulting <everitz.com>.
+# Copyright 2003-2009 Everitz Consulting <everitz.com>.
 #
 # This program is free software:  You may redistribute it and/or modify it
 # it under the terms of the Artistic License version 2 as published by the
@@ -51,9 +51,13 @@ my $plugin = MT::Plugin::Notifier->new({
     ['blog_disabled',     { Default => 0 , Scope => 'blog' }],
     ['blog_status',       { Default => 1 , Scope => 'blog' }],
     ['blog_queued',       { Default => 0 , Scope => 'blog' }],
+    ['blog_url_base',     { Default => '', Scope => 'blog' }],
+    ['blog_url_type',     { Default => 1, Scope => 'blog' }],
     ['system_address',    { Default => '', Scope => 'system' }],
     ['system_confirm',    { Default => 1 , Scope => 'system' }],
     ['system_queued',     { Default => 0 , Scope => 'system' }],
+    ['system_url_base',   { Default => '', Scope => 'system' }],
+    ['system_url_type',   { Default => 2 , Scope => 'system' }],
   ]),
 });
 MT->add_plugin($plugin);
@@ -71,9 +75,12 @@ sub init_registry {
       'MT::Comment::pre_save'                           => '$Notifier::Notifier::Plugin::check_comment',
       'MT::Comment::post_save'                          => '$Notifier::Notifier::Plugin::notify_comment',
       'MT::Entry::pre_save'                             => '$Notifier::Notifier::Plugin::check_entry',
-      'MT::App::CMS::cms_post_save.entry'               => '$Notifier::Notifier::Plugin::notify_entry',
-      'MT::AtomServer::api_post_save.entry'             => '$Notifier::Notifier::Plugin::notify_entry',
-      'MT::XMLRPCServer::api_post_save.entry'           => '$Notifier::Notifier::Plugin::notify_entry',
+      'MT::Entry::post_save'                            => '$Notifier::Notifier::Plugin::notify_entry',
+      # application callbacks for MT::Entry::post_save...
+      # - don't work for scheduled post...
+      # 'MT::App::CMS::cms_post_save.entry'               => '$Notifier::Notifier::Plugin::notify_entry',
+      # 'MT::AtomServer::api_post_save.entry'             => '$Notifier::Notifier::Plugin::notify_entry',
+      # 'MT::XMLRPCServer::api_post_save.entry'           => '$Notifier::Notifier::Plugin::notify_entry',
     },
     object_types => {
       'subscription'         => 'Notifier::Data',
