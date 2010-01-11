@@ -52,7 +52,7 @@ my $plugin = MT::Plugin::Notifier->new({
     ['blog_status',       { Default => 1 , Scope => 'blog' }],
     ['blog_queued',       { Default => 0 , Scope => 'blog' }],
     ['blog_url_base',     { Default => '', Scope => 'blog' }],
-    ['blog_url_type',     { Default => 1, Scope => 'blog' }],
+    ['blog_url_type',     { Default => 1 , Scope => 'blog' }],
     ['system_address',    { Default => '', Scope => 'system' }],
     ['system_confirm',    { Default => 1 , Scope => 'system' }],
     ['system_queued',     { Default => 0 , Scope => 'system' }],

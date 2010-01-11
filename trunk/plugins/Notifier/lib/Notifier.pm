@@ -23,7 +23,7 @@ use Notifier::Data;
 
 # version
 use vars qw($VERSION);
-$VERSION = '4.2.0';
+$VERSION = '4.2.1';
 
 # subscription functions
 
@@ -132,7 +132,7 @@ sub data_confirmation {
     'notifier_link' => Notifier::Util::script_name($blog->id),
     'notifier_version' => version_number(),
     'record_cipher' => $data->cipher,
-    'record_text' => $record_text
+    'record_text' => $record_text,
   );
   if ($entry) {
     $param{'record_link'} = $entry->permalink;

@@ -140,39 +140,23 @@ sub list_actions {
         order      => 1000,
         code       => '$Notifier::Notifier::App::_ui_sub',
         dialog     => 1,
-        condition  => sub {
-          return 0 if $app->mode eq 'view';
-          return ( $app->user->is_superuser() ) ? 1 : 0;
-        }
       },
       'mtn_add_subscription_block' => {
         label      => q(<MT_TRANS phrase="Add Subscription Block(s)">),
         order      => 1100,
         code       => '$Notifier::Notifier::App::_ui_opt',
         dialog     => 1,
-        condition  => sub {
-          return 0 if $app->mode eq 'view';
-          return ( $app->user->is_superuser() ) ? 1 : 0;
-        }
       },
       'mtn_view_subscription_count' => {
         label      => q(<MT_TRANS phrase="View Subscription Count(s)">),
         order      => 1200,
         code       => '$Notifier::Notifier::App::_ui_vue',
         dialog     => 1,
-        condition  => sub {
-          return 0 if $app->mode eq 'view';
-          return ( $app->user->is_superuser() ) ? 1 : 0;
-        }
       },
       'mtn_write_history_records' => {
         label      => q(<MT_TRANS phrase="Write History Records">),
         order      => 1400,
         code       => '$Notifier::Notifier::App::_sub_history',
-        condition  => sub {
-          return 0 if $app->mode eq 'view';
-          return ( $app->user->is_superuser() ) ? 1 : 0;
-        }
       },
     },
     'category' => {
@@ -181,36 +165,18 @@ sub list_actions {
         order      => 1000,
         code       => '$Notifier::Notifier::App::_ui_sub',
         dialog     => 1,
-        condition  => sub {
-          return 0 if $app->mode eq 'view';
-          return ( $app->user->is_superuser() ||
-                   $app->permissions->can_administer_blog ||
-                   $app->permissions->can_edit_notifications ) ? 1 : 0;
-        }
       },
       'mtn_add_subscription_block' => {
         label      => q(<MT_TRANS phrase="Add Subscription Block(s)">),
         order      => 1100,
         code       => '$Notifier::Notifier::App::_ui_opt',
         dialog     => 1,
-        condition  => sub {
-          return 0 if $app->mode eq 'view';
-          return ( $app->user->is_superuser() ||
-                   $app->permissions->can_administer_blog ||
-                   $app->permissions->can_edit_notifications ) ? 1 : 0;
-        }
       },
       'mtn_view_subscription_count' => {
         label      => q(<MT_TRANS phrase="View Subscription Count(s)">),
         order      => 1200,
         code       => '$Notifier::Notifier::App::_ui_vue',
         dialog     => 1,
-        condition  => sub {
-          return 0 if $app->mode eq 'view';
-          return ( $app->user->is_superuser() ||
-                   $app->permissions->can_administer_blog ||
-                   $app->permissions->can_edit_notifications ) ? 1 : 0;
-        }
       },
     },
     'entry' => {
@@ -219,36 +185,18 @@ sub list_actions {
         order      => 1000,
         code       => '$Notifier::Notifier::App::_ui_sub',
         dialog     => 1,
-        condition  => sub {
-          return 0 if $app->mode eq 'view';
-          return ( $app->user->is_superuser() ||
-                   $app->permissions->can_administer_blog ||
-                   $app->permissions->can_edit_notifications ) ? 1 : 0;
-        }
       },
       'mtn_add_subscription_block' => {
         label      => q(<MT_TRANS phrase="Add Subscription Block(s)">),
         order      => 1100,
         code       => '$Notifier::Notifier::App::_ui_opt',
         dialog     => 1,
-        condition  => sub {
-          return 0 if $app->mode eq 'view';
-          return ( $app->user->is_superuser() ||
-                   $app->permissions->can_administer_blog ||
-                   $app->permissions->can_edit_notifications ) ? 1 : 0;
-        }
       },
       'mtn_view_subscription_count' => {
         label      => q(<MT_TRANS phrase="View Subscription Count(s)">),
         order      => 1200,
         code       => '$Notifier::Notifier::App::_ui_vue',
         dialog     => 1,
-        condition  => sub {
-          return 0 if $app->mode eq 'view';
-          return ( $app->user->is_superuser() ||
-                   $app->permissions->can_administer_blog ||
-                   $app->permissions->can_edit_notifications ) ? 1 : 0;
-        }
       },
     },
     'subscription' => {
@@ -256,41 +204,23 @@ sub list_actions {
         label      => q(<MT_TRANS phrase="Block Subscription(s)">),
         order      => 100,
         code       => '$Notifier::Notifier::App::_sub_block',
-        condition  => sub {
-          return 0 if $app->mode eq 'view';
-          return ( $app->user->is_superuser() ||
-                   $app->permissions->can_administer_blog ||
-                   $app->permissions->can_edit_notifications ) ? 1 : 0;
-        }
       },
       'mtn_clear_subscription' => {
         label      => q(<MT_TRANS phrase="Clear Subscription Block(s)">),
         order      => 200,
         code       => '$Notifier::Notifier::App::_sub_clear',
-        condition  => sub {
-          return 0 if $app->mode eq 'view';
-          return ( $app->user->is_superuser() ||
-                   $app->permissions->can_administer_blog ||
-                   $app->permissions->can_edit_notifications ) ? 1 : 0;
-        }
       },
       'mtn_verify_subscription' => {
         label      => q(<MT_TRANS phrase="Verify Subscription(s)">),
         order      => 300,
         code       => '$Notifier::Notifier::App::_sub_verify',
-        condition  => sub {
-          return 0 if $app->mode eq 'view';
-          return ( $app->user->is_superuser() ||
-                   $app->permissions->can_administer_blog ||
-                   $app->permissions->can_edit_notifications ) ? 1 : 0;
-        }
       },
     },
   }
 }
 
 sub methods {
-  my $app = MT->instance->app;
+  my $app = MT->app;
   return {
     block_subs  => {
       code           => '$Notifier::Notifier::App::block_subs',

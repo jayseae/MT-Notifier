@@ -67,9 +67,9 @@ sub set_history {
   while (my $entry = $iter->()) {
     my $pinged = $entry->pinged_urls;
     next unless ($pinged && $pinged =~ m/everitz\.com\/sol\/(mt-)?notifier\/sent(_)?service\.html/);
-    require Notifier::Data;
     my $blog_id = $entry->blog_id;
     my $entry_id = $entry->id;
+    require Notifier::Data;
     my @subs =
       map { $_ }
       Notifier::Data->load({
@@ -101,16 +101,16 @@ sub set_history {
       next unless ($data);
       next if ($data->entry_id);
       require Notifier::History;
+      my %terms;
+      $terms{'comment_id'} = 0;
       my $history = Notifier::History->load({
         data_id => $data->id,
         entry_id => $entry_id
       });
       next if ($history);
-      $history = Notifier::History->new;
-      $history->data_id($data->id);
-      $history->comment_id(0);
-      $history->entry_id($entry_id);
-      $history->save;
+      $terms{'data_id'} = $data->id;
+      $terms{'entry_id'} = $entry->id;
+      Notifier::History->create(\%terms);
     }
   }
 }
