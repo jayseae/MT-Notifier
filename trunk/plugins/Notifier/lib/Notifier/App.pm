@@ -295,12 +295,16 @@ sub verify_subs {
       $url = $r;
     }
     $app->build_page($plugin->load_tmpl('request.tmpl'), {
-      confirm          => $confirm,
-      link_name        => ($r) ? $name : '',
-      link_url         => ($r) ? $url : '',
-      message          => $plugin->translate($message),
-      notifier_version => $plugin->version,
-      page_title       => $plugin->name.' '.$plugin->translate('Request Processing')
+      confirm              => $confirm,
+      link_name            => ($r) ? $name : '',
+      link_url             => ($r) ? $url : '',
+      message              => $plugin->translate($message),
+      notifier_author_link => $plugin->author_link,
+      notifier_author_name => $plugin->author_name,
+      notifier_plugin_link => $plugin->plugin_link,
+      notifier_name        => $plugin->name,
+      notifier_version     => Notifier::Util::version_number(),
+      page_title           => $plugin->name.' '.$plugin->translate('Request Processing')
     });
   }
 }

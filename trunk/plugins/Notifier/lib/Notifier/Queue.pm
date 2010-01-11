@@ -65,7 +65,7 @@ sub send {
         $q->remove;
         $count++;
     }
-    my $s = ($count != 1) ? 'Records' : 'Record';
+    my $s = ($count == 1) ? 'Record' : 'Records';
     $app->log($plugin->translate(
         "[_1]: Sent [_2] Subscription Queue $s.", $plugin->name, $count)
     );
