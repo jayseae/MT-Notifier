@@ -275,6 +275,11 @@ use vars qw( %Lexicon );
       'Status' => 'Status',
       'Enable MT-Notifier for This Blog (Default)' => 'Enable MT-Notifier for This Blog (Default)',
       'Disable MT-Notifier for This Blog' => 'Disable MT-Notifier for This Blog',
+      'Use System Setting for Base URL (Default)' => 'Use System Setting for Base URL (Default)',
+      'Use Config File for Base URL' => 'Use Config File for Base URL',
+      'Use This Blog Site URL for Base URL' => 'Use This Blog Site URL for Base URL',
+      'Specify Another Address for Base URL' => 'Specify Another Address for Base URL',
+      'Set Base URL' => 'Set Base URL',
       'Confirmation' => 'Confirmation',
       'Do not Send Any Confirmation Messages' => 'Do not Send Any Confirmation Messages',
       'Send Confirmation for New Subscriptions (Default)' => 'Send Confirmation for New Subscriptions (Default)',
@@ -295,8 +300,12 @@ use vars qw( %Lexicon );
       'Click here to install the [_1] Entry Subscription Widget' => 'Click here to install the [_1] Entry Subscription Widget',
 
       ## tmpl/settings/system.tmpl
+      'Use Config File for Base URL (Default)' => 'Use Config File for Base URL (Default)',
+      'Use Each Blog Site URL for Base URL' => 'Use Each Blog Site URL for Base URL',
       'Address to use when sending notifications and no other addresses are available:' => 'Address to use when sending notifications and no other addresses are available:',
       ## already defined
+      ## 'Specify Another Address for Base URL' => 'Specify Another Address for Base URL',
+      ## 'Set Base URL' => 'Set Base URL',
       ## 'Confirmation' => 'Confirmation',
       ## 'Do not Send Any Confirmation Messages' => 'Do not Send Any Confirmation Messages',
       ## 'Send Confirmation for New Subscriptions (Default)' => 'Send Confirmation for New Subscriptions (Default)',

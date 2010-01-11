@@ -98,12 +98,12 @@ sub script_name {
   my $blog = MT::Blog->load($blog_id);
   unless ($blog) {
     $app->log($plugin->translate('Specified blog unavailable - please check your data!'));
-    return;
+    return $mgr->AdminScript;
   }
   my $url_base;
   my $url_type = $plugin->get_config_value('blog_url_type', 'blog:'.$blog->id);
   if ($url_type == 1) {
-  	# use system setting (default)
+    # use system setting (default)
     $url_type = $plugin->get_config_value('system_url_type');
     if ($url_type == 2) {
       $url_base = $mgr->CGIPath;
@@ -117,15 +117,13 @@ sub script_name {
   } elsif ($url_type == 3) {
     $url_base = $blog->site_url;
   } elsif ($url_type == 4) {
-    $url_base = $plugin->get_config_value('blog_url_base');
+    $url_base = $plugin->get_config_value('blog_url_base', 'blog:'.$blog->id);
   }
   $url_base .= '/' unless $url_base =~ m!/$!;
   unless ($url_base =~ /^http/) {
     $app->log($plugin->translate('Invalid URL base value - please check your data ([_1])!', qq{$url_base}));
-    return;
   }
   return $url_base.$mgr->AdminScript;
-  }
 }
 
 1;

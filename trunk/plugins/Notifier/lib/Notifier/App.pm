@@ -180,7 +180,7 @@ sub verify_subs {
               });
               if ($blog) {
                 $url = $blog->archive_url;
-                $url .= '/' unless $url =~ m/\/$/;
+                $url .= '/' unless ($url =~ m/\/$/);
                 $url .= MT::Util::archive_file_for ('',  $blog, 'Category', $category);
               }
             } else {
@@ -254,7 +254,7 @@ sub verify_subs {
               });
               if ($blog) {
                 $url = $blog->archive_url;
-                $url .= '/' unless $url =~ m/\/$/;
+                $url .= '/' unless ($url =~ m/\/$/);
                 $url .= MT::Util::archive_file_for ('',  $blog, 'Category', $category);
               }
             }
@@ -313,23 +313,27 @@ sub write_history {
     require MT::Blog;
     my $blog = MT::Blog->load({ id => $id });
     next unless ($blog);
+    my @entries;
     require MT::Entry;
     my $entries = MT::Entry->load_iter({ blog_id => $blog->id });
     while (my $e = $entries->()) {
-      require Notifier::Data;
-      my $iter = Notifier::Data->load_iter({ blog_id => $blog->id, entry_id => 0 });
-      while (my $data = $iter->()) {
-        require Notifier::History;
+      push @entries, $e;
+    }
+    require Notifier::Data;
+    require Notifier::History;
+    my %terms;
+    $terms{'comment_id'} = 0;
+    my $iter = Notifier::Data->load_iter({ blog_id => $blog->id, entry_id => 0 });
+    while (my $data = $iter->()) {
+      for my $entry (@entries) {
         my $history = Notifier::History->load({
           data_id => $data->id,
-          entry_id => $e->id,
+          entry_id => $entry->id,
         });
         next if ($history);
-        $history = Notifier::History->new;
-        $history->data_id($data->id);
-        $history->comment_id(0);
-        $history->entry_id($e->id);
-        $history->save;
+        $terms{'data_id'} = $data->id;
+        $terms{'entry_id'} = $entry->id;
+        Notifier::History->create(\%terms);
       }
     }
   }
@@ -385,6 +389,7 @@ sub build_sub_data {
   my @data;
   while (my $data = $iter->()) {
     my $row = $data->column_values;
+    next unless ($data->blog_id == $blog->id);
     if ( $data->category_id ) {
       $row->{category_record} = 1;
       require MT::Category;
@@ -392,7 +397,7 @@ sub build_sub_data {
       if ($category) {
         require MT::Util;
         my $link = $blog->archive_url;
-        $link .= '/' unless $link =~ m/\/$/;
+        $link .= '/' unless ($link =~ m/\/$/);
         $link .= MT::Util::archive_file_for ('',  $blog, 'Category', $category);
         $row->{url_target} = $link;
       }
@@ -432,11 +437,11 @@ sub build_sub_table {
   } elsif ( $args{items} ) {
     $iter = sub { pop @{ $args{items} } };
   }
-  return [] unless $iter;
+  return [] unless ($iter);
   my $limit = $args{limit};
   my $param = $args{param} || {};
   my $data = build_sub_data($app, $iter);
-  return [] unless @$data;
+  return [] unless (@$data);
   $param->{subscription_table}[0]{object_loop} = $data;
   $app->load_list_actions( 'subscription', \%$param );
   $param->{object_loop} = $param->{subscription_table}[0]{object_loop};
@@ -580,7 +585,7 @@ sub install_widget {
   my $perms = $app->{perms};
   my $plugin = MT::Plugin::Notifier->instance;
   return $app->error($plugin->translate('Insufficient permissions for installing templates for this weblog.'))
-    unless $perms->can_edit_templates() || $perms->can_administer_blog() || $app->user->is_superuser();
+    unless ($perms->can_edit_templates() || $perms->can_administer_blog() || $app->user->is_superuser());
   my $blog_id = $app->param('blog_id');
   my $terms = {};
   $terms->{blog_id} = $blog_id;
