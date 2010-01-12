@@ -1,6 +1,6 @@
 # ===========================================================================
 # A Movable Type plugin with subscription options for your installation
-# Copyright 2003-2009 Everitz Consulting <everitz.com>.
+# Copyright 2003-2010 Everitz Consulting <everitz.com>.
 #
 # This program may not be redistributed without permission.
 # ===========================================================================
@@ -77,7 +77,12 @@ use vars qw( %Lexicon );
       'Unknown MailTransfer method \'[_1]\'' => 'Unknown MailTransfer method \'[_1]\'',
       '[_1]: Sent [_2] queued notification[_3].' => '[_1]: Sent [_2] queued notification[_3].',
 
-      ## lib/Notifier/App.pm
+      ## lib/Notifier/Import.pm (currently not used)
+      'You have successfully converted [_1] record[_2]!' => 'You have successfully converted [_1] record[_2]!',
+      'You are not authorized to run this process!' => 'You are not authorized to run this process!',
+      'Import Processing' => 'Import Processing',
+
+      ## lib/Notifier/Plugin.pm
       'No entry was found to match that subscription record!' => 'No entry was found to match that subscription record!',
       'No category was found to match that subscription record!' => 'No category was found to match that subscription record!',
       'No blog was found to match that subscription record!' => 'No blog was found to match that subscription record!',
@@ -90,7 +95,12 @@ use vars qw( %Lexicon );
       'Your request did not include a record key!' => 'Your request did not include a record key!',
       'Your request must include an email address!' => 'Your request must include an email address!',
       'Request Processing' => 'Request Processing',
+      'Unknown' => 'Unknown',
+      'Invalid Request' => 'Invalid Request',
       'Insufficient permissions for installing templates for this weblog.' => 'Insufficient permissions for installing templates for this weblog.',
+      '[_1] Blog Widget' => '[_1] Blog Widget',
+      '[_1] Category Widget' => '[_1] Category Widget',
+      '[_1] Entry Widget' => '[_1] Entry Widget',
       '[_1] Blog Widget: Template Already Exists' => '[_1] Blog Widget: Template Already Exists',
       '[_1] Category Widget: Template Already Exists' => '[_1] Category Widget: Template Already Exists',
       '[_1] Entry Widget: Template Already Exists' => '[_1] Entry Widget: Template Already Exists',
@@ -98,29 +108,12 @@ use vars qw( %Lexicon );
       ## already defined
       ## 'Subscriptions' => 'Subscriptions',
 
-      ## lib/Notifier/App.pm (widget)
+      ## lib/Notifier/Plugin.pm (widget)
       'Subscribe to Blog', => 'Subscribe to Blog',
       'Subscribe to Category', => 'Subscribe to Category',
       'Subscribe to Entry', => 'Subscribe to Entry',
-      'Go', => 'Go',
       'Powered by [_1]' => 'Powered by [_1]',
-
-      ## lib/Notifier/Import.pm (currently not used)
-      'You have successfully converted [_1] record[_2]!' => 'You have successfully converted [_1] record[_2]!',
-      'You are not authorized to run this process!' => 'You are not authorized to run this process!',
-      'Import Processing' => 'Import Processing',
-
-      ## lib/Notifier/Plugin.pm
-      'Add Subscription(s)' => 'Add Subscription(s)',
-      'Add Subscription Block(s)' => 'Add Subscription Block(s)',
-      'View Subscription Count' => 'View Subscription Count',
-      'Block Subscription(s)' => 'Block Subscription(s)',
-      'Clear Subscription(s)' => 'Clear Subscription(s)',
-      'Verify Subscription(s)' => 'Verify Subscription(s)',
-      'Write History Records' => 'Write History Records',
-      ## already defined
-      ## 'Email' => 'Email',
-      ## 'IP Address' => 'IP Address',
+      'Go', => 'Go',
 
       ## lib/Notifier/Util.pm
       'Specified blog unavailable - please check your data!' => 'Specified blog unavailable - please check your data!',
@@ -156,7 +149,7 @@ use vars qw( %Lexicon );
       'Actions' => 'Actions',
       'Add [_1]' => 'Add [_1]',
       'Status' => 'Status',
-      'Created' => 'Created',
+      'Modified' => 'Modified',
       'Type' => 'Type',
       'View' => 'View',
       'Click to show only blocked [_1]' => 'Click to show only blocked [_1]',
@@ -168,6 +161,8 @@ use vars qw( %Lexicon );
       'Click to edit [_1]' => 'Click to edit [_1]',
       'Save changes' => 'Save changes',
       'Save' => 'Save',
+      ## deprecated
+      ## 'Created' => 'Created',
       ## already defined
       ## 'Subscription' => 'Subscription',
       ## 'Subscriptions' => 'Subscriptions',
@@ -281,6 +276,8 @@ use vars qw( %Lexicon );
       'Specify Another Address for Base URL' => 'Specify Another Address for Base URL',
       'Set Base URL' => 'Set Base URL',
       'Confirmation' => 'Confirmation',
+      'Send Entry Notifications Prior to Subscription Date' => 'Send Entry Notifications Prior to Subscription Date',
+      'Skip Entry Notifications Prior to Subscription Date (Default)' => 'Skip Entry Notifications Prior to Subscription Date (Default)',
       'Do not Send Any Confirmation Messages' => 'Do not Send Any Confirmation Messages',
       'Send Confirmation for New Subscriptions (Default)' => 'Send Confirmation for New Subscriptions (Default)',
       'Override' => 'Override',
@@ -307,6 +304,8 @@ use vars qw( %Lexicon );
       ## 'Specify Another Address for Base URL' => 'Specify Another Address for Base URL',
       ## 'Set Base URL' => 'Set Base URL',
       ## 'Confirmation' => 'Confirmation',
+      ## 'Send Entry Notifications Prior to Subscription Date' => 'Send Entry Notifications Prior to Subscription Date',
+      ## 'Skip Entry Notifications Prior to Subscription Date (Default)' => 'Skip Entry Notifications Prior to Subscription Date (Default)',
       ## 'Do not Send Any Confirmation Messages' => 'Do not Send Any Confirmation Messages',
       ## 'Send Confirmation for New Subscriptions (Default)' => 'Send Confirmation for New Subscriptions (Default)',
       ## 'Queue' => 'Queue',

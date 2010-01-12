@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
-<plugin version="4.2.3">
+<plugin version="4.3">
   <name>MT-Notifier</name>
   <version_url>http://everitz.com/mt/notifier/version.xml</version_url>
-  <sig>Notifier/Notifier.pl</sig>
+  <sig>Notifier</sig>
   <icon>mt-static/plugins/Notifier/images/Notifier.png</icon>
   <files>
     <file>
@@ -30,6 +30,10 @@
       <destination>plugins/Notifier</destination>
     </file>
     <file>
+      <src>plugins/Notifier/config.yaml</src>
+      <destination>plugins/Notifier/config.yaml</destination>
+    </file>
+    <file>
       <src>plugins/Notifier/mt-notifier-queue.cgi</src>
       <permissions>0755</permissions>
       <destination>plugins/Notifier/mt-notifier-queue.cgi</destination>
@@ -37,10 +41,6 @@
     <file>
       <src>plugins/Notifier/Notifier.html</src>
       <destination>plugins/Notifier/Notifier.html</destination>
-    </file>
-    <file>
-      <src>plugins/Notifier/Notifier.pl</src>
-      <destination>plugins/Notifier/Notifier.pl</destination>
     </file>
     <file>
       <src>plugins/Notifier/lib</src>
@@ -53,10 +53,6 @@
     <file>
       <src>plugins/Notifier/lib/Notifier.pm</src>
       <destination>plugins/Notifier/lib/Notifier.pm</destination>
-    </file>
-    <file>
-      <src>plugins/Notifier/lib/Notifier/App.pm</src>
-      <destination>plugins/Notifier/lib/Notifier/App.pm</destination>
     </file>
     <file>
       <src>plugins/Notifier/lib/Notifier/Data.pm</src>
@@ -159,6 +155,14 @@
       <destination>plugins/Notifier/tmpl/include</destination>
     </file>
     <file>
+      <src>plugins/Notifier/tmpl/include/footer.tmpl</src>
+      <destination>plugins/Notifier/tmpl/include/footer.tmpl</destination>
+    </file>
+    <file>
+      <src>plugins/Notifier/tmpl/include/header.tmpl</src>
+      <destination>plugins/Notifier/tmpl/include/header.tmpl</destination>
+    </file>
+    <file>
       <src>plugins/Notifier/tmpl/include/subscription_table.tmpl</src>
       <destination>plugins/Notifier/tmpl/include/subscription_table.tmpl</destination>
     </file>
@@ -171,8 +175,8 @@
       <destination>plugins/Notifier/tmpl/settings/blog.tmpl</destination>
     </file>
     <file>
-      <src>plugins/Notifier/tmpl/settings/email.tmpl</src>
-      <destination>plugins/Notifier/tmpl/settings/email.tmpl</destination>
+      <src>plugins/Notifier/tmpl/settings/system.tmpl</src>
+      <destination>plugins/Notifier/tmpl/settings/system.tmpl</destination>
     </file>
   </files>
   <uninstall>

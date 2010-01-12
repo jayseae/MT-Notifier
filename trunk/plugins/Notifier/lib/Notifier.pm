@@ -1,6 +1,6 @@
 # ===========================================================================
 # A Movable Type plugin with subscription options for your installation
-# Copyright 2003-2009 Everitz Consulting <everitz.com>.
+# Copyright 2003-2010 Everitz Consulting <everitz.com>.
 #
 # This program may not be redistributed without permission.
 # ===========================================================================
@@ -11,9 +11,7 @@ use strict;
 
 use MT;
 
-# version
-use vars qw($VERSION);
-$VERSION = '4.2.3';
+sub init_app { 1; }
 
 # subscription functions
 
@@ -23,7 +21,7 @@ sub create_subscription {
     require Notifier::Data;
     require Notifier::Util;
     my $app = MT->app;
-    my $plugin = MT::Plugin::Notifier->instance;
+    my $plugin = MT->component('Notifier');
     my ($email, $record, $blog_id, $category_id, $entry_id, $bulk) = @_;
     my $blog;
     if (my $fixed = MT::Util::is_valid_email($email)) {
@@ -96,7 +94,7 @@ sub data_confirmation {
     require Notifier::Data;
     require Notifier::Util;
     my ($category, $entry, $type, $author);
-    my $plugin = MT::Plugin::Notifier->instance;
+    my $plugin = MT->component('Notifier');
     if ($data->entry_id) {
         require MT::Entry;
         $entry = MT::Entry->load($data->entry_id);
@@ -205,7 +203,7 @@ sub notify_users {
     require Notifier::History;
     require Notifier::Util;
     my ($entry, $entry_id, $comment, $comment_id, $tmpl, $type);
-    my $plugin = MT::Plugin::Notifier->instance;
+    my $plugin = MT->component('Notifier');
     if ((ref $obj) && $obj->isa('MT::Comment')) {
         require MT::Entry;
         $entry = MT::Entry->load($obj->entry_id);
@@ -291,30 +289,47 @@ sub notify_users {
         'From' => $sender_address,
         'Subject' => Notifier::Util::load_email('notification-subject.tmpl', \%param)
     );
+    # check bypass flags
+    my $blog_bypass = $plugin->get_config_value('blog_bypass', 'blog:'.$blog->id);
+    my $system_bypass = $plugin->get_config_value('system_bypass');
+    # check queued flags
     my $blog_queued = $plugin->get_config_value('blog_queued', 'blog:'.$blog->id);
     my $system_queued = $plugin->get_config_value('system_queued');
     my %sent;
     foreach my $sub (@subs) {
-      next if ($comment && $comment->email eq $sub->email);
-      next if ($sent{$sub});
-      my %terms;
-      $terms{'data_id'} = $sub->id;
-      $terms{'comment_id'} = $comment_id;
-      $terms{'entry_id'} = $entry_id;
-      my $history = Notifier::History->load(\%terms);
-      next if ($history);
-      $head{'To'} = $sub->email;
-      $param{'record_cipher'} = $sub->cipher;
-      my $body = Notifier::Util::load_email($tmpl, \%param);
-      if ($system_queued && $blog_queued) {
-          require Notifier::Queue;
-          Notifier::Queue->create(\%head, $body);
-      } else {
-          require MT::Mail;
-          MT::Mail->send(\%head, $body);
-      }
-      Notifier::History->create(\%terms);
-      $sent{$sub} = 1;
+        next if ($comment && $comment->email eq $sub->email);
+        next if ($sent{$sub});
+        my %terms;
+        $terms{'data_id'} = $sub->id;
+        $terms{'comment_id'} = $comment_id;
+        $terms{'entry_id'} = $entry_id;
+        my $history = Notifier::History->load(\%terms);
+        if ($history) {
+            $sent{$sub} = 1;
+            next;
+        }
+        if ($system_bypass && $blog_bypass) {
+            if ($obj->isa('MT::Entry')) {
+                if ($sub->created_on ge $entry->authored_on) {
+                    # create history for entries written before user subscribed
+                    Notifier::History->create(\%terms);
+                    $sent{$sub} = 1;
+                    next;
+                }
+            }
+        }
+        $head{'To'} = $sub->email;
+        $param{'record_cipher'} = $sub->cipher;
+        my $body = Notifier::Util::load_email($tmpl, \%param);
+        if ($system_queued && $blog_queued) {
+            require Notifier::Queue;
+            Notifier::Queue->create(\%head, $body);
+        } else {
+            require MT::Mail;
+            MT::Mail->send(\%head, $body);
+        }
+        Notifier::History->create(\%terms);
+        $sent{$sub} = 1;
     }
 }
 
