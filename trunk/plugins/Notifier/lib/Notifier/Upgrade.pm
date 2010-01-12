@@ -18,111 +18,111 @@ package Notifier::Upgrade;
 use strict;
 
 sub set_blog_id {
-  require Notifier::Data;
-  my $iter = Notifier::Data->load_iter();
-  while (my $obj = $iter->()) {
-    next if ($obj->blog_id);
-    if (my $entry_id = $obj->entry_id()) {
-      require MT::Entry;
-      my $entry = MT::Entry->get_by_key({
-        id => $entry_id
-      });
-      if ($entry) {
-        $obj->blog_id($entry->blog_id);
-      }
-    }
-    if (my $category_id = $obj->category_id()) {
-      require MT::Category;
-      my $category = MT::Category->get_by_key({
-        id => $category_id
-      });
-      if ($category) {
-        $obj->blog_id($category->blog_id);
-      }
-    }
+    require Notifier::Data;
     require Notifier::Util;
-    $obj->cipher(Notifier::Util::produce_cipher(
-      'a'.$obj->email.'b'.$obj->blog_id.'c'.$obj->category_id.'d'.$obj->entry_id
-    ));
-    $obj->save;
-  }
+    my $iter = Notifier::Data->load_iter();
+    while (my $obj = $iter->()) {
+        next if ($obj->blog_id);
+        if (my $entry_id = $obj->entry_id()) {
+            require MT::Entry;
+            my $entry = MT::Entry->get_by_key({
+                id => $entry_id
+            });
+            if ($entry) {
+                $obj->blog_id($entry->blog_id);
+            }
+        }
+        if (my $category_id = $obj->category_id()) {
+            require MT::Category;
+            my $category = MT::Category->get_by_key({
+                id => $category_id
+            });
+            if ($category) {
+                $obj->blog_id($category->blog_id);
+            }
+        }
+        $obj->cipher(Notifier::Util::produce_cipher(
+            'a'.$obj->email.'b'.$obj->blog_id.'c'.$obj->category_id.'d'.$obj->entry_id
+        ));
+        $obj->save;
+    }
 }
 
 sub set_blog_status {
-  require MT::Blog;
-  my $iter = MT::Blog->load_iter();
-  while (my $obj = $iter->()) {
-    my $blog_id = $obj->id;
-    next unless ($blog_id);
-    my $plugin = MT::Plugin::Notifier->instance;
-    my $blog_status = $plugin->get_config_value('blog_disabled', 'blog:'.$blog_id);
-    $plugin->set_config_value('blog_status', ($blog_status == 1) ? 0 : 1, 'blog:'.$blog_id);
-  }
+    require MT::Blog;
+    my $iter = MT::Blog->load_iter();
+    while (my $obj = $iter->()) {
+        my $blog_id = $obj->id;
+        next unless ($blog_id);
+        my $plugin = MT::Plugin::Notifier->instance;
+        my $blog_status = $plugin->get_config_value('blog_disabled', 'blog:'.$blog_id);
+        $plugin->set_config_value('blog_status', ($blog_status == 1) ? 0 : 1, 'blog:'.$blog_id);
+    }
 }
 
 sub set_history {
-  my $set;
-  require MT::Entry;
-  my $iter = MT::Entry->load_iter();
-  while (my $entry = $iter->()) {
-    my $pinged = $entry->pinged_urls;
-    next unless ($pinged && $pinged =~ m/everitz\.com\/sol\/(mt-)?notifier\/sent(_)?service\.html/);
-    my $blog_id = $entry->blog_id;
-    my $entry_id = $entry->id;
-    require Notifier::Data;
-    my @subs =
-      map { $_ }
-      Notifier::Data->load({
-        blog_id => $blog_id,
-        record => Notifier::Data::SUBSCRIBE(),
-        status => Notifier::Data::RUNNING(),
-      });
+    require MT::Entry;
     require MT::Placement;
-    my @places = MT::Placement->load({
-      entry_id => $entry_id
-    });
-    foreach my $place (@places) {
-      my @category_subs = Notifier::Data->load({
-        category_id => $place->category_id,
-        record => Notifier::Data::SUBSCRIBE(),
-        status => Notifier::Data::RUNNING(),
-      });
-      foreach (@category_subs) {
-        push @subs, $_;
-      }
+    require Notifier::Data;
+    require Notifier::History;
+    my $set;
+    my $iter = MT::Entry->load_iter();
+    while (my $entry = $iter->()) {
+        my $pinged = $entry->pinged_urls;
+        next unless ($pinged && $pinged =~ m/everitz\.com\/sol\/(mt-)?notifier\/sent(_)?service\.html/);
+        my $blog_id = $entry->blog_id;
+        my $entry_id = $entry->id;
+        my @subs =
+            map { $_ }
+            Notifier::Data->load({
+                blog_id => $blog_id,
+                record => Notifier::Data::SUBSCRIBE(),
+                status => Notifier::Data::RUNNING(),
+            });
+        my @places = MT::Placement->load({
+            entry_id => $entry_id
+        });
+        foreach my $place (@places) {
+            my @category_subs = Notifier::Data->load({
+                category_id => $place->category_id,
+                record => Notifier::Data::SUBSCRIBE(),
+                status => Notifier::Data::RUNNING(),
+            });
+            foreach (@category_subs) {
+                push @subs, $_;
+            }
+        }
+        my $users = scalar @subs;
+        next unless ($users);
+        foreach my $sub (@subs) {
+            my $data = Notifier::Data->load({
+                email => $sub->email,
+                record => Notifier::Data::SUBSCRIBE(),
+            });
+            next unless ($data);
+            next if ($data->entry_id);
+            my %terms;
+            $terms{'comment_id'} = 0;
+            my $history = Notifier::History->load({
+                data_id => $data->id,
+                entry_id => $entry_id
+            });
+            next if ($history);
+            $terms{'data_id'} = $data->id;
+            $terms{'entry_id'} = $entry->id;
+            Notifier::History->create(\%terms);
+        }
     }
-    my $users = scalar @subs;
-    next unless ($users);
-    foreach my $sub (@subs) {
-      my $data = Notifier::Data->load({
-        email => $sub->email,
-        record => Notifier::Data::SUBSCRIBE(),
-      });
-      next unless ($data);
-      next if ($data->entry_id);
-      require Notifier::History;
-      my %terms;
-      $terms{'comment_id'} = 0;
-      my $history = Notifier::History->load({
-        data_id => $data->id,
-        entry_id => $entry_id
-      });
-      next if ($history);
-      $terms{'data_id'} = $data->id;
-      $terms{'entry_id'} = $entry->id;
-      Notifier::History->create(\%terms);
-    }
-  }
 }
 
 sub set_ip {
-  require Notifier::Data;
-  my $iter = Notifier::Data->load_iter();
-  while (my $obj = $iter->()) {
-    next if ($obj->ip);
-    $obj->ip('0.0.0.0');
-    $obj->save;
-  }
+    require Notifier::Data;
+    my $iter = Notifier::Data->load_iter();
+    while (my $obj = $iter->()) {
+        next if ($obj->ip);
+        $obj->ip('0.0.0.0');
+        $obj->save;
+    }
 }
 
 1;

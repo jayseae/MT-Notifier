@@ -220,7 +220,7 @@ use vars qw( %Lexicon );
       'There are [_1] subscriptions and [_2] subscription blocks in this list.' => 'There are [_1] subscriptions and [_2] subscription blocks in this list.',
 
       ## tmpl/email/confirmation.tmpl
-      'requires you to use a double-opt system for making any changes to your subscription information' => 'requires you to use a double-opt system for making any changes to your subscription information',
+      'requires you to use a double-opt system for making any changes to your subscription information.' => 'requires you to use a double-opt system for making any changes to your subscription information.',
       'Because you, or someone using your email address, recently submitted a request at' => 'Because you, or someone using your email address, recently submitted a request at',
       ', you are being sent this confirmation to verify that the request is genuine.' => ', you are being sent this confirmation to verify that the request is genuine.',
       'The request is to' => 'The request is to',

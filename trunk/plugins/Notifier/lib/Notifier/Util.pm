@@ -25,6 +25,7 @@ use MT;
 
 sub load_blog {
     my ($obj) = @_;
+    require MT::Blog;
     my $blog_id;
     if ($obj->entry_id) {
         require MT::Entry;
@@ -37,7 +38,6 @@ sub load_blog {
     } else {
         $blog_id = $obj->blog_id;
     }
-    require MT::Blog;
     my $blog = MT::Blog->load($blog_id) or return;
     $blog;
 }
@@ -50,6 +50,8 @@ sub load_email {
 
 sub load_sender_address {
     my ($obj, $author) = @_;
+    require MT::Blog;
+    require MT::Util;
     my $app = MT->app;
     my $plugin = MT::Plugin::Notifier->instance;
     my $entry;
@@ -59,7 +61,6 @@ sub load_sender_address {
     } else {
         $entry = $obj;
     }
-    require MT::Blog;
     my $blog = MT::Blog->load($entry->blog_id);
     unless ($blog) {
         $app->log($plugin->translate('Specified blog unavailable - please check your data!'));
@@ -74,7 +75,6 @@ sub load_sender_address {
     } elsif ($blog_address_type == 3) {
         $sender_address = $plugin->get_config_value('blog_address', 'blog:'.$blog->id);
     }
-    require MT::Util;
     if (my $fixed = MT::Util::is_valid_email($sender_address)) {
         return $fixed;
     } else {
@@ -99,11 +99,11 @@ sub produce_cipher {
 
 sub script_name {
     my ($blog_id) = shift;
-    my $app = MT->app;
+    require MT::Blog;
     require MT::ConfigMgr;
+    my $app = MT->app;
     my $mgr = MT::ConfigMgr->instance;
     my $plugin = MT::Plugin::Notifier->instance;
-    require MT::Blog;
     my $blog = MT::Blog->load($blog_id);
     unless ($blog) {
         $app->log($plugin->translate('Specified blog unavailable - please check your data!'));
