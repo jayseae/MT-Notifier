@@ -13,23 +13,24 @@ use MT;
 
 # version
 use vars qw($VERSION);
-$VERSION = '4.2.2';
+$VERSION = '4.2.3';
 
 # subscription functions
 
 sub create_subscription {
+    require MT::Blog;
+    require MT::Util;
+    require Notifier::Data;
+    require Notifier::Util;
     my $app = MT->app;
     my $plugin = MT::Plugin::Notifier->instance;
     my ($email, $record, $blog_id, $category_id, $entry_id, $bulk) = @_;
     my $blog;
-    require MT::Blog;
-    require MT::Util;
     if (my $fixed = MT::Util::is_valid_email($email)) {
         $email = $fixed;
     } else {
         return 1;
     }
-    require Notifier::Data;
     return unless ($record eq Notifier::Data::OPT_OUT() || $record eq Notifier::Data::SUBSCRIBE());
     if ($entry_id) {
         require MT::Entry;
@@ -69,7 +70,6 @@ sub create_subscription {
         $data->entry_id($entry_id);
         $data->email($email);
         $data->record($record);
-      	require Notifier::Util;
         $data->cipher(Notifier::Util::produce_cipher(
             'a'.$email.'b'.$blog_id.'c'.$category_id.'d'.$entry_id
         ));
@@ -91,6 +91,10 @@ sub create_subscription {
 
 sub data_confirmation {
     my ($data) = @_;
+    require MT::Mail;
+    require MT::Util;
+    require Notifier::Data;
+    require Notifier::Util;
     my ($category, $entry, $type, $author);
     my $plugin = MT::Plugin::Notifier->instance;
     if ($data->entry_id) {
@@ -100,15 +104,13 @@ sub data_confirmation {
         $type = $plugin->translate('Entry');
         $author = ($entry->author) ? $entry->author : '';
     } elsif ($data->category_id) {
-      	require MT::Category;
+        require MT::Category;
         $category = MT::Category->load($data->category_id);
         return unless ((ref $category) && $category->isa('MT::Category'));
         $type = $plugin->translate('Category');
     } else {
         $type = $plugin->translate('Blog');
     }
-    require Notifier::Data;
-    require Notifier::Util;
     my $sender_address = Notifier::Util::load_sender_address($data, $author);
     return unless ($sender_address);
     my $blog = Notifier::Util::load_blog($data);
@@ -118,9 +120,8 @@ sub data_confirmation {
         $plugin->translate('opt-out of');
     my %head = (
         'From' => $sender_address,
-        'To' => $data->email
+        'To' => $data->email,
     );
-    require MT::Util;
     my %param = (
         'blog_id' => $blog->id,
         'blog_id_'.$blog->id => 1,
@@ -132,7 +133,7 @@ sub data_confirmation {
         'notifier_plugin_link' => $plugin->plugin_link,
         'notifier_name' => $plugin->name,
         'notifier_link' => Notifier::Util::script_name($blog->id),
-        'notifier_version' => Notifier::Util::version_number(),
+        'notifier_version' => $plugin->version,
         'record_cipher' => $data->cipher,
         'record_text' => $record_text,
     );
@@ -151,7 +152,6 @@ sub data_confirmation {
     }
     $head{'Subject'} = Notifier::Util::load_email('confirmation-subject.tmpl', \%param);
     my $body = Notifier::Util::load_email('confirmation.tmpl', \%param);
-    require MT::Mail;
     my $mail = MT::Mail->send(\%head, $body);
     unless ($mail) {
         my $app = MT->app;
@@ -159,30 +159,30 @@ sub data_confirmation {
             'Error sending confirmation message to [_1], error [_2]',
             $head{'To'},
             MT::Mail->errstr
-            ));
+        ));
     }
 }
 
 sub entry_notifications {
     my $entry_id = shift;
+    require MT::Category;
     require MT::Entry;
+    require MT::Placement;
+    require Notifier::Data;
     my $entry = MT::Entry->load($entry_id);
     return unless ((ref $entry) && $entry->isa('MT::Entry'));
     my (%terms);
-    require Notifier::Data;
     $terms{'blog_id'} = $entry->blog_id;
     $terms{'category_id'} = 0;
     $terms{'entry_id'} = 0;
     $terms{'record'} = Notifier::Data::SUBSCRIBE();
     $terms{'status'} = Notifier::Data::RUNNING();
     my @work_subs = Notifier::Data->load(\%terms);
-    require MT::Placement;
     my @places = MT::Placement->load({
         blog_id => $entry->blog_id,
         entry_id => $entry->id,
     });
     foreach my $place (@places) {
-        require MT::Category;
         my $cat = MT::Category->load($place->category_id);
         next unless ((ref $cat) && $cat->isa('MT::Category'));
         $terms{'category_id'} = $cat->id;
@@ -197,6 +197,13 @@ sub entry_notifications {
 
 sub notify_users {
     my ($obj, $work_subs) = @_;
+    require MT::Blog;
+    require MT::Category;
+    require MT::Placement;
+    require MT::Util;
+    require Notifier::Data;
+    require Notifier::History;
+    require Notifier::Util;
     my ($entry, $entry_id, $comment, $comment_id, $tmpl, $type);
     my $plugin = MT::Plugin::Notifier->instance;
     if ((ref $obj) && $obj->isa('MT::Comment')) {
@@ -214,8 +221,6 @@ sub notify_users {
         $comment_id = 0;
         $type = $plugin->translate('Entry');
     }
-    require MT::Blog;
-    require Notifier::Data;
     my $blog = MT::Blog->load($obj->blog_id);
     return unless ((ref $blog) && $blog->isa('MT::Blog'));
     my (%terms);
@@ -225,13 +230,11 @@ sub notify_users {
     $terms{'record'} = Notifier::Data::OPT_OUT();
     $terms{'status'} = Notifier::Data::RUNNING();
     my @work_opts = Notifier::Data->load(\%terms);
-    require MT::Placement;
     my @places = MT::Placement->load({
         blog_id => $entry->blog_id,
         entry_id => $entry->id,
     });
     foreach my $place (@places) {
-        require MT::Category;
         my $cat = MT::Category->load($place->category_id);
         next unless ((ref $cat) && $cat->isa('MT::Category'));
         $terms{'category_id'} = $cat->id;
@@ -243,10 +246,8 @@ sub notify_users {
     my %opts = map { $_->email => 1 } @work_opts;
     my @subs = grep { !exists $opts{$_->email} } @$work_subs;
     return unless (scalar @subs);
-    require Notifier::Util;
     my $sender_address = Notifier::Util::load_sender_address($obj, $entry->author);
     return unless ($sender_address);
-    require MT::Util;
     my %param = (
         'blog_id' => $blog->id,
         'blog_id_'.$blog->id => 1,
@@ -271,7 +272,7 @@ sub notify_users {
         'notifier_plugin_link' => $plugin->plugin_link,
         'notifier_name' => $plugin->name,
         'notifier_link' => Notifier::Util::script_name($blog->id),
-        'notifier_version' => Notifier::Util::version_number(),
+        'notifier_version' => $plugin->version,
     );
     if ($comment) {
         $param{'comment_author'} = $comment->author;
@@ -297,7 +298,6 @@ sub notify_users {
       next if ($comment && $comment->email eq $sub->email);
       next if ($sent{$sub});
       my %terms;
-      require Notifier::History;
       $terms{'data_id'} = $sub->id;
       $terms{'comment_id'} = $comment_id;
       $terms{'entry_id'} = $entry_id;

@@ -13,29 +13,29 @@ use MT;
 # callbacks
 
 sub check_comment {
-  my ($err, $obj) = @_;
-  my $id = 'blog:'.$obj->blog_id;
-  my $notify = 1;
-  $notify = 0 unless ($obj->visible);
-  my $plugin = MT::Plugin::Notifier->instance;
-  $notify = 0 if ($plugin->get_config_value('blog_disabled', $id));
-  require MT::Request;
-  my $r = MT::Request->instance;
-  $r->cache('mtn_notify_comment_'.$id, $notify);
+    my ($err, $obj) = @_;
+    require MT::Request;
+    my $id = 'blog:'.$obj->blog_id;
+    my $notify = 1;
+    $notify = 0 unless ($obj->visible);
+    my $plugin = MT::Plugin::Notifier->instance;
+    $notify = 0 if ($plugin->get_config_value('blog_disabled', $id));
+    my $r = MT::Request->instance;
+    $r->cache('mtn_notify_comment_'.$id, $notify);
 }
 
 sub check_entry {
-  my ($err, $obj) = @_;
-  my $plugin = MT::Plugin::Notifier->instance;
-  return if ($plugin->get_config_value('blog_disabled', 'blog:'.$obj->blog_id));
-  require MT::Entry;
-  if ($obj->status == MT::Entry::RELEASE()) {
-      if (my $notify = $obj->id) {
-          require MT::Request;
-          my $r = MT::Request->instance;
-          $r->cache('mtn_notify_entry', $notify);
-      }
-  }
+    my ($err, $obj) = @_;
+    require MT::Entry;
+    my $plugin = MT::Plugin::Notifier->instance;
+    return if ($plugin->get_config_value('blog_disabled', 'blog:'.$obj->blog_id));
+    if ($obj->status == MT::Entry::RELEASE()) {
+          if (my $notify = $obj->id) {
+                require MT::Request;
+                my $r = MT::Request->instance;
+                $r->cache('mtn_notify_entry', $notify);
+          }
+    }
 }
 
 sub notify_comment {
@@ -78,10 +78,10 @@ sub notify_comment {
 sub notify_entry {
     my ($err, $obj) = @_;
     require MT::Request;
+    require Notifier;
     my $r = MT::Request->instance;
     my $notify = $r->cache('mtn_notify_entry');
     return unless ($notify);
-    require Notifier;
     Notifier::entry_notifications($notify);
 }
 
