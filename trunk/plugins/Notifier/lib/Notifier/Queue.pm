@@ -1,6 +1,6 @@
 # ===========================================================================
 # A Movable Type plugin with subscription options for your installation
-# Copyright 2003-2009 Everitz Consulting <everitz.com>.
+# Copyright 2003-2010 Everitz Consulting <everitz.com>.
 #
 # This program is free software:  You may redistribute it and/or modify it
 # it under the terms of the Artistic License version 2 as published by the
@@ -29,17 +29,18 @@ __PACKAGE__->install_properties({
         'body' => 'text',
     },
     audit => 1,
+    class_type => 'subscription.queue',
     datasource => 'notifier_queue',
     primary_key => 'id',
 });
 
 sub class_label {
-    my $plugin = MT::Plugin::Notifier->instance;
+    my $plugin = MT->component('Notifier');
     $plugin->translate('Subscription Queue');
 }
 
 sub class_label_plural {
-    my $plugin = MT::Plugin::Notifier->instance;
+    my $plugin = MT->component('Notifier');
     $plugin->translate('Subscription Queue Records');
 }
 
@@ -55,14 +56,14 @@ sub create {
 
 sub send {
     my ($app, $limit) = @_;
-    my $plugin = MT::Plugin::Notifier->instance;
+    my $plugin = MT->component('Notifier');
     my (%terms, %args);
     $args{'limit'} = $limit;
     $args{'direction'} = 'ascend';
     $args{'sort'} = 'id';
     require Notifier::Queue;
     my $iter = Notifier::Queue->load_iter(\%terms, \%args);
-    my $count = 0;
+    my %sent;
     while (my $q = $iter->()) {
         my %head = (
             'From' => $q->head_from,
@@ -71,13 +72,19 @@ sub send {
         );
         require MT::Mail;
         MT::Mail->send(\%head, $q->body);
-        $q->remove;
-        $count++;
+        $sent{$q->head_to} = $q;
     }
-    my $s = ($count == 1) ? 'Record' : 'Records';
-    $app->log($plugin->translate(
-        "[_1]: Sent [_2] Subscription Queue $s.", $plugin->name, $count)
-    );
+    my $count = scalar keys %sent;
+    if ($count) {
+        my $s = ($count == 1) ? 'Record' : 'Records';
+        foreach my $sub (keys (%sent)) {
+            my $q = $sent{$sub};
+            $q->remove;
+        }
+        $app->log($plugin->translate(
+            "[_1]: Sent [_2] Subscription Queue $s.", $plugin->name, $count)
+        );
+    }
 }
 
 1;

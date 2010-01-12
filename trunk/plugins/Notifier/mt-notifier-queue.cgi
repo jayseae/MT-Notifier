@@ -2,7 +2,7 @@
 
 # ===========================================================================
 # A Movable Type plugin with subscription options for your installation
-# Copyright 2003-2009 Everitz Consulting <everitz.com>.
+# Copyright 2003-2010 Everitz Consulting <everitz.com>.
 #
 # This program is free software:  You may redistribute it and/or modify it
 # it under the terms of the Artistic License version 2 as published by the
@@ -27,13 +27,13 @@ use Notifier::Queue;
 my $help_message = <<HELP_TEXT;
 mt-notifier-queue.cgi Usage:
 
-mt-notifier-queue.cgi [-limit=#]
+mt-notifier-queue.cgi [--limit=#]
 HELP_TEXT
 
 my $help = 0;
 my $limit;
 
-GetOptions('help' => \$help, 'limit' => \$limit);
+GetOptions('help' => \$help, 'limit=i' => \$limit);
 
 my $mt = MT->new()
     or die MT->errstr;

@@ -26,6 +26,16 @@
             </p>
         </mtapp:setting>
         <mtapp:setting
+            id="mtn_bypass"
+            label="<__trans phrase="Bypass">"
+            hint=""
+            show_hint="0">
+            <p>
+                <input type="radio" name="blog_bypass" id="blog_bypass_0" value="0" <mt:if name="blog_bypass_0">checked="checked"</mt:if> /> <__trans phrase="Send Entry Notifications Prior to Subscription Date"><br />
+                <input type="radio" name="blog_bypass" id="blog_bypass_1" value="1" <mt:if name="blog_bypass_1">checked="checked"</mt:if> /> <__trans phrase="Skip Entry Notifications Prior to Subscription Date (Default)">
+            </p>
+        </mtapp:setting>
+        <mtapp:setting
             id="mtn_confirm"
             label="<__trans phrase="Confirmation">"
             hint=""
@@ -75,9 +85,9 @@
             hint=""
             show_hint="0">
             <p>
-                <a href="<$mt:var name="script_url"$>?__mode=widget_sub_blog&blog_id=<$mt:var name="blog_id"$>"><__trans phrase="Click here to install the [_1] Blog Subscription Widget" params="MT-Notifier"></a><br />
-                <a href="<$mt:var name="script_url"$>?__mode=widget_sub_category&blog_id=<$mt:var name="blog_id"$>"><__trans phrase="Click here to install the [_1] Category Subscription Widget" params="MT-Notifier"></a><br />
-                <a href="<$mt:var name="script_url"$>?__mode=widget_sub_entry&blog_id=<$mt:var name="blog_id"$>"><__trans phrase="Click here to install the [_1] Entry Subscription Widget" params="MT-Notifier"></a>
+                <a href="<$mt:var name="script_url"$>?__mode=sub_widget_blog&blog_id=<$mt:var name="blog_id"$>"><__trans phrase="Click here to install the [_1] Blog Subscription Widget" params="MT-Notifier"></a><br />
+                <a href="<$mt:var name="script_url"$>?__mode=sub_widget_category&blog_id=<$mt:var name="blog_id"$>"><__trans phrase="Click here to install the [_1] Category Subscription Widget" params="MT-Notifier"></a><br />
+                <a href="<$mt:var name="script_url"$>?__mode=sub_widget_entry&blog_id=<$mt:var name="blog_id"$>"><__trans phrase="Click here to install the [_1] Entry Subscription Widget" params="MT-Notifier"></a>
             </p>
         </mtapp:setting>
     </div>

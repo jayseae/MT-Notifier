@@ -15,6 +15,16 @@
     </mtapp:setting>
     <mtapp:setting
         id="mtn_confirm"
+        label="<__trans phrase="Bypass">"
+        hint=""
+        show_hint="0">
+        <p>
+            <input type="radio" name="system_bypass" id="system_bypass_0" value="0" <mt:if name="system_bypass_0">checked="checked"</mt:if> /> <__trans phrase="Send Entry Notifications Prior to Subscription Date"><br />
+            <input type="radio" name="system_bypass" id="system_bypass_1" value="1" <mt:if name="system_bypass_1">checked="checked"</mt:if> /> <__trans phrase="Skip Entry Notifications Prior to Subscription Date (Default)">
+        </p>
+    </mtapp:setting>
+    <mtapp:setting
+        id="mtn_bypass"
         label="<__trans phrase="Confirmation">"
         hint=""
         show_hint="0">

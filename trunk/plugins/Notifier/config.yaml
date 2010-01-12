@@ -1,0 +1,182 @@
+# ===========================================================================
+# Copyright Everitz Consulting.  Not for redistribution.
+# ===========================================================================
+name: MT-Notifier
+id: Notifier
+key: notifier
+author_link: http://everitz.com/
+author_name: Everitz Consulting
+description: <__trans phrase="Subscription options for your Movable Type installation.">
+l10n_class: Notifier::L10N
+icon: images/Notifier.gif
+schema_version: 62
+version: 4.3
+plugin_link: http://everitz.com/mt/notifier/index.php
+doc_link: http://everitz.com/mt/notifier/install.php
+settings:
+    blog_address:
+        Default: ''
+        Scope: blog
+    blog_address_type:
+        Default: 1
+        Scope: blog
+    blog_all_comments:
+        Default: 0
+        Scope: blog
+    blog_bypass:
+        Default: 1
+        Scope: blog
+    blog_confirm:
+        Default: 1
+        Scope: blog
+    blog_disabled:
+        Default: 0
+        Scope: blog
+    blog_status:
+        Default: 1
+        Scope: blog
+    blog_queued:
+        Default: 0
+        Scope: blog
+    blog_url_base:
+        Default: ''
+        Scope: blog
+    blog_url_type:
+        Default: 1
+        Scope: blog
+    system_address:
+        Default: ''
+        Scope: system
+    system_bypass:
+        Default: 1
+        Scope: system
+    system_confirm:
+        Default: 1
+        Scope: system
+    system_queued:
+        Default: 0
+        Scope: system
+    system_url_base:
+        Default: ''
+        Scope: system
+    system_url_type:
+        Default: 2
+        Scope: system
+system_config_template: settings/system.tmpl
+blog_config_template: settings/blog.tmpl
+
+init_app: $Notifier::Notifier::init_app
+
+applications:
+    cms:
+        methods:
+            block_subs: $Notifier::Notifier::Plugin::block_subs
+            clear_subs: $Notifier::Notifier::Plugin::clear_subs
+            create_subs: $Notifier::Notifier::Plugin::create_subs
+            sub_widget_blog: $Notifier::Notifier::Plugin::sub_widget_blog
+            sub_widget_category: $Notifier::Notifier::Plugin::sub_widget_category
+            sub_widget_entry: $Notifier::Notifier::Plugin::sub_widget_entry
+    comments:
+        methods:
+            verify_subs: $Notifier::Notifier::Plugin::verify_subs
+callbacks:
+    MT::Comment::pre_save: $Notifier::Notifier::Plugin::check_comment
+    MT::Comment::post_save: $Notifier::Notifier::Plugin::notify_comment
+    MT::Entry::pre_save: $Notifier::Notifier::Plugin::check_entry
+    MT::Entry::post_save: $Notifier::Notifier::Plugin::notify_entry
+list_actions:
+    blog:
+        mtn_add_subscription:
+            label: <__trans phrase="Add Subscription(s)">
+            order: 1000
+            code: $Notifier::Notifier::Plugin::_ui_sub
+            dialog: 1
+        mtn_add_subscription_block:
+            label: <__trans phrase="Add Subscription Block(s)">
+            order: 1100
+            code: $Notifier::Notifier::Plugin::_ui_opt
+            dialog: 1
+        mtn_view_subscription_count:
+            label: <__trans phrase="View Subscription Count(s)">
+            order: 1200
+            code: $Notifier::Notifier::Plugin::notifier_count
+            dialog: 1
+        mtn_write_history_records:
+            label: <__trans phrase="Write History Records">
+            order: 1300
+            code: $Notifier::Notifier::Plugin::write_history
+            dialog: 1
+    category:
+        mtn_add_subscription:
+            label: <__trans phrase="Add Subscription(s)">
+            order: 1000
+            code: $Notifier::Notifier::Plugin::_ui_sub
+            dialog: 1
+        mtn_add_subscription_block:
+            label: <__trans phrase="Add Subscription Block(s)">
+            order: 1100
+            code: $Notifier::Notifier::Plugin::_ui_opt
+            dialog: 1
+        mtn_view_subscription_count:
+            label: <__trans phrase="View Subscription Count(s)">
+            order: 1200
+            code: $Notifier::Notifier::Plugin::notifier_count
+            dialog: 1
+    entry:
+        mtn_add_subscription:
+            label: <__trans phrase="Add Subscription(s)">
+            order: 1000
+            code: $Notifier::Notifier::Plugin::_ui_sub
+            dialog: 1
+        mtn_add_subscription_block:
+            label: <__trans phrase="Add Subscription Block(s)">
+            order: 1100
+            code: $Notifier::Notifier::Plugin::_ui_opt
+            dialog: 1
+        mtn_view_subscription_count:
+            label: <__trans phrase="View Subscription Count(s)">
+            order: 1200
+            code: $Notifier::Notifier::Plugin::notifier_count
+            dialog: 1
+    subscription:
+        mtn_block_subscription:
+            label: <__trans phrase="Block Subscription(s)">
+            order: 1000
+            code: $Notifier::Notifier::Plugin::block_subs
+        mtn_clear_subscription:
+            label: <__trans phrase="Clear Subscription Block(s)">
+            order: 1100
+            code: $Notifier::Notifier::Plugin::clear_subs
+        mtn_verify_subscription:
+            label: <__trans phrase="Verify Subscription(s)">
+            order: 1200
+            code: $Notifier::Notifier::Plugin::verify_subs
+object_types:
+    subscription: Notifier::Data
+    subscription.history: Notifier::History
+    subscription.queue: Notifier::Queue
+tags:
+    function:
+        NotifierCatID: $Notifier::Notifier::Plugin::notifier_category_id
+        NotifierCheck: $Notifier::Notifier::Plugin::notifier_check
+upgrade_functions:
+    set_blog_id:
+        version_limit: 3.5
+        updater:
+            label: Adding blog ids to MT-Notifier data...
+            code:  $Notifier::Notifier::Upgrade::set_blog_id
+    set_history:
+        version_limit: 3.5
+        updater:
+            label: Creating MT-Notifier history records...
+            code:  $Notifier::Notifier::Upgrade::set_history
+    set_ip:
+        version_limit: 3.6
+        updater:
+            label: Adding ip address to MT-Notifier data...
+            code:  $Notifier::Notifier::Upgrade::set_ip
+    set_blog_status:
+        version_limit: 4.1
+        updater:
+            label: Migrating MT-Notifier blog settings...
+            code:  $Notifier::Notifier::Upgrade::set_blog_status

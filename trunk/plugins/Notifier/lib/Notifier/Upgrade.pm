@@ -1,6 +1,6 @@
 # ===========================================================================
 # A Movable Type plugin with subscription options for your installation
-# Copyright 2003-2009 Everitz Consulting <everitz.com>.
+# Copyright 2003-2010 Everitz Consulting <everitz.com>.
 #
 # This program is free software:  You may redistribute it and/or modify it
 # it under the terms of the Artistic License version 2 as published by the
@@ -54,7 +54,7 @@ sub set_blog_status {
     while (my $obj = $iter->()) {
         my $blog_id = $obj->id;
         next unless ($blog_id);
-        my $plugin = MT::Plugin::Notifier->instance;
+        my $plugin = MT->component('Notifier');
         my $blog_status = $plugin->get_config_value('blog_disabled', 'blog:'.$blog_id);
         $plugin->set_config_value('blog_status', ($blog_status == 1) ? 0 : 1, 'blog:'.$blog_id);
     }
@@ -62,54 +62,31 @@ sub set_blog_status {
 
 sub set_history {
     require MT::Entry;
-    require MT::Placement;
     require Notifier::Data;
     require Notifier::History;
-    my $set;
-    my $iter = MT::Entry->load_iter();
-    while (my $entry = $iter->()) {
-        my $pinged = $entry->pinged_urls;
-        next unless ($pinged && $pinged =~ m/everitz\.com\/sol\/(mt-)?notifier\/sent(_)?service\.html/);
-        my $blog_id = $entry->blog_id;
-        my $entry_id = $entry->id;
-        my @subs =
-            map { $_ }
-            Notifier::Data->load({
-                blog_id => $blog_id,
-                record => Notifier::Data::SUBSCRIBE(),
-                status => Notifier::Data::RUNNING(),
-            });
-        my @places = MT::Placement->load({
-            entry_id => $entry_id
-        });
-        foreach my $place (@places) {
-            my @category_subs = Notifier::Data->load({
-                category_id => $place->category_id,
-                record => Notifier::Data::SUBSCRIBE(),
-                status => Notifier::Data::RUNNING(),
-            });
-            foreach (@category_subs) {
-                push @subs, $_;
-            }
-        }
-        my $users = scalar @subs;
-        next unless ($users);
-        foreach my $sub (@subs) {
-            my $data = Notifier::Data->load({
-                email => $sub->email,
-                record => Notifier::Data::SUBSCRIBE(),
-            });
-            next unless ($data);
-            next if ($data->entry_id);
+    # map entry id to hash key, blog id to hash value
+    my %entries = map { $_->id => $_->blog_id } MT::Entry->load({
+        # only load published entries
+        status => MT::Entry::RELEASE(),
+    });
+    my $iter = Notifier::Data->load_iter({
+        # only load subs that are verified
+        record => Notifier::Data::SUBSCRIBE(),
+        status => Notifier::Data::RUNNING(),
+    });
+    while (my $data = $iter->()) {
+        foreach my $entry_id (keys %entries) {
             my %terms;
-            $terms{'comment_id'} = 0;
-            my $history = Notifier::History->load({
-                data_id => $data->id,
-                entry_id => $entry_id
-            });
-            next if ($history);
+            # check entry_id, skip unless equal to sub blog_id
+            next unless ($entries{$entry_id} == $data->blog_id);
+            # load history terms: id, comment id (0), entry id
             $terms{'data_id'} = $data->id;
-            $terms{'entry_id'} = $entry->id;
+            $terms{'comment_id'} = 0;
+            $terms{'entry_id'} = $entry_id;
+            # check for existing history record, skip if none
+            my $history = Notifier::History->load(\%terms);
+            next if ($history);
+            # no history? create a new record
             Notifier::History->create(\%terms);
         }
     }

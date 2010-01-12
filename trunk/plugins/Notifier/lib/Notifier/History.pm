@@ -1,6 +1,6 @@
 # ===========================================================================
 # A Movable Type plugin with subscription options for your installation
-# Copyright 2003-2009 Everitz Consulting <everitz.com>.
+# Copyright 2003-2010 Everitz Consulting <everitz.com>.
 #
 # This program is free software:  You may redistribute it and/or modify it
 # it under the terms of the Artistic License version 2 as published by the
@@ -22,9 +22,14 @@ use MT::Object;
 __PACKAGE__->install_properties({
     column_defs => {
         'id' => 'integer not null auto_increment',
-        'data_id' => 'integer not null default 0',
-        'entry_id' => 'integer not null default 0',
-        'comment_id' => 'integer not null default 0',
+        'data_id' => 'integer not null',
+        'entry_id' => 'integer not null',
+        'comment_id' => 'integer not null',
+    },
+    defaults => {
+        data_id => 0,
+        entry_id => 0,
+        comment_id => 0,
     },
     indexes => {
         data_id => 1,
@@ -32,17 +37,18 @@ __PACKAGE__->install_properties({
         comment_id => 1,
     },
     audit => 1,
+    class_type => 'subscription.history',
     datasource => 'notifier_history',
     primary_key => 'id',
 });
 
 sub class_label {
-    my $plugin = MT::Plugin::Notifier->instance;
+    my $plugin = MT->component('Notifier');
     $plugin->translate('Subscription History');
 }
 
 sub class_label_plural {
-    my $plugin = MT::Plugin::Notifier->instance;
+    my $plugin = MT->component('Notifier');
     $plugin->translate('Subscription History Records');
 }
 

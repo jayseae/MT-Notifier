@@ -1,6 +1,6 @@
 # ===========================================================================
 # A Movable Type plugin with subscription options for your installation
-# Copyright 2003-2009 Everitz Consulting <everitz.com>.
+# Copyright 2003-2010 Everitz Consulting <everitz.com>.
 #
 # This program is free software:  You may redistribute it and/or modify it
 # it under the terms of the Artistic License version 2 as published by the
@@ -22,15 +22,23 @@ use MT::Object;
 __PACKAGE__->install_properties({
     column_defs => {
         'id' => 'integer not null auto_increment',
-        'blog_id' => 'integer not null default 0',
-        'category_id' => 'integer not null default 0',
-        'entry_id' => 'integer not null default 0',
+        'blog_id' => 'integer not null',
+        'category_id' => 'integer not null',
+        'entry_id' => 'integer not null',
         'email' => 'string(75) not null',
         'cipher' => 'string(75) not null',
-        'record' => 'smallint not null default 0',
-        'status' => 'smallint not null default 0',
-        'type' => 'smallint not null default 0',
+        'record' => 'smallint not null',
+        'status' => 'smallint not null',
+        'type' => 'smallint not null',
         'ip' => 'string(40) not null',
+    },
+    defaults => {
+        blog_id => 0,
+        category_id => 0,
+        entry_id => 0,
+        record => 0,
+        status => 0,
+        type => 0,
     },
     indexes => {
         blog_id => 1,
@@ -44,7 +52,9 @@ __PACKAGE__->install_properties({
         ip => 1,
     },
     audit => 1,
+    class_type => 'subscription',
     datasource => 'notifier_data',
+    meta => 1,
     primary_key => 'id',
 });
 
@@ -61,12 +71,12 @@ use constant TEMPORARY => 2;
 use constant BULK => 1;
 
 sub class_label {
-    my $plugin = MT::Plugin::Notifier->instance;
+    my $plugin = MT->component('Notifier');
     $plugin->translate('Subscription');
 }
 
 sub class_label_plural {
-    my $plugin = MT::Plugin::Notifier->instance;
+    my $plugin = MT->component('Notifier');
     $plugin->translate('Subscriptions');
 }
 

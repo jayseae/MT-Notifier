@@ -1,6 +1,6 @@
 # ===========================================================================
 # A Movable Type plugin with subscription options for your installation
-# Copyright 2003-2009 Everitz Consulting <everitz.com>.
+# Copyright 2003-2010 Everitz Consulting <everitz.com>.
 #
 # This program is free software:  You may redistribute it and/or modify it
 # it under the terms of the Artistic License version 2 as published by the
@@ -18,10 +18,22 @@ package Notifier::Util;
 use base qw(MT::App);
 use strict;
 
-use File::Spec;
 use MT;
 
 # shared functions
+
+sub check_permission {
+    my $app = MT->app;
+    return 0 unless ($app);
+    if ($app->permissions) {
+        return 1 if ($app->permissions->can_edit_notifications);
+        return 1 if ($app->permissions->can_administer_blog);
+    }
+    if ($app->user) {
+        return 1 if ($app->user->is_superuser());
+    }
+    return 0;
+}
 
 sub load_blog {
     my ($obj) = @_;
@@ -53,7 +65,7 @@ sub load_sender_address {
     require MT::Blog;
     require MT::Util;
     my $app = MT->app;
-    my $plugin = MT::Plugin::Notifier->instance;
+    my $plugin = MT->component('Notifier');
     my $entry;
     if (UNIVERSAL::isa($obj, 'MT::Comment')) {
         require MT::Entry;
@@ -71,7 +83,8 @@ sub load_sender_address {
     if ($blog_address_type == 1) {
         $sender_address = $plugin->get_config_value('system_address');
     } elsif ($blog_address_type == 2) {
-        $sender_address = $author->email if ($author);
+        # use author email if there is one, otherwise use system default (thanks ches@lexblog)
+        $sender_address = $author ? $author->email : $plugin->get_config_value('system_address');
     } elsif ($blog_address_type == 3) {
         $sender_address = $plugin->get_config_value('blog_address', 'blog:'.$blog->id);
     }
@@ -103,7 +116,7 @@ sub script_name {
     require MT::ConfigMgr;
     my $app = MT->app;
     my $mgr = MT::ConfigMgr->instance;
-    my $plugin = MT::Plugin::Notifier->instance;
+    my $plugin = MT->component('Notifier');
     my $blog = MT::Blog->load($blog_id);
     unless ($blog) {
         $app->log($plugin->translate('Specified blog unavailable - please check your data!'));
@@ -132,33 +145,7 @@ sub script_name {
     unless ($url_base =~ /^http/) {
         $app->log($plugin->translate('Invalid URL base value - please check your data ([_1])!', qq{$url_base}));
     }
-    return $url_base.$mgr->AdminScript;
-}
-
-# version routines
-
-sub schema_version {
-    require Notifier;
-    (my $ver = Notifier->VERSION) =~ s/^([\d]+[\.][\d]).*$/$1/;
-    # returns 1.2 (no letters)
-    $ver;
-}
-
-sub schema_version_old {
-    require Notifier;
-    (my $ver = Notifier->VERSION) =~ s/^([\d]+[\.]).*$/$1/;
-    (my $rel = Notifier->VERSION) =~ s/^[\d]+[\.](.*)$/$1/;
-    $rel =~ s/\.//g;
-    $ver = $ver.$rel;
-    # returns 1.23 (no letters)
-    $ver;
-}
-
-sub version_number {
-    require Notifier;
-    (my $ver = Notifier->VERSION) =~ s/^([\d]+[\.]?[\d]*).*$/$1/;
-    # returns 1.2 (no letters)
-    $ver;
+    return $url_base.$mgr->CommentScript;
 }
 
 1;
