@@ -366,7 +366,7 @@ sub build_sub_table {
     } elsif ($args{items}) {
         $iter = sub { shift @{ $args{items} } };
     }
-    return [] unless $iter;
+    return [] unless ($iter);
 
     my $limit = $args{limit};
     my $param = $args{param} || {};
@@ -420,7 +420,7 @@ sub build_sub_table {
         $row->{object} = $obj;
         push @data, $row;
     }
-    return [] unless @data;
+    return [] unless (@data);
 
     $param->{sub_table}[0] = {%$list_pref};
     $param->{object_loop} = $param->{sub_table}[0]{object_loop} = \@data;
@@ -444,14 +444,14 @@ sub list_subs {
     unless ($app->user->is_superuser) {
         if ($app->param('blog_id')) {
             return $app->errtrans('Permission denied.')
-                unless $perms && $perms->can_edit_notifications;
+                unless ($perms && $perms->can_edit_notifications());
         } else {
             require MT::Permission;
             my @blogs =
                 map { $_->blog_id }
                 grep { $_->can_edit_notifications }
                 MT::Permission->load( { author_id => $app->user->id } );
-            return $app->errtrans('Permission denied.') unless @blogs;
+            return $app->errtrans('Permission denied.') unless (@blogs);
         }
     }
 
@@ -541,7 +541,7 @@ sub list_subs {
     );
 
     delete $_->{object} foreach @$data;
-    delete $param{sub_table} unless @$data;
+    delete $param{sub_table} unless (@$data);
 
     ## We tried to load $limit + 1 entries above; if we actually got
     ## $limit + 1 back, we know we have another page of entries.
@@ -701,14 +701,13 @@ sub sub_widget_entry {
 # widget creation
 
 sub install_widget {
-    my $app = shift;
-    my $type = shift;
+    my ($app, $type) = @_;
     require MT::Template;
-    my $perms = $app->{perms};
+    my $perms = $app->permissions;
     my $plugin = MT->component('Notifier');
     return $app->error($plugin->translate('Insufficient permissions for installing templates for this weblog.'))
-        unless ($perms->can_edit_templates() || $perms->can_administer_blog() || $app->user->is_superuser());
-    my $blog_id = $app->param('blog_id');
+        unless ($app->user->is_superuser() || ($perms && ($perms->can_edit_templates() || $perms->can_administer_blog())));
+    my $blog_id = MT->app->param('blog_id');
     my $terms = {};
     $terms->{blog_id} = $blog_id;
     $terms->{name} = $plugin->translate("[_1] $type Widget", $plugin->name);
@@ -718,7 +717,7 @@ sub install_widget {
     } else {
         my $val = {};
         $val->{name} = $terms->{name};
-        $val->{text} = $app->translate_templatized(widget_template($type));
+        $val->{text} = $app->translate_templatized(widget_template($plugin, $type));
         my $at = 'widget';
         my $tmpl = new MT::Template;
         $tmpl->set_values($val);
@@ -730,8 +729,7 @@ sub install_widget {
 }
 
 sub widget_template {
-    my $type = shift;
-    my $plugin = MT->component('Notifier');
+    my ($plugin, $type) = @_;
     my $plugin_link = $plugin->plugin_link;
     my $plugin_name = $plugin->name;
     my $message = $plugin->translate("Subscribe to $type");
@@ -751,7 +749,7 @@ sub widget_template {
         <div class="widget-subscribe widget">
             <h3 class="widget-header">$message</h3>
             <div class="widget-content">
-                <form method="get" action="<mt:cgipath><mt:adminscript>">
+                <form method="get" action="<mt:cgipath><mt:commentscript>">
                     <input type="hidden" name="__mode" value="verify_subs" />
                     <input type="hidden" name="$field" value="$value" />
                     <input id="email" name="email" size="16" />
@@ -795,26 +793,25 @@ sub notify_comment {
     my ($err, $obj) = @_;
     my $id = 'blog:'.$obj->blog_id;
     if ($obj->is_not_junk) {
+        require MT::Request;
         require Notifier::Data;
         if (MT->app->param('subscribe')) {
             require Notifier;
             Notifier::create_subscription($obj->email, Notifier::Data::SUBSCRIBE(), 0, 0, $obj->entry_id)
         }
-        require MT::Request;
         my $r = MT::Request->instance;
         return unless ($r->cache('mtn_notify_comment_'.$id));
         my (%terms);
         $terms{'blog_id'} = $obj->blog_id;
-        $terms{'entry_id'} = $obj->entry_id;
         $terms{'record'} = Notifier::Data::SUBSCRIBE();
         $terms{'status'} = Notifier::Data::RUNNING();
-        my @work_subs = Notifier::Data->load(\%terms);
+        my @work_subs;
         my $plugin = MT->component('Notifier');
         if ($plugin->get_config_value('blog_all_comments', $id)) {
-            delete $terms{'entry_id'};
             my @blog_subs = Notifier::Data->load(\%terms);
             push @work_subs, @blog_subs;
-            foreach my $c ($obj->entry->categories) {
+            my $cats = $obj->entry->categories;
+            foreach my $c (@$cats) {
                 require MT::Category;
                 my $cat = MT::Category->load($c);
                 next unless ((ref $cat) && $cat->isa('MT::Category'));
@@ -822,6 +819,9 @@ sub notify_comment {
                 my @cat_subs = Notifier::Data->load(\%terms);
                 push @work_subs, @cat_subs;
             }
+        } else {
+            $terms{'entry_id'} = $obj->entry_id;
+            @work_subs = Notifier::Data->load(\%terms);
         }
         return unless (scalar @work_subs);
         Notifier::notify_users($obj, \@work_subs);

@@ -1,5 +1,8 @@
 # ===========================================================================
-# Copyright Everitz Consulting.  Not for redistribution.
+# A Movable Type plugin with subscription options for your installation
+# Copyright 2003-2010 Everitz Consulting <everitz.com>.
+#
+# This program may not be redistributed without permission.
 # ===========================================================================
 name: MT-Notifier
 id: Notifier
@@ -10,7 +13,7 @@ description: <__trans phrase="Subscription options for your Movable Type install
 l10n_class: Notifier::L10N
 icon: images/Notifier.gif
 schema_version: 62
-version: 4.3
+version: 4.31
 plugin_link: http://everitz.com/mt/notifier/index.php
 doc_link: http://everitz.com/mt/notifier/install.php
 settings:

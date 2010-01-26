@@ -140,7 +140,7 @@ sub data_confirmation {
         $param{'record_name'} = MT::Util::remove_html($entry->title);
     } elsif ($category) {
         my $link = $blog->archive_url;
-        $link .= '/' unless $link =~ m/\/$/;
+        $link .= '/' unless ($link =~ m/\/$/);
         $link .= MT::Util::archive_file_for ('',  $blog, $type, $category);
         $param{'record_link'} = $link;
         $param{'record_name'} = MT::Util::remove_html($category->label);
