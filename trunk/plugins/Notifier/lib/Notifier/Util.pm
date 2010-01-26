@@ -141,7 +141,7 @@ sub script_name {
     } elsif ($url_type == 4) {
         $url_base = $plugin->get_config_value('blog_url_base', 'blog:'.$blog->id);
     }
-    $url_base .= '/' unless $url_base =~ m!/$!;
+    $url_base .= '/' unless ($url_base =~ m!/$!);
     unless ($url_base =~ /^http/) {
         $app->log($plugin->translate('Invalid URL base value - please check your data ([_1])!', qq{$url_base}));
     }
