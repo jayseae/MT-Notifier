@@ -54,10 +54,60 @@ sub load_blog {
     $blog;
 }
 
-sub load_email {
-    my ($tmpl, $param) = @_;
-    my $out = MT->build_email("email/$tmpl", $param);
-    return($out);
+sub load_notifier_tmpl {
+    my $app = shift;
+    my ($args, $blog_id) = @_;
+    my $mt = MT->app;
+    my $plugin = MT->component('Notifier');
+    # move hashref parameters to new hash
+    my %terms;
+    foreach my $key ( keys %{$args} ) {
+        # set $blog_id, but don't add to terms
+        if ($key eq 'blog_id') {
+            $blog_id = $args->{$key};
+            next;
+        }
+        # don't add extra keys to terms - will break load_global_tmpl!
+        next if ($key eq 'category_id' || $key eq 'comment_id' || $key eq 'entry_id' || $key eq 'text');
+        $terms{$key} = $args->{$key};
+    }
+    my $tmpl;
+    # load the requested template from disk
+    my $file = $args->{identifier}.'.tmpl';
+    my $path = $plugin->envelope.'/tmpl';
+    $mt->{plugin_template_path} = $path;
+    $tmpl = $plugin->load_tmpl($file);
+    if ($tmpl) {
+        # if we have a template, set the various contexts
+        my $ctx = $tmpl->context;
+        if ($args->{blog_id}) {
+            require MT::Blog;
+            my $blog = MT::Blog->load({ id => $args->{blog_id} });
+            $ctx->stash('blog', $blog) if ($blog);
+        }
+        if ($args->{category_id}) {
+            require MT::Category;
+            my $category = MT::Category->load({ id => $args->{category_id} });
+            $ctx->stash('category', $category) if ($category);
+        }
+        if ($args->{comment_id}) {
+            require MT::Comment;
+            my $comment = MT::Comment->load({ id => $args->{comment_id} });
+            $ctx->stash('comment', $comment) if ($comment);
+        }
+        if ($args->{entry_id}) {
+            require MT::Entry;
+            my $entry = MT::Entry->load({ id => $args->{entry_id} });
+            $ctx->stash('entry', $entry) if ($entry);
+        }
+        $app->set_default_tmpl_params($tmpl, $blog_id);
+        return $tmpl;
+    } else {
+        # no template, log a message and return an error
+        my $message = $plugin->translate('Could not load the [_1] [_2] template!', $plugin->name, $plugin->translate($args->{text}));
+        MT->log({ blog_id => $args->{blog_id}, message => $message });
+        return $mt->error($message);
+    }
 }
 
 sub load_sender_address {
@@ -146,6 +196,26 @@ sub script_name {
         $app->log($plugin->translate('Invalid URL base value - please check your data ([_1])!', qq{$url_base}));
     }
     return $url_base.$mgr->CommentScript;
+}
+
+sub set_default_tmpl_params {
+    my $app = shift;
+    my ($tmpl, $blog_id) = @_;
+    my $param = {};
+    my $plugin = MT->component('Notifier');
+    $param->{notifier_author_link} = $plugin->author_link;
+    $param->{notifier_author_name} = $plugin->author_name;
+    $param->{notifier_plugin_docs} = $plugin->doc_link;
+    $param->{notifier_plugin_icon} = $plugin->icon;
+    $param->{notifier_plugin_link} = $plugin->plugin_link;
+    $param->{notifier_plugin_name} = $plugin->name;
+    $param->{notifier_schema} = $plugin->schema_version;
+    $param->{notifier_version} = $plugin->version;
+    if ($blog_id) {
+        # script name is only available when there is a $blog_id
+        $param->{notifier_script} = Notifier::Util::script_name($blog_id);
+    }
+    $tmpl->param($param);
 }
 
 1;

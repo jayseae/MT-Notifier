@@ -25,7 +25,7 @@ sub set_blog_id {
         next if ($obj->blog_id);
         if (my $entry_id = $obj->entry_id()) {
             require MT::Entry;
-            my $entry = MT::Entry->get_by_key({
+            my $entry = MT::Entry->load({
                 id => $entry_id
             });
             if ($entry) {
@@ -34,7 +34,7 @@ sub set_blog_id {
         }
         if (my $category_id = $obj->category_id()) {
             require MT::Category;
-            my $category = MT::Category->get_by_key({
+            my $category = MT::Category->load({
                 id => $category_id
             });
             if ($category) {

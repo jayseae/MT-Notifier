@@ -122,7 +122,7 @@ sub data_confirmation {
     return unless ($sender_address);
     my $blog = Notifier::Util::load_blog($data);
     return unless ((ref $blog) && $blog->isa('MT::Blog'));
-    my $record_text = ($data->record == Notifier::Data::SUBSCRIBE()) ?
+    my $record_description = ($data->record == Notifier::Data::SUBSCRIBE()) ?
         $plugin->translate('subscribe to') :
         $plugin->translate('opt-out of');
     my %head = (
@@ -130,35 +130,49 @@ sub data_confirmation {
         'To' => $data->email,
     );
     my %param = (
-        'blog_id' => $blog->id,
-        'blog_id_'.$blog->id => 1,
-        'blog_description' => MT::Util::remove_html($blog->description),
-        'blog_name' => MT::Util::remove_html($blog->name),
-        'blog_url' => $blog->site_url,
-        'notifier_author_link' => $plugin->author_link,
-        'notifier_author_name' => $plugin->author_name,
-        'notifier_plugin_link' => $plugin->plugin_link,
-        'notifier_name' => $plugin->name,
-        'notifier_link' => Notifier::Util::script_name($blog->id),
-        'notifier_version' => $plugin->version,
-        'record_cipher' => $data->cipher,
-        'record_text' => $record_text,
+        'notifier_record_cipher' => $data->cipher,
+        'notifier_record_description' => $record_description,
     );
     if ($entry) {
-        $param{'record_link'} = $entry->permalink;
-        $param{'record_name'} = MT::Util::remove_html($entry->title);
+        $param{'notifier_record_link'} = $entry->permalink;
+        $param{'notifier_record_text'} = MT::Util::remove_html($entry->title);
     } elsif ($category) {
         my $link = $blog->archive_url;
         $link .= '/' unless ($link =~ m/\/$/);
         $link .= MT::Util::archive_file_for ('',  $blog, $type, $category);
-        $param{'record_link'} = $link;
-        $param{'record_name'} = MT::Util::remove_html($category->label);
+        $param{'notifier_record_link'} = $link;
+        $param{'notifier_record_text'} = MT::Util::remove_html($category->label);
     } elsif ($blog) {
-        $param{'record_link'} = $blog->site_url;
-        $param{'record_name'} = MT::Util::remove_html($blog->name);
+        $param{'notifier_record_link'} = $blog->site_url;
+        $param{'notifier_record_text'} = MT::Util::remove_html($blog->name);
     }
-    $head{'Subject'} = Notifier::Util::load_email('confirmation-subject.tmpl', \%param);
-    my $body = Notifier::Util::load_email('confirmation.tmpl', \%param);
+    # load confirmation subject template
+    my %parms = (
+        'identifier'  => 'notifier_confirmation_subject',
+        'blog_id'     => $data->blog_id,
+        'category_id' => $data->category_id,
+        'entry_id'    => $data->entry_id,
+        'text'        => 'Confirmation Subject',
+        'type'        => 'email',
+    );
+    my ($body, $tmpl);
+    $tmpl = Notifier::Util->load_notifier_tmpl(\%parms);
+    if ($tmpl) {
+        $tmpl->param(\%param);
+        my $html = $tmpl->output();
+        $html = $tmpl->errstr unless (defined $tmpl);
+        $head{'Subject'} = $html;
+    }
+    # load confirmation body template
+    $parms{'identifier'} = 'notifier_confirmation_body';
+    $parms{'text'} = 'Confirmation Body';
+    $tmpl = Notifier::Util->load_notifier_tmpl(\%parms);
+    if ($tmpl) {
+        $tmpl->param(\%param);
+        my $html = $tmpl->output();
+        $html = $tmpl->errstr unless (defined $tmpl);
+        $body = $html;
+    }
     my $mail = MT::Mail->send(\%head, $body);
     unless ($mail) {
         my $app = MT->app;
@@ -178,12 +192,13 @@ sub entry_notifications {
     require Notifier::Data;
     my $entry = MT::Entry->load($entry_id);
     return unless ((ref $entry) && $entry->isa('MT::Entry'));
-    my (%terms);
-    $terms{'blog_id'} = $entry->blog_id;
-    $terms{'category_id'} = 0;
-    $terms{'entry_id'} = 0;
-    $terms{'record'} = Notifier::Data::SUBSCRIBE();
-    $terms{'status'} = Notifier::Data::RUNNING();
+    my %terms = (
+        'blog_id' => $entry->blog_id,
+        'category_id' => 0,
+        'entry_id' => 0,
+        'record' => Notifier::Data::SUBSCRIBE(),
+        'status' => Notifier::Data::RUNNING(),
+    );
     my @work_subs = Notifier::Data->load(\%terms);
     my @places = MT::Placement->load({
         blog_id => $entry->blog_id,
@@ -206,36 +221,40 @@ sub notify_users {
     my ($obj, $work_subs) = @_;
     require MT::Blog;
     require MT::Category;
+    require MT::Entry;
     require MT::Placement;
     require MT::Util;
     require Notifier::Data;
     require Notifier::History;
     require Notifier::Util;
-    my ($entry, $entry_id, $comment, $comment_id, $tmpl, $type);
+    my ($entry, $entry_id, $comment, $comment_id);
+    my ($class, $type);
     my $plugin = MT->component('Notifier');
     if ((ref $obj) && $obj->isa('MT::Comment')) {
-        require MT::Entry;
         $entry = MT::Entry->load($obj->entry_id);
         return unless ((ref $entry) && $entry->isa('MT::Entry'));
-        $entry_id = 0;
+        $class = 'comment';
         $comment = $obj;
         $comment_id = $comment->id;
+        $entry_id = 0;
         $type = $plugin->translate('Comment');
     }
     if ((ref $obj) && $obj->isa('MT::Entry')) {
+        $class = 'entry';
+        $comment_id = 0;
         $entry = $obj;
         $entry_id = $entry->id;
-        $comment_id = 0;
         $type = $plugin->translate('Entry');
     }
     my $blog = MT::Blog->load($obj->blog_id);
     return unless ((ref $blog) && $blog->isa('MT::Blog'));
-    my (%terms);
-    $terms{'blog_id'} = $blog->id;
-    $terms{'category_id'} = 0;
-    $terms{'entry_id'} = 0;
-    $terms{'record'} = Notifier::Data::OPT_OUT();
-    $terms{'status'} = Notifier::Data::RUNNING();
+    my %terms = (
+        'blog_id' => $blog->id,
+        'category_id' => 0,
+        'entry_id' => 0,
+        'record' => Notifier::Data::OPT_OUT(),
+        'status' => Notifier::Data::RUNNING(),
+    );
     my @work_opts = Notifier::Data->load(\%terms);
     my @places = MT::Placement->load({
         blog_id => $entry->blog_id,
@@ -255,49 +274,27 @@ sub notify_users {
     return unless (scalar @subs);
     my $sender_address = Notifier::Util::load_sender_address($obj, $entry->author);
     return unless ($sender_address);
-    my %param = (
-        'blog_id' => $blog->id,
-        'blog_id_'.$blog->id => 1,
-        'blog_description' => MT::Util::remove_html($blog->description),
-        'blog_name' => MT::Util::remove_html($blog->name),
-        'blog_url' => $blog->site_url,
-        'entry_author' => MT::Util::remove_html($entry->author->name),
-        'entry_author_nickname' => MT::Util::remove_html($entry->author->nickname),
-        'entry_author_email' => $entry->author->email,
-        'entry_author_url' => $entry->author->url,
-        'entry_body' => $entry->text,
-        'entry_excerpt' => $entry->get_excerpt,
-        'entry_id' => $entry->id,
-        'entry_id_'.$entry->id => 1,
-        'entry_keywords' => $entry->keywords,
-        'entry_link' => $entry->permalink,
-        'entry_more' => $entry->text_more,
-        'entry_status' => $entry->status,
-        'entry_title' => $entry->title,
-        'notifier_author_link' => $plugin->author_link,
-        'notifier_author_name' => $plugin->author_name,
-        'notifier_plugin_link' => $plugin->plugin_link,
-        'notifier_name' => $plugin->name,
-        'notifier_link' => Notifier::Util::script_name($blog->id),
-        'notifier_version' => $plugin->version,
-    );
-    if ($comment) {
-        $param{'comment_author'} = $comment->author;
-        $param{'comment_body'} = $comment->text;
-        $param{'comment_id'} = $comment->id;
-        $param{'comment_url'} = $comment->url;
-        $param{'notifier_comment'} = 1;
-        $param{'notifier_entry'} = 0;
-        $tmpl = 'new-comment.tmpl';
-    } else {
-        $param{'notifier_comment'} = 0;
-        $param{'notifier_entry'} = 1;
-        $tmpl = 'new-entry.tmpl';
-    }
     my %head = (
         'From' => $sender_address,
-        'Subject' => Notifier::Util::load_email('notification-subject.tmpl', \%param)
     );
+    # load notification subject template
+    my %parms = (
+        'identifier'  => 'notifier_'.$class.'_notification_subject',
+        'blog_id'     => $blog->id,
+        'category_id' => $entry ? $entry->category : 0,
+        'entry_id'    => $comment ? $comment->entry_id : $entry->id,
+        'comment_id'  => $comment ? $comment->id : 0,
+        'text'        => $type.' Notification Subject',
+        'type'        => 'email',
+    );
+    my %param;
+    my $tmpl = Notifier::Util->load_notifier_tmpl(\%parms);
+    if ($tmpl) {
+        $tmpl->param(\%param);
+        my $html = $tmpl->output();
+        $html = $tmpl->errstr unless (defined $tmpl);
+        $head{'Subject'} = $html;
+    }
     # check bypass flags
     my $blog_bypass = $plugin->get_config_value('blog_bypass', 'blog:'.$blog->id);
     my $system_bypass = $plugin->get_config_value('system_bypass');
@@ -328,8 +325,18 @@ sub notify_users {
             }
         }
         $head{'To'} = $sub->email;
-        $param{'record_cipher'} = $sub->cipher;
-        my $body = Notifier::Util::load_email($tmpl, \%param);
+        $param{'notifier_record_cipher'} = $sub->cipher;
+        # load notification body template
+        my $body;
+        $parms{'identifier'} = 'notifier_'.$class.'_notification_body';
+        $parms{'text'} = $type.' Notification Body';
+        $tmpl = Notifier::Util->load_notifier_tmpl(\%parms);
+        if ($tmpl) {
+            $tmpl->param(\%param);
+            my $html = $tmpl->output();
+            $html = $tmpl->errstr unless (defined $tmpl);
+            $body = $html;
+        }
         if ($system_queued && $blog_queued) {
             require Notifier::Queue;
             Notifier::Queue->create(\%head, $body);
