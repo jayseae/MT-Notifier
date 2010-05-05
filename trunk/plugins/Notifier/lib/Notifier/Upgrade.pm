@@ -2,6 +2,10 @@
 # A Movable Type plugin with subscription options for your installation
 # Copyright 2003-2010 Everitz Consulting <everitz.com>.
 #
+# This program is distributed in the hope that it will be useful but does
+# NOT INCLUDE ANY WARRANTY; Without even the implied warranty of FITNESS
+# FOR A PARTICULAR PURPOSE.
+#
 # This program may not be redistributed without permission.
 # ===========================================================================
 package Notifier::Upgrade;
@@ -16,7 +20,7 @@ sub set_blog_id {
         next if ($obj->blog_id);
         if (my $entry_id = $obj->entry_id()) {
             require MT::Entry;
-            my $entry = MT::Entry->get_by_key({
+            my $entry = MT::Entry->load({
                 id => $entry_id
             });
             if ($entry) {
@@ -25,7 +29,7 @@ sub set_blog_id {
         }
         if (my $category_id = $obj->category_id()) {
             require MT::Category;
-            my $category = MT::Category->get_by_key({
+            my $category = MT::Category->load({
                 id => $category_id
             });
             if ($category) {

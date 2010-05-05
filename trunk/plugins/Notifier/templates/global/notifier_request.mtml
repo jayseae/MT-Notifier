@@ -1,0 +1,58 @@
+<__trans_section component="notifier">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" id="sixapart-standard">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=<$mt:PublishCharset$>" />
+    <meta name="generator" content="<$mt:ProductName version="1"$>" />
+    <link rel="stylesheet" type="text/css" href="<$mt:Link template="Stylesheet"$>" />
+    <title><__trans phrase="[_1]: [_2]" params="<$mt:BlogName encode_html="1"$>%%<$mt:Var name="page_title" default="Request Processing"$>"></title>
+</head>
+<body class="layout-one-column">
+    <div id="container">
+        <div id="container-inner">
+            <div id="header">
+                <div id="header-inner">
+                    <div id="header-content">
+                        <div id="header-name"><a href="<$mt:BlogURL$>" accesskey="1"><$mt:BlogName encode_html="1"$></a></div>
+                        <div id="header-description"><$mt:BlogDescription$></div>
+                    </div>
+                </div>
+            </div>
+            <div id="content">
+                <div id="content-inner">
+                    <div id="alpha">
+                        <div id="alpha-inner">
+                            <div class="asset entry-asset">
+                                <div class="asset-header">
+                                    <h1 id="page-title"><$mt:Var name="notifier_message"$></h1>
+
+                                    <mt:If name="notifier_link_url">
+                                        <mt:SetVarBlock name="notifier_link_text"><mt:If name="notifier_link_name"><$mt:Var name="notifier_link_name"$><mt:Else><$mt:Var name="notifier_link_url"$></mt:If></mt:SetVarBlock>
+                                        <p><a href="<$mt:Var name="notifier_link_url"$>">Return to <$mt:Var name="notifier_link_text"$></a></p>
+                                    </mt:If>
+                                </div>
+
+                                <div class="asset-content">
+                                    <mt:If name="notifier_confirm">
+                                        <p><__trans phrase="You will receive an email to confirm your request momentarily.  If you do not, you may submit your request again."></p>
+                                    </mt:If>
+                                </div>
+                            </div><!-- /asset -->
+                            <div class="asset-footer"></div>
+                        </div><!-- /alpha-inner -->
+                    </div><!-- /alpha -->
+                </div><!-- /content-inner -->
+            </div><!-- /content -->
+            <div id="footer"><div id="footer-inner"><div id="footer-content"><div class="widget-powered-widget"><div class="widget-content">
+                <div id="version">
+                    <__trans phrase="Powered by"> <a href="<$mt:Var name="notifier_plugin_link"$>"><$mt:Var name="notifier_plugin_name"$></a> <__trans phrase="version"> <$mt:Var name="notifier_version"$>.
+                </div>
+                <div id="copyright">
+                    <__trans phrase="Copyright"> &copy; 2003-<$mt:Date format="%Y"$> <a href="<$mt:Var name="notifier_author_link"$>"><$mt:Var name="notifier_author_name"$></a>.  <__trans phrase="All Rights Reserved">.
+                </div>
+            </div></div></div></div></div>
+        </div><!-- /container-inner -->
+    </div><!-- /container -->
+</body>
+</html>
+</__trans_section>
