@@ -774,42 +774,41 @@ TMPL
 
 sub check_comment {
     my ($err, $obj) = @_;
-    require MT::Request;
-    my $id = 'blog:'.$obj->blog_id;
     my $notify = 1;
-    $notify = 0 unless ($obj->visible);
     my $plugin = MT->component('Notifier');
-    $notify = 0 if ($plugin->get_config_value('blog_disabled', $id));
+    $notify = 0 if ($plugin->get_config_value('blog_disabled', 'blog:'.$obj->blog_id));
+    $notify = 0 unless ($obj->visible);
+    require MT::Request;
     my $r = MT::Request->instance;
-    $r->cache('mtn_notify_comment_'.$id, $notify);
+    $r->cache('mtn_notify_comment', $notify);
 }
 
 sub check_entry {
     my ($err, $obj) = @_;
-    require MT::Entry;
     my $plugin = MT->component('Notifier');
     return if ($plugin->get_config_value('blog_disabled', 'blog:'.$obj->blog_id));
-    if ($obj->status == MT::Entry::RELEASE()) {
-          if (my $notify = $obj->id) {
-                require MT::Request;
-                my $r = MT::Request->instance;
-                $r->cache('mtn_notify_entry', $notify);
-          }
+    if (my $notify = $obj->id) {
+        # Notify current subscribers of new (published) entry
+        require MT::Entry;
+        if ($obj->status == MT::Entry::RELEASE()) {
+            require MT::Request;
+            my $r = MT::Request->instance;
+            $r->cache('mtn_notify_entry', $notify);
+        }
     }
 }
 
 sub notify_comment {
     my ($err, $obj) = @_;
-    my $id = 'blog:'.$obj->blog_id;
     if ($obj->is_not_junk) {
-        require MT::Request;
+        require Notifier;
         require Notifier::Data;
         if (MT->app->param('subscribe')) {
-            require Notifier;
             Notifier::create_subscription($obj->email, Notifier::Data::SUBSCRIBE(), 0, 0, $obj->entry_id);
         }
+        require MT::Request;
         my $r = MT::Request->instance;
-        return unless ($r->cache('mtn_notify_comment_'.$id));
+        return unless ($r->cache('mtn_notify_comment'));
         my %terms = (
             'blog_id' => $obj->blog_id,
             'record'  => Notifier::Data::SUBSCRIBE(),
@@ -817,7 +816,7 @@ sub notify_comment {
         );
         my @work_subs;
         my $plugin = MT->component('Notifier');
-        if ($plugin->get_config_value('blog_all_comments', $id)) {
+        if ($plugin->get_config_value('blog_all_comments', 'blog:'.$obj->blog_id)) {
             my @blog_subs = Notifier::Data->load(\%terms);
             push @work_subs, @blog_subs;
             my $cats = $obj->entry->categories;
@@ -841,10 +840,10 @@ sub notify_comment {
 sub notify_entry {
     my ($err, $obj) = @_;
     require MT::Request;
-    require Notifier;
     my $r = MT::Request->instance;
     my $notify = $r->cache('mtn_notify_entry');
     return unless ($notify);
+    require Notifier;
     Notifier::entry_notifications($notify);
 }
 

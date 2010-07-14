@@ -17,7 +17,7 @@ description: <__trans phrase="Subscription options for your Movable Type install
 l10n_class: Notifier::L10N
 icon: images/Notifier.gif
 schema_version: 63
-version: 5.0
+version: 5.01
 plugin_link: http://everitz.com/mt/notifier/index.php
 doc_link: http://everitz.com/mt/notifier/install.php
 settings:
