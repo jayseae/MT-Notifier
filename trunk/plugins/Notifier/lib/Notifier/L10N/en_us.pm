@@ -1,6 +1,6 @@
 # ===========================================================================
 # A Movable Type plugin with subscription options for your installation
-# Copyright 2003-2010 Everitz Consulting <everitz.com>.
+# Copyright 2003-2011 Everitz Consulting <everitz.com>.
 #
 # This program is distributed in the hope that it will be useful but does
 # NOT INCLUDE ANY WARRANTY; Without even the implied warranty of FITNESS
@@ -80,6 +80,7 @@ use vars qw( %Lexicon );
       ## modules
 
       ## lib/Notifier.pm
+      'Author' => 'Author',
       'Entry' => 'Entry',
       'Category' => 'Category',
       'Blog' => 'Blog',
@@ -95,6 +96,7 @@ use vars qw( %Lexicon );
       'Entry Notification Body' => 'Entry Notification Body',
 
       ## lib/Notifier/Plugin.pm
+      'No author was found to match that subscription record!' => 'No author was found to match that subscription record!',
       'No entry was found to match that subscription record!' => 'No entry was found to match that subscription record!',
       'No category was found to match that subscription record!' => 'No category was found to match that subscription record!',
       'No blog was found to match that subscription record!' => 'No blog was found to match that subscription record!',
@@ -125,6 +127,7 @@ use vars qw( %Lexicon );
       'Subscribe to Blog' => 'Subscribe to Blog',
       'Subscribe to Category' => 'Subscribe to Category',
       'Subscribe to Entry' => 'Subscribe to Entry',
+      'Subscribe to Author' => 'Subscribe to Author',
       'Powered by [_1]' => 'Powered by [_1]',
       'Go' => 'Go',
       ## already defined
@@ -232,6 +235,7 @@ use vars qw( %Lexicon );
       ## 'Blocked' => 'Blocked',
       ## 'Active' => 'Active',
       ## 'Pending' => 'Pending',
+      ## 'Author' => 'Author',
       ## 'Entry' => 'Entry',
       ## 'Category' => 'Category',
       ## 'Blog' => 'Blog',
@@ -314,6 +318,7 @@ use vars qw( %Lexicon );
       'Click here to install the [_1] Blog Subscription Widget' => 'Click here to install the [_1] Blog Subscription Widget',
       'Click here to install the [_1] Category Subscription Widget' => 'Click here to install the [_1] Category Subscription Widget',
       'Click here to install the [_1] Entry Subscription Widget' => 'Click here to install the [_1] Entry Subscription Widget',
+      'Click here to install the [_1] Author Subscription Widget' => 'Click here to install the [_1] Author Subscription Widget',
       ## already defined
       ## 'Status' => 'Status',
 

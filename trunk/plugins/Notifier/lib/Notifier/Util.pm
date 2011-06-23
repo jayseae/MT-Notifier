@@ -1,6 +1,6 @@
 # ===========================================================================
 # A Movable Type plugin with subscription options for your installation
-# Copyright 2003-2010 Everitz Consulting <everitz.com>.
+# Copyright 2003-2011 Everitz Consulting <everitz.com>.
 #
 # This program is distributed in the hope that it will be useful but does
 # NOT INCLUDE ANY WARRANTY; Without even the implied warranty of FITNESS
@@ -17,6 +17,33 @@ use MT;
 
 # shared functions
 
+sub check_config_flag {
+    my $flag = shift;
+    require MT::Request;
+    my $r = MT::Request->instance;
+    my $blog = $r->cache('mtn_blog');
+    my ($system_value, $blog_value);
+    my $plugin = MT->component('Notifier');
+    $system_value = $plugin->get_config_value('system_'.$flag);
+    if ($blog) {
+        $blog_value = $plugin->get_config_value('blog_'.$flag, 'blog:'.$blog->id);
+    }
+    require Notifier::Data;
+    if ($system_value && $blog_value) {
+        # both configuration values exist
+        return Notifier::Data::FULL();
+    } elsif ($blog_value) {
+        # blog configuration value exists
+        return Notifier::Data::BLOG();
+    } elsif ($system_value) {
+        # system configuration value exists
+        return Notifier::Data::SITE();
+    } else {
+        # neither configuration value is set
+        return Notifier::Data::NULL();
+    }
+}
+
 sub check_permission {
     my $app = MT->app;
     return 0 unless ($app);
@@ -30,28 +57,9 @@ sub check_permission {
     return 0;
 }
 
-sub load_blog {
-    my ($obj) = @_;
-    require MT::Blog;
-    my $blog_id;
-    if ($obj->entry_id) {
-        require MT::Entry;
-        my $entry = MT::Entry->load($obj->entry_id) or return;
-        $blog_id = $entry->blog_id;
-    } elsif ($obj->category_id) {
-        require MT::Category;
-        my $category = MT::Category->load($obj->category_id) or return;
-        $blog_id = $category->blog_id;
-    } else {
-        $blog_id = $obj->blog_id;
-    }
-    my $blog = MT::Blog->load($blog_id) or return;
-    $blog;
-}
-
 sub load_notifier_tmpl {
     my $app = shift;
-    my ($args, $blog_id) = @_;
+    my ($args, $blog_id, $author) = @_;
     my $mt = MT->app;
     my $plugin = MT->component('Notifier');
     # move hashref parameters to new hash
@@ -63,7 +71,7 @@ sub load_notifier_tmpl {
             next;
         }
         # don't add extra keys to terms - will break load_global_tmpl!
-        next if ($key eq 'category_id' || $key eq 'comment_id' || $key eq 'entry_id' || $key eq 'text');
+        next if ($key eq 'category_id' || $key eq 'comment_id' || $key eq 'entry_id' || $key eq 'author_id' || $key eq 'text');
         $terms{$key} = $args->{$key};
     }
     my $tmpl;
@@ -92,44 +100,45 @@ sub load_notifier_tmpl {
             my $entry = MT::Entry->load({ id => $args->{entry_id} });
             $ctx->stash('entry', $entry) if ($entry);
         }
-        $app->set_default_tmpl_params($tmpl, $blog_id);
+        if ($args->{author_id}) {
+            require MT::Author;
+            $author = MT::Author->load({ id => $args->{author_id} });
+            $ctx->stash('author', $author) if ($author);
+        }
+        $app->set_default_tmpl_params($tmpl, $blog_id, $author);
         return $tmpl;
     } else {
         # no template, log a message and return an error
         my $message = $plugin->translate('Could not load the [_1] [_2] template!', $plugin->name, $plugin->translate($args->{text}));
         MT->log({ blog_id => $args->{blog_id}, message => $message });
-        return $mt->error($message);
+        return MT->error($message);
     }
 }
 
 sub load_sender_address {
-    my ($obj, $author) = @_;
-    require MT::Blog;
-    require MT::Util;
-    my $app = MT->app;
+    my ($author, $blog) = @_;
     my $plugin = MT->component('Notifier');
-    my $entry;
-    if (UNIVERSAL::isa($obj, 'MT::Comment')) {
-        require MT::Entry;
-        $entry = MT::Entry->load($obj->entry_id);
-    } else {
-        $entry = $obj;
-    }
-    my $blog = MT::Blog->load($entry->blog_id);
-    unless ($blog) {
-        $app->log($plugin->translate('Specified blog unavailable - please check your data!'));
-        return;
-    }
-    my $blog_address_type = $plugin->get_config_value('blog_address_type', 'blog:'.$blog->id);
+    # retrieve default system address for sender address
+    my $system_address = $plugin->get_config_value('system_address');
     my $sender_address;
-    if ($blog_address_type == 1) {
-        $sender_address = $plugin->get_config_value('system_address');
-    } elsif ($blog_address_type == 2) {
-        # use author email if there is one, otherwise use system default (thanks ches@lexblog)
-        $sender_address = $author ? $author->email : $plugin->get_config_value('system_address');
-    } elsif ($blog_address_type == 3) {
-        $sender_address = $plugin->get_config_value('blog_address', 'blog:'.$blog->id);
+    if ($blog) {
+        my $blog_address_type = $plugin->get_config_value('blog_address_type', 'blog:'.$blog->id);
+        if ($blog_address_type == 1) {
+            # use default system address for sender address
+            $sender_address = $system_address;
+        } elsif ($blog_address_type == 2) {
+            # use author email if there is one, otherwise use system default (thanks ches@lexblog)
+            $sender_address = $author ? $author->email : $plugin->get_config_value('system_address');
+        } elsif ($blog_address_type == 3) {
+            # use default blog address for sender address
+            $sender_address = $plugin->get_config_value('blog_address', 'blog:'.$blog->id);
+        }
+    } else {
+        # no blog?  has to be system address
+        $sender_address = $system_address;
     }
+    # now have a sender address, make sure it is valid and return
+    require MT::Util;
     if (my $fixed = MT::Util::is_valid_email($sender_address)) {
         return $fixed;
     } else {
@@ -139,7 +148,7 @@ sub load_sender_address {
         } else {
             $message .= $plugin->translate('No sender address - please configure one!');
         }
-        $app->log($message);
+        MT->log($message);
         return;
     }
 }
@@ -153,46 +162,70 @@ sub produce_cipher {
 }
 
 sub script_name {
-    my ($blog_id) = shift;
-    require MT::Blog;
+    my $blog_id = shift;
+    my $author = shift;
+    my $plugin = MT->component('Notifier');
+    # retrieve default system base url
+    my $system_base = $plugin->get_config_value('system_url_base');
+    # retrieve default system url type
+    my $system_url_type = $plugin->get_config_value('system_url_type');
+    my $blog_url_type;
+    my $url_base;
     require MT::ConfigMgr;
-    my $app = MT->app;
     my $mgr = MT::ConfigMgr->instance;
     my $plugin = MT->component('Notifier');
-    my $blog = MT::Blog->load($blog_id);
-    unless ($blog) {
-        $app->log($plugin->translate('Specified blog unavailable - please check your data!'));
-        return $mgr->AdminScript;
-    }
-    my $url_base;
-    my $url_type = $plugin->get_config_value('blog_url_type', 'blog:'.$blog->id);
-    if ($url_type == 1) {
-      # use system setting (default)
-      $url_type = $plugin->get_config_value('system_url_type');
-      if ($url_type == 2) {
-          $url_base = $mgr->CGIPath;
-      } elsif ($url_type == 3) {
-          $url_base = $blog->site_url;
-      } elsif ($url_type == 4) {
-          $url_base = $plugin->get_config_value('system_url_base');
-      }
-    } elsif ($url_type == 2) {
+    if ($system_url_type == 2) {
+        # use config file for base url
         $url_base = $mgr->CGIPath;
-    } elsif ($url_type == 3) {
-        $url_base = $blog->site_url;
-    } elsif ($url_type == 4) {
-        $url_base = $plugin->get_config_value('blog_url_base', 'blog:'.$blog->id);
+    } elsif ($system_url_type == 4) {
+        # use default system base for base url
+        $url_base = $system_base;
+    }
+    if ($blog_id) {
+        $blog_url_type = $plugin->get_config_value('blog_url_type', 'blog:'.$blog_id);
+        if ($blog_url_type == 1) {
+            # use system setting for base url (default)
+            if ($system_url_type == 3) {
+                # use current blog site url for base url
+                require MT::Blog;
+                my $blog = MT::Blog->load($blog_id);
+                unless ($blog) {
+                    my $message = $plugin->translate('Specified blog unavailable - please check your data!');
+                    MT->log($message);
+                    return MT->error($message);
+                }
+                $url_base = $blog->site_url;
+            }
+        } elsif ($blog_url_type == 2) {
+            # use config file for base url
+            $url_base = $mgr->CGIPath;
+        } elsif ($blog_url_type == 3) {
+            # use current blog site url for base url
+            require MT::Blog;
+            my $blog = MT::Blog->load($blog_id);
+            unless ($blog) {
+                my $message = $plugin->translate('Specified blog unavailable - please check your data!');
+                MT->log($message);
+                return MT->error($message);
+            }
+            $url_base = $blog->site_url;
+        } elsif ($blog_url_type == 4) {
+            # use blog base for base url
+            $url_base = $plugin->get_config_value('blog_url_base', 'blog:'.$blog_id);
+        }
     }
     $url_base .= '/' unless ($url_base =~ m!/$!);
     unless ($url_base =~ /^http/) {
-        $app->log($plugin->translate('Invalid URL base value - please check your data ([_1])!', qq{$url_base}));
+        my $message = $plugin->translate('Invalid URL base value - please check your data ([_1])!', qq{$url_base});
+        MT->log($message);
+        return MT->error($message);
     }
     return $url_base.$mgr->CommentScript;
 }
 
 sub set_default_tmpl_params {
     my $app = shift;
-    my ($tmpl, $blog_id) = @_;
+    my ($tmpl, $blog_id, $author) = @_;
     my $param = {};
     my $plugin = MT->component('Notifier');
     $param->{notifier_author_link} = $plugin->author_link;
@@ -203,10 +236,8 @@ sub set_default_tmpl_params {
     $param->{notifier_plugin_name} = $plugin->name;
     $param->{notifier_schema} = $plugin->schema_version;
     $param->{notifier_version} = $plugin->version;
-    if ($blog_id) {
-        # script name is only available when there is a $blog_id
-        $param->{notifier_script} = Notifier::Util::script_name($blog_id);
-    }
+    # conditional code for script name handled in subroutine
+    $param->{notifier_script} = Notifier::Util::script_name($blog_id, $author);
     $tmpl->param($param);
 }
 

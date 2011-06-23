@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <plugin version="5.0.0">
   <name>MT-Notifier</name>
-  <version_url>http://everitz.com/mt/notifier/version.xml</version_url>
+  <version_url>http://www.everitz.com/mt/notifier/version.xml</version_url>
   <sig>Notifier</sig>
   <icon>mt-static/plugins/Notifier/images/Notifier.png</icon>
   <files>

@@ -1,1 +1,1 @@
-<__trans_section component="notifier">[<$mt:BlogName remove_html="1"$>] <__trans phrase="Please confirm your request to"> <$mt:Var name="notifier_record_description"$> <$mt:Var name="notifier_record_text"$></__trans_section>
+<__trans_section component="notifier">[<mt:IfBlog><$mt:BlogName remove_html="1"$><mt:Else><$mt:AuthorDisplayName remove_html="1"$></mt:ifBlog>] <__trans phrase="Please confirm your request to"> <$mt:Var name="notifier_record_description"$> <$mt:Var name="notifier_record_text"$></__trans_section>

@@ -1,6 +1,6 @@
-<__trans_section component="notifier">'<$mt:BlogName$>' <__trans phrase="requires you to use a double-opt system for making any changes to your subscription information.">
+<__trans_section component="notifier">'<mt:IfBlog><$mt:BlogName$><mt:Else><$mt:AuthorDisplayName$></mt:ifBlog>' <__trans phrase="requires you to use a double-opt system for making any changes to your subscription information.">
 
-<__trans phrase="Because you, or someone using your email address, recently submitted a request at"> '<$mt:BlogName$>'<__trans phrase=", you are being sent this confirmation to verify that the request is genuine.">
+<__trans phrase="Because you, or someone using your email address, recently submitted a request at"> '<mt:IfBlog><$mt:BlogName$><mt:Else><$mt:AuthorDisplayName$></mt:ifBlog>'<__trans phrase=", you are being sent this confirmation to verify that the request is genuine.">
 
 <__trans phrase="The request is to"> <$mt:Var name="notifier_record_description"$>:
 <$mt:Var name="notifier_record_text"$>
