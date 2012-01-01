@@ -1,6 +1,6 @@
 # ===========================================================================
 # A Movable Type plugin with subscription options for your installation
-# Copyright 2003-2010 Everitz Consulting <everitz.com>.
+# Copyright 2003-2012 Everitz Consulting <www.everitz.com>.
 #
 # This program is free software:  You may redistribute it and/or modify it
 # it under the terms of the Artistic License version 2 as published by the
@@ -13,6 +13,7 @@
 # You should have received a copy of the Artistic License with this program.
 # If not, see <http://www.opensource.org/licenses/artistic-license-2.0.php>.
 # ===========================================================================
+
 package Notifier::Data;
 
 use strict;
@@ -25,6 +26,7 @@ __PACKAGE__->install_properties({
         'blog_id' => 'integer not null',
         'category_id' => 'integer not null',
         'entry_id' => 'integer not null',
+        'author_id' => 'integer not null',
         'email' => 'string(75) not null',
         'cipher' => 'string(75) not null',
         'record' => 'smallint not null',
@@ -36,6 +38,7 @@ __PACKAGE__->install_properties({
         blog_id => 0,
         category_id => 0,
         entry_id => 0,
+        author_id => 0,
         record => 0,
         status => 0,
         type => 0,
@@ -44,6 +47,7 @@ __PACKAGE__->install_properties({
         blog_id => 1,
         category_id => 1,
         entry_id => 1,
+        author_id => 1,
         email => 1,
         cipher => 1,
         record => 1,
@@ -69,6 +73,12 @@ use constant TEMPORARY => 2;
 
 # other
 use constant BULK => 1;
+
+# flags
+use constant NULL => 0;
+use constant SITE => 1;
+use constant BLOG => 2;
+use constant FULL => 3;
 
 sub class_label {
     my $plugin = MT->component('Notifier');

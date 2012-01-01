@@ -1,0 +1,364 @@
+<mt:setvarblock name="page_title"><__trans phrase="Manage [_1]" params="<$mt:var name="object_label_plural"$>"></mt:setvarblock>
+<mt:setvarblock name="content_header">
+    <mt:if name="error">
+        <mtapp:statusmsg
+            id="generic-error"
+            class="error">
+            <$mt:var name="error"$>
+        </mtapp:statusmsg>
+    </mt:if>
+
+    <mt:if name="saved">
+        <mtapp:statusmsg
+            id="saved"
+            class="success">
+            <__trans phrase="You have added a [_1] for [_2]." params="<$mt:var name="object_label" lower_case="1"$>%%<strong><$mt:var name="saved" escape="html"$></strong>">
+        </mtapp:statusmsg>
+    </mt:if>
+
+    <mt:if name="saved_deleted">
+        <mtapp:statusmsg
+            id="saved-deleted"
+            class="success">
+            <__trans phrase="You have successfully deleted the selected [_1]." params="<$mt:var name="object_label_plural" lower_case="1"$>">
+        </mtapp:statusmsg>
+    </mt:if>
+</mt:setvarblock>
+<mt:setvarblock name="related_content">
+    <mtapp:widget
+        id="quickfilters"
+        label="<__trans phrase="Quickfilters">">
+        <$mtapp:ListFilters$>
+    </mtapp:widget>
+    <mt:if name="subscription_count">
+        <mtapp:widget
+            id="useful-links"
+            label="<__trans phrase="Useful links">">
+            <ul>
+                <li><a href="<MT_ACTION mode="export_subs" <mt:if name="blog_id">blog_id="<$mt:var name="blog_id"$>"</mt:if> magic_token="<$mt:var name="magic_token"$>" return_args="<$mt:var name="return_args"$>">" class="icon-left icon-download"><__trans phrase="Download [_1] (CSV)" params="<$mt:var name="object_label_plural"$>"></a></li>
+            </ul>
+        </mtapp:widget>
+    </mt:if>
+    <$mt:include name="include/display_options.tmpl"$>
+    <$mtapp:PageActions$>
+</mt:setvarblock>
+<mt:setvarblock name="html_body_footer">
+    <$mt:include name="include/display_options.tmpl"$>
+</mt:setvarblock>
+<mt:setvarblock name="html_head" append="1">
+    <script type="text/javascript" src="<$mt:var name="static_uri"$>js/tc/client.js"></script>
+
+    <script type="text/javascript">
+    <!--
+    var current_edit = 0;
+    var old_note_email = '';
+    function highlight_note(id) {
+        if (current_edit) return;
+        var note_link = getByID('note-link-' + id);
+        if (!note_link) return;
+        note_link.style.backgroundColor = '#FFC';
+        note_link.style.borderColor = '#FFC';
+    }
+
+    function unhighlight_note(id) {
+        var note_link = getByID('note-link-' + id);
+        if (!note_link) return;
+        note_link.style.backgroundColor = 'transparent';
+        note_link.style.borderColor = '#3F658C';
+    }
+
+    function edit_note(id) {
+        if (current_edit) return;
+        var note_links = new Array();
+        note_links.push(getByID('note-email-link-' + id));
+        var note_fields = new Array();
+        note_fields.push(getByID('note-email-field-' + id));
+        var note_email = getByID('note-email-' + id);
+        if (!note_links.length || !note_fields.length || !note_email) return;
+        current_edit = id;
+        old_note_email = note_email.value;
+        for (i=0;i<1;++i) {
+            note_links[i].style.display = 'none';
+            note_fields[i].style.display = 'inline';
+        }
+        note_email.focus();
+        note_email.select();
+        unhighlight_note(id);
+        return false;
+    }
+
+    function cancel_edit(id) {
+        var note_links = new Array();
+        note_links.push(getByID('note-email-link-' + id));
+        var note_fields = new Array();
+        note_fields.push(getByID('note-email-field-' + id));
+        var note_email = getByID('note-email-' + id);
+        if (!note_links.length || !note_fields.length || !note_email) return;
+        note_email.value = old_note_email;
+        old_note_email = '';
+        current_edit = 0;
+        for (i=0;i<2;++i) {
+            note_links[i].style.display = 'inline';
+            note_fields[i].style.display = 'none';
+        }
+        return false;
+    }
+
+    function submit_edit(id) {
+        if ((0 != current_edit) && (id != current_edit))
+            id = current_edit;
+        // if old email matches new email, ignore submission (same as cancel)
+        // if new email is already in our noteList array, warn user
+        // if not in noteList and not in range of noteList notes, check with server.
+        var note_form = getByID('create-inline-notification-form');
+        var note_email = getByID('note-email-' + id);
+        if (!note_form || !note_email) return false;
+        var new_note_email = note_email.value;
+        if ((old_note_email == new_note_email)) {
+            cancel_edit(id);
+            return false;
+        }
+        return submit_edit_form(id);
+    }
+
+    function submit_edit_form(id) {
+        var note_form = getByID('create-inline-notification-form');
+        var note_email = getByID('note-email-' + id);
+        if (!note_form || !note_email) return false;
+        note_form['id'].value = id;
+        note_form['email'].value = note_email.value;
+        note_form.submit();
+        return false;
+    }
+
+    function setCreateMode () {
+        getByID('email').value = '';
+        getByID('create-inline-notification').style.display = 'block';
+        getByID('create-contact').style.display = 'none';
+        var el = getByID('saved-msg');
+        if (el) el.style.display = 'none';
+        var el = getByID('saved-deleted-msg');
+        if (el) el.style.display = 'none';
+        getByID('email').focus();
+    }
+
+    function cancelCreateMode () {
+        getByID('create-inline-notification').style.display = 'none';
+        getByID('create-contact').style.display = 'block';
+    }
+
+    var tableSelect;
+    function init()
+    {
+    	// setup
+    	tableSelect = new TC.TableSelect( "<$mt:var name="object_type"$>-listing-table" );
+      tableSelect.rowSelect = true;
+
+      setFilterCol(<mt:if name="filter">'<$mt:var name="filter"$>'<mt:else>'none'</mt:if>);
+      <mt:if name="filter">
+      setFilterVal('<$mt:var name="filter_val"$>');
+      </mt:if>
+    }
+
+    TC.attachLoadEvent( init );
+
+    // adding filter option to template
+
+    function enableFilterButton(fld) {
+        if (fld && (fld.id == "filter-col")) {
+            var opt = fld.options[fld.selectedIndex];
+        }
+        getByID("filter-button").style.display = "inline";
+    }
+
+    function toggleFilter() {
+        var filterActive = getByID("filter-title");
+        if (filterActive.style.display == "none") {
+            filterActive.style.display = "block";
+            getByID("filter-select").style.display = "none";
+        } else {
+            filterActive.style.display = "none";
+            getByID("filter-select").style.display = "block";<mt:unless name="filter">setFilterCol('status');</mt:unless>
+        }
+    }
+
+    function setFilterCol(choice) {
+        var sel = getByID('filter-select');
+        if (!sel) return;
+        sel.className = "filter-" + choice;
+        if (choice != 'none') {
+            var fld = getByID('filter-col');
+            if (choice == 'status')
+                fld.selectedIndex = 0;
+            col_span = getByID("filter-text-col");
+            if (fld.selectedIndex > -1 && col_span)
+                col_span.innerHTML = '<strong>' + fld.options[fld.selectedIndex].text + '</strong>';
+        }
+    }
+    //-->
+    </script>
+
+    <style type="text/css">
+    .listing .status-block img { background-image: url(<$mt:var name="static_uri"$>images/status_icons/user-disabled.gif); background-repeat:no-repeat; }
+    .listing tr.selected .status-block img { background-image: url(<$mt:var name="static_uri"$>images/status_icons/invert-user-disabled.gif); }
+    .listing .status-pending img { background-image: url(<$mt:var name="static_uri"$>images/status_icons/user-pending.gif); background-repeat:no-repeat; }
+    .listing tr.selected .status-pending img { background-image: url(<$mt:var name="static_uri"$>images/status_icons/invert-user-pending.gif); }
+    .listing .status-publish img { background-image: url(<$mt:var name="static_uri"$>images/status_icons/trusted.gif); background-repeat:no-repeat; }
+    .listing tr.selected .status-publish img { background-image: url(<$mt:var name="static_uri"$>images/status_icons/invert-trusted.gif); }
+    </style>
+</mt:setvarblock>
+<mt:setvarblock name="list_filter_form">
+<div class="listing-filter">
+    <div class="listing-filter-inner inner pkg">
+        <form id="filter-form" method="get" action="<$mt:var name="mt_url"$>">
+            <input type="hidden" name="__mode" value="<$mt:var name="mode"$>" />
+            <mt:if name="blog_id">
+            <input type="hidden" name="blog_id" value="<$mt:var name="blog_id"$>" />
+            </mt:if>
+            <input id="filter" type="hidden" name="filter" value="" />
+            <input id="filter_val" type="hidden" name="filter_val" value="" />
+        </form>
+        <form id="filter-select-form" method="get" onsubmt="return execFilter(this)">
+            <div class="filter">
+                <div id="filter-title">
+                <mt:if name="filter_key">
+                    <strong><__trans phrase="Showing only: [_1]" params="<$mt:var name="filter_label"$>"></strong>
+                    <a class="filter-link" href="<$mt:var name="script_url"$>?__mode=<$mt:var name="mode"$><mt:if name="blog_id">&amp;blog_id=<$mt:var name="blog_id"$></mt:if>">[ <__trans phrase="Remove filter"> ]</a>
+                <mt:else>
+                    <mt:unless name="filter">
+                    <strong><__trans phrase="All [_1]" params="<$mt:var name="object_label_plural"$>"></strong>
+                    <a href="javascript:void(0)" onclick="toggleFilter()" class="filter-link">[ <__trans phrase="change"> ]</a>
+                    <mt:else>
+                    <strong><a href="javascript:void(0)" onclick="toggleFilter()"><__trans phrase="[_1] where [_2] is [_3]" params='<$mt:var name="object_label_plural"$>%%<span id="filter-text-col">&nbsp;</span>%%<span id="filter-text-val"></span>'></a></strong>
+                    <a href="<$mt:var name="script_url"$>?__mode=<$mt:var name="mode"$><mt:if name="blog_id">&amp;blog_id=<$mt:var name="blog_id"$></mt:if>" class="filter-link">[ <__trans phrase="Remove filter"> ]</a>
+                    </mt:unless>
+                </mt:if>
+                </div>
+                <div id="filter-select" class="page-title" style="display: none">
+                    <__trans phrase="Show only [_1] where" params="<$mt:var name="object_label_plural" lower_case="1"$>">
+                    <!-- start filter form -->
+                        <select id="filter-col" name="filter" onchange="setFilterCol(this.options[this.selectedIndex].value);enableFilterButton(this)">
+                            <option value="status"><__trans phrase="status"></option>
+                        </select>
+                        <__trans phrase="is">
+                        <span id="filter-status" style="display: none">
+                            <select id="status-val" name="filter_val" onchange="enableFilterButton()">
+                                <option value="active"><__trans phrase="active"></option>
+                                <option value="blocked"><__trans phrase="blocked"></option>
+                                <option value="pending"><__trans phrase="pending"></option>
+                            </select>
+                        </span>
+                    <!-- end of filter form -->
+                    <span class="buttons">
+                        <a href="javascript:void(0)"
+                            id="filter-button"
+                            onclick="return execFilter(getByID('filter-select-form'))"
+                            type="submit"
+                            ><__trans phrase="Filter"></a>
+                        <a href="javascript:void(0)"
+                            onclick="toggleFilter(); return false;"
+                            type="submit"
+                            ><__trans phrase="Cancel"></a>
+                    </span>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+</mt:setvarblock>
+<mt:setvarblock name="action_buttons">
+<a href="javascript:void(0)"
+    onclick="doRemoveItems(getByID('<$mt:var name="object_type"$>-listing-form'), '<__trans phrase="[_1]" params="<$mt:var name="object_label" lower_case="1"$>">', '<__trans phrase="[_1]" params="<$mt:var name="object_label_plural" lower_case="1"$>">'); return false;"
+    accesskey="x"
+    title="<__trans phrase="Delete selected [_1] (x)" params="<$mt:var name="object_label_plural" lower_case="1"$>">"
+    ><__trans phrase="Delete"></a>
+</mt:setvarblock>
+<mt:include name="include/header.tmpl">
+<$mt:var name="list_filter_form"$>
+
+<div class="create-inline" id="create-inline-notification">
+<form method="post" action="<$mt:var name="script_url"$>" id="create-inline-notification-form">
+<input type="hidden" name="blog_id" value="<$mt:var name="blog_id"$>" />
+<input type="hidden" name="__mode" value="create_subs" />
+<input type="hidden" name="record" value="1" />
+<input type="hidden" name="return_args" value="<$mt:var name="return_args" escape="html"$>" />
+<input type="hidden" name="magic_token" value="<$mt:var name="magic_token"$>" />
+<input type="hidden" name="id" value="" />
+<mtapp:setting
+    id="email"
+    label="<__trans phrase="Email">"
+    label_class="inline"
+    hint=""
+    show_hint="0">
+    <input name="email" id="email" value="<$mt:var name="email"$>" />
+</mtapp:setting>
+<mtapp:setting
+    id="actions"
+    label="<__trans phrase="Actions">"
+    label_class="inline field-no-header"
+    hint=""
+    show_hint="0">
+    <span class="buttons">
+        <a href="javascript:void(0)" mt:command="submit"
+            ><__trans phrase="Add [_1]" params="<$mt:var name="object_label"$>"></a>
+        <a href="javascript:void(0)"
+            onclick="cancelCreateMode(); return false"
+            ><__trans phrase="Cancel"></a>
+    </span>
+</mtapp:setting>
+</form>
+</div>
+<mtapp:listing>
+    <mt:if name="__first__">
+    <thead>
+        <tr>
+            <th class="cb"><input type="checkbox" name="id-head" value="all" class="select" /></th>
+            <th class="status si">
+                <img src="<$mt:var name="static_uri"$>images/status_icons/invert-flag.gif" alt="<__trans phrase="Status">" title="<__trans phrase="Status">" width="9" height="9" />
+            </th>
+            <th class="email"><__trans phrase="Email"></th>
+            <th class="modified"><__trans phrase="Modified"></th>
+            <th class="type"><__trans phrase="Type"></th>
+            <th class="view"><__trans phrase="View"></th>
+        </tr>
+    </thead>
+    <tbody>
+    </mt:if>
+        <tr class="<mt:if name="__odd__">odd<mt:else>even</mt:if>">
+            <td class="cb" id="delete-<$mt:var name="id"$>"><input type="checkbox" name="id" value="<$mt:var name="id"$>" class="select" /></td>
+            <td class="status si <mt:if name="url_block">status-block<mt:else><mt:if name="visible">status-publish<mt:else>status-pending</mt:if></mt:if>">
+                <mt:if name="visible">
+                    <mt:if name="url_block"><a href="<$mt:var name="script_url"$>?__mode=list_subs<mt:if name="blog_id">&amp;blog_id=<$mt:var name="blog_id"$></mt:if>&amp;filter=status&amp;filter_val=blocked" title="<__trans phrase="Click to show only blocked [_1]" params="<$mt:var name="object_label_plural" lower_case="1"$>">"><img src="<$mt:var name="static_uri"$>images/spacer.gif" alt="<__trans phrase="Blocked">" width="13" height="9" /></a>
+                    <mt:else><a href="<$mt:var name="script_url"$>?__mode=list_subs<mt:if name="blog_id">&amp;blog_id=<$mt:var name="blog_id"$></mt:if>&amp;filter=status&amp;filter_val=active" title="<__trans phrase="Click to show only active [_1]" params="<$mt:var name="object_label_plural" lower_case="1"$>">"><img src="<$mt:var name="static_uri"$>images/spacer.gif" alt="<__trans phrase="Active">" width="13" height="9" /></a>
+                    </mt:if>
+                <mt:else>
+                    <a href="<$mt:var name="script_url"$>?__mode=list_subs<mt:if name="blog_id">&amp;blog_id=<$mt:var name="blog_id"$></mt:if>&amp;filter=status&amp;filter_val=pending" title="<__trans phrase="Click to show only pending [_1]" params="<$mt:var name="object_label_plural" lower_case="1"$>">"><img src="<$mt:var name="static_uri"$>images/spacer.gif" alt="<__trans phrase="Pending">" width="13" height="9" /></a>
+                </mt:if>
+            </td>
+            <td><a href="javascript:void(0)" title="<__trans phrase="Click to edit [_1]" params="<$mt:var name="object_label" lower_case="1"$>">" class="edit-link" id="note-email-link-<$mt:var name="id"$>" onmouseover="highlight_note(<$mt:var name="id"$>)" onmouseout="unhighlight_note(<$mt:var name="id"$>)" onclick="edit_note(<$mt:var name="id"$>); return false;"><$mt:var name="email" escape="html"$></a>
+                <span id="note-email-field-<$mt:var name="id"$>" style="display: none">
+                    <input type="text" name="note-email-<$mt:var name="id"$>" id="note-email-<$mt:var name="id"$>" value="<$mt:var name="email" escape="html"$>" />
+                    <span class="buttons">
+                        <a href="javascript:void(0)"
+                            onclick="submit_edit(<$mt:var name="id"$>); return false;"
+                            title="<__trans phrase="Save changes">"
+                            ><__trans phrase="Save"></a>
+                        <a href="javascript:void(0)"
+                            onclick="cancel_edit(<$mt:var name="id"$>); return false;"
+                            ><__trans phrase="Cancel"></a>
+                    </span>
+                </span>
+            </td>
+            <td><span title="<$mt:var name="created_on_time_formatted"$>"><$mt:if name="created_on_relative"$><mt:if name="dates_relative"><$mt:var name="created_on_relative"$><mt:else><$mt:var name="created_on_formatted"$></mt:if><mt:else><$mt:var name="created_on_formatted"$></mt:if></span></td>
+            <td class="view si">
+                <img src="<$mt:var name="static_uri"$>images/nav_icons/color/<mt:if name="author_record">authors<mt:else><mt:if name="entry_record">comments<mt:else><mt:if name="category_record">assets<mt:else>entries</mt:if></mt:if></mt:if>.gif" alt="<mt:if name="author_record"><__trans phrase="Author"><mt:else><mt:if name="entry_record"><__trans phrase="Entry"><mt:else><mt:if name="category_record"><__trans phrase="Category"><mt:else><__trans phrase="Blog"></mt:if></mt:if></mt:if> <__trans phrase="[_1]" params="<$mt:var name="object_label"$>">"  title="<mt:if name="author_record"><__trans phrase="Author"><mt:else><mt:if name="entry_record"><__trans phrase="Entry"><mt:else><mt:if name="category_record"><__trans phrase="Category"><mt:else><__trans phrase="Blog"></mt:if></mt:if></mt:if> <__trans phrase="[_1]" params="<$mt:var name="object_label"$>">"width="17" height="15" />
+            </td>
+            <td class="view si status-view">
+                <mt:if name="url_target"><a href="<$mt:var name="url_target"$>" target="_blank" title="<__trans phrase="View"> <mt:if name="author_record"><__trans phrase="Author" lower_case="1"><mt:else><mt:if name="entry_record"><__trans phrase="Entry" lower_case="1"><mt:else><mt:if name="category_record"><__trans phrase="Category" lower_case="1"><mt:else><__trans phrase="Blog" lower_case="1"></mt:if></mt:if></mt:if>"><img src="<$mt:var name="static_uri"$>images/spacer.gif" height="9" width="13" /></a></mt:if>
+            </td>
+        </tr>
+    <mt:if name="__last__">
+    </tbody>
+    </mt:if>
+</mtapp:listing>
+<mt:include name="include/footer.tmpl">

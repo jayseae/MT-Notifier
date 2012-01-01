@@ -1,0 +1,13 @@
+<__trans_section component="notifier"><$mt:CommentBody$>
+
+<mt:If tag="CommentAuthor"><__trans phrase="Author: "><$mt:CommentAuthor$></mt:If>
+<mt:If tag="CommentURL"><__trans phrase="Website: "><$mt:CommentURL$></mt:If>
+
+<__trans phrase="View the entire entry:">
+<$mt:EntryPermalink$>
+
+<__trans phrase="Cancel this subscription:">
+<$mt:Var name="notifier_script"$>?__mode=verify_subs&c=<$mt:Var name="notifier_record_cipher"$>&u=1
+
+<__trans phrase="Block all notifications from this site:">
+<$mt:Var name="notifier_script"$>?__mode=verify_subs&c=<$mt:Var name="notifier_record_cipher"$>&o=1</__trans_section>

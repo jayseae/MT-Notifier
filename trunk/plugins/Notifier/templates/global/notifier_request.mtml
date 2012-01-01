@@ -1,10 +1,11 @@
+<__trans_section component="notifier">
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" id="sixapart-standard">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=<$mt:PublishCharset$>" />
     <meta name="generator" content="<$mt:ProductName version="1"$>" />
     <link rel="stylesheet" type="text/css" href="<$mt:Link template="Stylesheet"$>" />
-    <title><$mt:BlogName encode_html="1"$>: <$mt:Var name="page_title" default="Request Processing"$></title>
+    <title><__trans phrase="[_1]: [_2]" params="<$mt:BlogName encode_html="1"$>%%<$mt:Var name="page_title" default="Request Processing"$>"></title>
 </head>
 <body class="layout-one-column">
     <div id="container">
@@ -33,7 +34,7 @@
 
                                 <div class="asset-content">
                                     <mt:If name="notifier_confirm">
-                                        <p>You will receive an email to confirm your request momentarily.  If you do not, you may submit your request again.</p>
+                                        <p><__trans phrase="You will receive an email to confirm your request momentarily.  If you do not, you may submit your request again."></p>
                                     </mt:If>
                                 </div>
                             </div><!-- /asset -->
@@ -44,13 +45,14 @@
             </div><!-- /content -->
             <div id="footer"><div id="footer-inner"><div id="footer-content"><div class="widget-powered-widget"><div class="widget-content">
                 <div id="version">
-                    Powered by <a href="<$mt:Var name="notifier_plugin_link"$>"><$mt:Var name="notifier_plugin_name"$></a> version <$mt:Var name="notifier_version"$>.
+                    <__trans phrase="Powered by"> <a href="<$mt:Var name="notifier_plugin_link"$>"><$mt:Var name="notifier_plugin_name"$></a> <__trans phrase="version"> <$mt:Var name="notifier_version"$>.
                 </div>
                 <div id="copyright">
-                    Copyright &copy; 2003-<$mt:Date format="%Y"$> <a href="<$mt:Var name="notifier_author_link"$>"><$mt:Var name="notifier_author_name"$></a>.  All Rights Reserved.
+                    <__trans phrase="Copyright"> &copy; 2003-<$mt:Date format="%Y"$> <a href="<$mt:Var name="notifier_author_link"$>"><$mt:Var name="notifier_author_name"$></a>.  <__trans phrase="All Rights Reserved">.
                 </div>
             </div></div></div></div></div>
         </div><!-- /container-inner -->
     </div><!-- /container -->
 </body>
 </html>
+</__trans_section>

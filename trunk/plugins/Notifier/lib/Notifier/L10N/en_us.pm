@@ -1,6 +1,6 @@
 # ===========================================================================
 # A Movable Type plugin with subscription options for your installation
-# Copyright 2003-2010 Everitz Consulting <everitz.com>.
+# Copyright 2003-2012 Everitz Consulting <www.everitz.com>.
 #
 # This program is free software:  You may redistribute it and/or modify it
 # it under the terms of the Artistic License version 2 as published by the
@@ -13,6 +13,7 @@
 # You should have received a copy of the Artistic License with this program.
 # If not, see <http://www.opensource.org/licenses/artistic-license-2.0.php>.
 # ===========================================================================
+
 package Notifier::L10N::en_us;
 
 use strict;
@@ -85,6 +86,7 @@ use vars qw( %Lexicon );
       ## modules
 
       ## lib/Notifier.pm
+      'Author' => 'Author',
       'Entry' => 'Entry',
       'Category' => 'Category',
       'Blog' => 'Blog',
@@ -100,6 +102,7 @@ use vars qw( %Lexicon );
       'Entry Notification Body' => 'Entry Notification Body',
 
       ## lib/Notifier/Plugin.pm
+      'No author was found to match that subscription record!' => 'No author was found to match that subscription record!',
       'No entry was found to match that subscription record!' => 'No entry was found to match that subscription record!',
       'No category was found to match that subscription record!' => 'No category was found to match that subscription record!',
       'No blog was found to match that subscription record!' => 'No blog was found to match that subscription record!',
@@ -130,6 +133,7 @@ use vars qw( %Lexicon );
       'Subscribe to Blog' => 'Subscribe to Blog',
       'Subscribe to Category' => 'Subscribe to Category',
       'Subscribe to Entry' => 'Subscribe to Entry',
+      'Subscribe to Author' => 'Subscribe to Author',
       'Powered by [_1]' => 'Powered by [_1]',
       'Go' => 'Go',
       ## already defined
@@ -141,6 +145,207 @@ use vars qw( %Lexicon );
       'Invalid sender address - please reconfigure it!' => 'Invalid sender address - please reconfigure it!',
       'No sender address - please configure one!' => 'No sender address - please configure one!',
       'Invalid URL base value - please check your data ([_1])!' => 'Invalid URL base value - please check your data ([_1])!',
+
+      ## templates: global templates are available in mt and are only translated on initial load - after that, you have to do them yourself!
+
+      ## templates/global/notifier_comment_notification_body.mtml
+      'Author: ' => 'Author: ',
+      'Website: ' => 'Website: ',
+      'View the entire entry:' => 'View the entire entry:',
+      'Cancel this subscription:' => 'Cancel this subscription:',
+      'Block all notifications from this site:' => 'Block all notifications from this site:',
+
+      ## templates/global/notifier_comment_notification_subject.mtml
+      'New Comment on' => 'New Comment on',
+
+      ## templates/global/notifier_confirmation_body.mtml
+      'requires you to use a double-opt system for making any changes to your subscription information.' => 'requires you to use a double-opt system for making any changes to your subscription information.',
+      'Because you, or someone using your email address, recently submitted a request at' => 'Because you, or someone using your email address, recently submitted a request at',
+      ', you are being sent this confirmation to verify that the request is genuine.' => ', you are being sent this confirmation to verify that the request is genuine.',
+      'The request is to' => 'The request is to',
+      'Please confirm your request by clicking this link' => 'Please confirm your request by clicking this link',
+      'Use this link if you would like to visit before confirming this request' => 'Use this link if you would like to visit before confirming this request',
+      'If you did not make this request, do nothing.  You will receive no further reminders of this request.  If you did make this request, but there are errors in the request, you can simply submit a new one to correct any problems.  Confirmation of that request will follow your re-submission.' => 'If you did not make this request, do nothing.  You will receive no further reminders of this request.  If you did make this request, but there are errors in the request, you can simply submit a new one to correct any problems.  Confirmation of that request will follow your re-submission.',
+      ## already defined
+      ## 'subscribe to' => 'subscribe to',
+      ## 'opt-out of' => 'opt-out of',
+
+      ## templates/global/notifier_confirmation_subject.mtml
+      'Please confirm your request to' => 'Please confirm your request to',
+      ## already defined
+      ## 'subscribe to' => 'subscribe to',
+      ## 'opt-out of' => 'opt-out of',
+
+      ## templates/global/notifier_entry_notification_body.mtml
+      ## already defined
+      ## 'View the entire entry:' => 'View the entire entry:',
+      ## 'Cancel this subscription:' => 'Cancel this subscription:',
+      ## 'Block all notifications from this site:' => 'Block all notifications from this site:',
+
+      ## templates/global/notifier_entry_notification_subject.mtml
+      'New Entry from' => 'New Entry from',
+
+      ## global/templates/notifier_request.mtml
+      'Return to' => 'Return to',
+      'You will receive an email to confirm your request momentarily.  If you do not, you may submit your request again.' => 'You will receive an email to confirm your request momentarily.  If you do not, you may submit your request again.',
+      'Powered by' => 'Powered by',
+      'version' => 'version',
+      'Copyright' => 'Copyright',
+      'All Rights Reserved' => 'All Rights Reserved',
+      'Powered by' => 'Powered by',
+      ## already defined
+      ## 'Request Processing' => Request Processing',
+
+      ## templates: these templates are loaded by the app, and as such are translated with each load
+
+      ## tmpl/list_subscription.tmpl
+      'Manage [_1]' => 'Manage [_1]',
+      'You have added a [_1] for [_2].' => 'You have added a [_1] for [_2].',
+      'You have successfully deleted the selected [_1].' => 'You have successfully deleted the selected [_1].',
+      'Quickfilters' => 'Quickfilters',
+      'Useful links' => 'Useful links',
+      'Download [_1] (CSV)' => 'Download [_1] (CSV)',
+      'Showing only: [_1]' => 'Showing only: [_1]',
+      'Remove filter' => 'Remove filter',
+      'All [_1]' => 'All [_1]',
+      'change' => 'change',
+      '[_1] where [_2] is [_3]' => '[_1] where [_2] is [_3]',
+      'Show only [_1] where' => 'Show only [_1] where',
+      'status' => 'status',
+      'is' => 'is',
+      'active' => 'active',
+      'blocked' => 'blocked',
+      'pending' => 'pending',
+      'Filter' => 'Filter',
+      'Cancel' => 'Cancel',
+      'Delete selected [_1] (x)' => 'Delete selected [_1] (x)',
+      'Delete' => 'Delete',
+      'Actions' => 'Actions',
+      'Add [_1]' => 'Add [_1]',
+      'Status' => 'Status',
+      'Modified' => 'Modified',
+      'Type' => 'Type',
+      'View' => 'View',
+      'Click to show only blocked [_1]' => 'Click to show only blocked [_1]',
+      'Click to show only active [_1]' => 'Click to show only active [_1]',
+      'Click to show only pending [_1]' => 'Click to show only pending [_1]',
+      'Click to edit [_1]' => 'Click to edit [_1]',
+      'Save changes' => 'Save changes',
+      'Save' => 'Save',
+      ## already defined
+      ## 'Subscription' => 'Subscription',
+      ## 'Subscriptions' => 'Subscriptions',
+      ## 'subscription' => 'subscription',
+      ## 'subscriptions' => 'subscriptions',
+      ## 'Email' => 'Email',
+      ## 'Blocked' => 'Blocked',
+      ## 'Active' => 'Active',
+      ## 'Pending' => 'Pending',
+      ## 'Author' => 'Author',
+      ## 'Entry' => 'Entry',
+      ## 'Category' => 'Category',
+      ## 'Blog' => 'Blog',
+
+      ## tmpl/dialog/close.tmpl
+      'Subscription Status' => 'Subscription Status',
+      '[_1] email address(es) added to [_2] selection(s).' => '[_1] email address(es) added to [_2] selection(s).',
+      'If the numbers don\'t match, you should check your data, wait a moment and try adding them again.' => 'If the numbers don\'t match, you should check your data, wait a moment and try adding them again.',
+      'Close' => 'Close',
+
+      ## tmpl/dialog/count.tmpl
+      'Subscription Count' => 'Subscription Count',
+      '[_1] has [_2] subscriptions and [_3] subscription blocks.' => '[_1] has [_2] subscriptions and [_3] subscription blocks.',
+      'There are [_1] subscriptions and [_2] subscription blocks in this list.' => 'There are [_1] subscriptions and [_2] subscription blocks in this list.',
+      ## already defined
+      ## 'Close' => 'Close',
+
+      ## tmpl/dialog/start.tmpl
+      'Enter the email addresses, one per line, that you would like to subscribe to the current selection.  Click the Create Subscription(s) button to process the addresses when your list is complete.' => 'Enter the email addresses, one per line, that you would like to subscribe to the current selection.  Click the Create Subscription(s) button to process the addresses when your list is complete.',
+      'Enter the email addresses, one per line, that you would like to enter into the system in order to block subscriptions.  These records are used to prevent subscriptions from being sent to a specific address, and are used in the event that a particular user no longer wants to receive anything from your site.  Click the Block Subscription(s) button to process the addresses when your list is complete.' => 'Enter the email addresses, one per line, that you would like to enter into the system in order to block subscriptions.  These records are used to prevent subscriptions from being sent to a specific address, and are used in the event that a particular user no longer wants to receive anything from your site.  Click the Block Subscription(s) button to process the addresses when your list is complete.',
+      'Create Subscription(s)' => 'Create Subscription(s)',
+      ## already defined
+      ## 'Add Subscription(s)' => 'Add Subscription(s)',
+      ## 'Block Subscription(s)' => 'Block Subscription(s)',
+      ## 'Create Subscription(s)' => 'Create Subscription(s)',
+
+      ## tmpl/include/subscription_table.tmpl
+      'Click to email [_1]' => 'Click to email [_1]',
+      ## already defined
+      ## 'Delete selected [_1] (x)' => 'Delete selected [_1] (x)',
+      ## 'Delete' => 'Delete',
+      ## 'Status' => 'Status',
+      ## 'Email' => 'Email',
+      ## 'IP Address' => 'IP Address',
+      ## 'Modified' => 'Modified',
+      ## 'Type' => 'Type',
+      ## 'View' => 'View',
+      ## 'Click to show only blocked [_1]' => 'Click to view only blocked [_1]',
+      ## 'Blocked' => 'Blocked',
+      ## 'Click to show only active [_1]' => 'Click to view only active [_1]',
+      ## 'Active' => 'Active',
+      ## 'Click to show only pending [_1]' => 'Click to view only pending [_1]',
+      ## 'Pending' => 'Pending',
+      ## 'Entry' => 'Entry',
+      ## 'Category' => 'Category',
+      ## 'Blog' => 'Blog',
+      ## 'Subscription' => 'Subscription',
+      ## 'Subscriptions' => 'Subscriptions',
+      ## 'subscription' => 'subscription',
+      ## 'subscriptions' => 'subscriptions',
+      ## 'View' => 'View',
+
+      ## tmpl/settings/blog.tmpl
+      'Enable MT-Notifier for This Blog (Default)' => 'Enable MT-Notifier for This Blog (Default)',
+      'Disable MT-Notifier for This Blog' => 'Disable MT-Notifier for This Blog',
+      'Base URL' => 'Base URL',
+      'Use System Setting for Base URL (Default)' => 'Use System Setting for Base URL (Default)',
+      'Use Config File for Base URL' => 'Use Config File for Base URL',
+      'Use This Blog Site URL for Base URL' => 'Use This Blog Site URL for Base URL',
+      'Specify Another Address for Base URL' => 'Specify Another Address for Base URL',
+      'Set Base URL' => 'Set Base URL',
+      'Bypass' => 'Bypass',
+      'Send Entry Notifications Prior to Subscription Date' => 'Send Entry Notifications Prior to Subscription Date',
+      'Skip Entry Notifications Prior to Subscription Date (Default)' => 'Skip Entry Notifications Prior to Subscription Date (Default)',
+      'Confirmation' => 'Confirmation',
+      'Do not Send Any Confirmation Messages' => 'Do not Send Any Confirmation Messages',
+      'Send Confirmation for New Subscriptions (Default)' => 'Send Confirmation for New Subscriptions (Default)',
+      'Override' => 'Override',
+      'Only Send Comments for Entry Subscriptions (Default)' => 'Only Send Comments for Entry Subscriptions (Default)',
+      'Allow Blog and Category Subscription Comment Override' => 'Allow Blog and Category Subscription Comment Override',
+      'Queue' => 'Queue',
+      'Do not Submit any Notifications to Delivery Queue (Default)' => 'Do not Submit any Notifications to Delivery Queue (Default)',
+      'Submit Notifications to Queue for Later Delivery' => 'Submit Notifications to Queue for Later Delivery',
+      'Sender' => 'Sender',
+      'Use System Address for Sender Address (Default)' => 'Use System Address for Sender Address (Default)',
+      'Use Author Address for Sending Notifications' => 'Use Author Address for Sending Notifications',
+      'Specify Another Address for Sending Notifications' => 'Specify Another Address for Sending Notifications',
+      'Set Address' => 'Set Address',
+      'Widgets' => 'Widgets',
+      'Click here to install the [_1] Blog Subscription Widget' => 'Click here to install the [_1] Blog Subscription Widget',
+      'Click here to install the [_1] Category Subscription Widget' => 'Click here to install the [_1] Category Subscription Widget',
+      'Click here to install the [_1] Entry Subscription Widget' => 'Click here to install the [_1] Entry Subscription Widget',
+      'Click here to install the [_1] Author Subscription Widget' => 'Click here to install the [_1] Author Subscription Widget',
+      ## already defined
+      ## 'Status' => 'Status',
+
+      ## tmpl/settings/system.tmpl
+      'Use Each Blog Site URL for Base URL' => 'Use Each Blog Site URL for Base URL',
+      'Address to use when sending notifications and no other addresses are available:' => 'Address to use when sending notifications and no other addresses are available:',
+      ## already defined
+      ## 'Base URL' => 'Base URL',
+      ## 'Use Config File for Base URL' => 'Use Config File for Base URL',
+      ## 'Specify Another Address for Base URL' => 'Specify Another Address for Base URL',
+      ## 'Set Base URL' => 'Set Base URL',
+      ## 'Bypass' => 'Bypass',
+      ## 'Send Entry Notifications Prior to Subscription Date' => 'Send Entry Notifications Prior to Subscription Date',
+      ## 'Skip Entry Notifications Prior to Subscription Date (Default)' => 'Skip Entry Notifications Prior to Subscription Date (Default)',
+      ## 'Confirmation' => 'Confirmation',
+      ## 'Do not Send Any Confirmation Messages' => 'Do not Send Any Confirmation Messages',
+      ## 'Send Confirmation for New Subscriptions (Default)' => 'Send Confirmation for New Subscriptions (Default)',
+      ## 'Queue' => 'Queue',
+      ## 'Do not Submit any Notifications to Delivery Queue (Default)' => 'Do not Submit any Notifications to Delivery Queue (Default)',
+      ## 'Submit Notifications to Queue for Later Delivery' => 'Submit Notifications to Queue for Later Delivery',
+      ## 'Sender' => 'Sender',
 
 );
 

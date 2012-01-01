@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
-<plugin version="5.0.0">
+<plugin version="6.0.0">
   <name>MT-Notifier</name>
-  <version_url>http://everitz.com/mt/notifier/version.xml</version_url>
+  <version_url>http://www.everitz.com/mt/notifier/version.xml</version_url>
   <sig>Notifier</sig>
   <icon>mt-static/plugins/Notifier/images/Notifier.png</icon>
   <files>
@@ -99,40 +99,48 @@
       <destination>plugins/Notifier/php/function.mtnotifiercatid.php</destination>
     </file>
     <file>
+      <src>plugins/Notifier/templates</src>
+      <destination>plugins/Notifier/templates</destination>
+    </file>
+    <file>
+      <src>plugins/Notifier/templates/global</src>
+      <destination>plugins/Notifier/templates/global</destination>
+    </file>
+    <file>
+      <src>plugins/Notifier/templates/global/notifier_comment_notification_body.tmpl</src>
+      <destination>plugins/Notifier/templates/global/notifier_comment_notification_body.tmpl</destination>
+    </file>
+    <file>
+      <src>plugins/Notifier/templates/global/notifier_comment_notification_subject.tmpl</src>
+      <destination>plugins/Notifier/templates/global/notifier_comment_notification_subject.tmpl</destination>
+    </file>
+    <file>
+      <src>plugins/Notifier/templates/global/notifier_confirmation_body.tmpl</src>
+      <destination>plugins/Notifier/templates/global/notifier_confirmation_body.tmpl</destination>
+    </file>
+    <file>
+      <src>plugins/Notifier/templates/global/notifier_confirmation_subject.tmpl</src>
+      <destination>plugins/Notifier/templates/global/notifier_confirmation_subject.tmpl</destination>
+    </file>
+    <file>
+      <src>plugins/Notifier/templates/global/notifier_entry_notification_body.tmpl</src>
+      <destination>plugins/Notifier/templates/global/notifier_entry_notification_body.tmpl</destination>
+    </file>
+    <file>
+      <src>plugins/Notifier/templates/global/notifier_entry_notification_subject.tmpl</src>
+      <destination>plugins/Notifier/templates/global/notifier_entry_notification_subject.tmpl</destination>
+    </file>
+    <file>
+      <src>plugins/Notifier/templates/global/notifier_request.tmpl</src>
+      <destination>plugins/Notifier/templates/global/notifier_request.tmpl</destination>
+    </file>
+    <file>
       <src>plugins/Notifier/tmpl</src>
       <destination>plugins/Notifier/tmpl</destination>
     </file>
     <file>
-      <src>plugins/Notifier/tmpl/notifier_comment_notification_body.tmpl</src>
-      <destination>plugins/Notifier/tmpl/notifier_comment_notification_body.tmpl</destination>
-    </file>
-    <file>
-      <src>plugins/Notifier/tmpl/notifier_comment_notification_subject.tmpl</src>
-      <destination>plugins/Notifier/tmpl/notifier_comment_notification_subject.tmpl</destination>
-    </file>
-    <file>
-      <src>plugins/Notifier/tmpl/notifier_confirmation_body.tmpl</src>
-      <destination>plugins/Notifier/tmpl/notifier_confirmation_body.tmpl</destination>
-    </file>
-    <file>
-      <src>plugins/Notifier/tmpl/notifier_confirmation_subject.tmpl</src>
-      <destination>plugins/Notifier/tmpl/notifier_confirmation_subject.tmpl</destination>
-    </file>
-    <file>
-      <src>plugins/Notifier/tmpl/notifier_entry_notification_body.tmpl</src>
-      <destination>plugins/Notifier/tmpl/notifier_entry_notification_body.tmpl</destination>
-    </file>
-    <file>
-      <src>plugins/Notifier/tmpl/notifier_entry_notification_subject.tmpl</src>
-      <destination>plugins/Notifier/tmpl/notifier_entry_notification_subject.tmpl</destination>
-    </file>
-    <file>
-      <src>plugins/Notifier/tmpl/notifier_request.tmpl</src>
-      <destination>plugins/Notifier/tmpl/notifier_request.tmpl</destination>
-    </file>
-    <file>
-      <src>plugins/Notifier/tmpl/notifier_request.tmpl</src>
-      <destination>plugins/Notifier/tmpl/notifier_request.tmpl</destination>
+      <src>plugins/Notifier/tmpl/list_subscription.tmpl</src>
+      <destination>plugins/Notifier/tmpl/list_subscription.tmpl</destination>
     </file>
     <file>
       <src>plugins/Notifier/tmpl/dialog</src>
@@ -149,6 +157,14 @@
     <file>
       <src>plugins/Notifier/tmpl/dialog/start.tmpl</src>
       <destination>plugins/Notifier/tmpl/dialog/start.tmpl</destination>
+    </file>
+    <file>
+      <src>plugins/Notifier/tmpl/include</src>
+      <destination>plugins/Notifier/tmpl/include</destination>
+    </file>
+    <file>
+      <src>plugins/Notifier/tmpl/include/subscription_table.tmpl</src>
+      <destination>plugins/Notifier/tmpl/include/subscription_table.tmpl</destination>
     </file>
     <file>
       <src>plugins/Notifier/tmpl/settings</src>

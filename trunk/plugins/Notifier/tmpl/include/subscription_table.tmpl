@@ -1,0 +1,63 @@
+<mt:setvarblock name="action_buttons">
+    <a href="javascript:void(0)"
+        onclick="doRemoveItems(getByID('<$mt:var name="object_type"$>-listing-form'), '<$mt:var name="object_label" lower_case="1" escape="js"$>', '<$mt:var name="object_label_plural" lower_case="1" escape="js"$>'); return false;"
+        accesskey="x"
+        title="<__trans phrase="Delete selected [_1] (x)" params="<$mt:var name="object_label_plural" lower_case="1"$>">"
+        ><__trans phrase="Delete"></a>
+
+    <style type="text/css">
+    .listing .status-block img { background-image: url(<$mt:var name="static_uri"$>images/status_icons/user-disabled.gif); background-repeat:no-repeat; }
+    .listing tr.selected .status-block img { background-image: url(<$mt:var name="static_uri"$>images/status_icons/invert-user-disabled.gif); }
+    .listing .status-pending img { background-image: url(<$mt:var name="static_uri"$>images/status_icons/user-pending.gif); background-repeat:no-repeat; }
+    .listing tr.selected .status-pending img { background-image: url(<$mt:var name="static_uri"$>images/status_icons/invert-user-pending.gif); }
+    .listing .status-publish img { background-image: url(<$mt:var name="static_uri"$>images/status_icons/trusted.gif); background-repeat:no-repeat; }
+    .listing tr.selected .status-publish img { background-image: url(<$mt:var name="static_uri"$>images/status_icons/invert-trusted.gif); }
+    </style>
+</mt:setvarblock>
+
+<mtapp:listing>
+    <mt:if name="__first__">
+    <thead>
+        <tr>
+            <th class="cb"><input type="checkbox" name="id-head" value="all" class="select" /></th>
+            <th class="status si">
+                <img src="<$mt:var name="static_uri"$>images/status_icons/invert-flag.gif" alt="<__trans phrase="Status">" title="<__trans phrase="Status">" width="9" height="9" />
+            </th>
+            <th class="email"><__trans phrase="Email"></th>
+            <th class="email"><__trans phrase="IP Address"></th>
+            <th class="modified"><__trans phrase="Modified"></th>
+            <th class="type"><__trans phrase="Type"></th>
+            <th class="view"><__trans phrase="View"></th>
+        </tr>
+    </thead>
+    <tbody>
+    </mt:if>
+        <tr class="<mt:if name="__odd__">odd<mt:else>even</mt:if>">
+            <td class="cb" id="delete-<$mt:var name="id"$>"><input type="checkbox" name="id" value="<$mt:var name="id"$>" class="select" /></td>
+            <td class="status si <mt:if name="url_block">status-block<mt:else><mt:if name="visible">status-publish<mt:else>status-pending</mt:if></mt:if>">
+                <mt:if name="visible">
+                    <mt:if name="url_block"><a href="<$mt:var name="script_url"$>?__mode=list_subs<mt:if name="blog_id">&amp;blog_id=<$mt:var name="blog_id"$></mt:if>&amp;filter=status&amp;filter_val=blocked" title="<__trans phrase="Click to show only blocked [_1]" params="<$mt:var name="object_label_plural" lower_case="1"$>">"><img src="<$mt:var name="static_uri"$>images/spacer.gif" alt="<__trans phrase="Blocked">" width="13" height="9" /></a>
+                    <mt:else><a href="<$mt:var name="script_url"$>?__mode=list_subs<mt:if name="blog_id">&amp;blog_id=<$mt:var name="blog_id"$></mt:if>&amp;filter=status&amp;filter_val=active" title="<__trans phrase="Click to show only active [_1]" params="<$mt:var name="object_label_plural" lower_case="1"$>">"><img src="<$mt:var name="static_uri"$>images/spacer.gif" alt="<__trans phrase="Active">" width="13" height="9" /></a>
+                    </mt:if>
+                <mt:else>
+                    <a href="<$mt:var name="script_url"$>?__mode=list_subs<mt:if name="blog_id">&amp;blog_id=<$mt:var name="blog_id"$></mt:if>&amp;filter=status&amp;filter_val=pending" title="<__trans phrase="Click to show only pending [_1]" params="<$mt:var name="object_label_plural" lower_case="1"$>">"><img src="<$mt:var name="static_uri"$>images/spacer.gif" alt="<__trans phrase="Pending">" width="13" height="9" /></a>
+                </mt:if>
+            </td>
+            <td>
+                <a href="mailto:<$mt:var name="email" lower_case="1"$>" title="<__trans phrase="Click to email [_1]" params="<$mt:var name="email" lower_case="1"$>">"><$mt:var name="email" escape="html"$></a>
+            </td>
+            <td>
+                <$mt:var name="ip"$>
+            </td>
+            <td><span title="<$mt:var name="created_on_time_formatted"$>"><$mt:if name="created_on_relative"$><mt:if name="dates_relative"><$mt:var name="created_on_relative"$><mt:else><$mt:var name="created_on_formatted"$></mt:if><mt:else><$mt:var name="created_on_formatted"$></mt:if></span></td>
+            <td class="view si">
+                <img src="<$mt:var name="static_uri"$>images/nav_icons/mini/<mt:if name="entry_record">comments<mt:else><mt:if name="category_record">entries<mt:else>docs</mt:if></mt:if>.gif" alt="<mt:if name="entry_record"><__trans phrase="Entry"><mt:else><mt:if name="category_record"><__trans phrase="Category"><mt:else><__trans phrase="Blog"></mt:if></mt:if> <__trans phrase="[_1]" params="<$mt:var name="object_label"$>">"  title="<mt:if name="entry_record"><__trans phrase="Entry"><mt:else><mt:if name="category_record"><__trans phrase="Category"><mt:else><__trans phrase="Blog"></mt:if></mt:if> <__trans phrase="[_1]" params="<$mt:var name="object_label"$>">"width="9" height="11" />
+            </td>
+            <td class="view si status-view">
+                <mt:if name="url_target"><a href="<$mt:var name="url_target"$>" target="_blank" title="<__trans phrase="View"> <mt:if name="entry_record"><__trans phrase="Entry" lower_case="1"><mt:else><mt:if name="category_record"><__trans phrase="Category" lower_case="1"><mt:else><__trans phrase="Blog" lower_case="1"></mt:if></mt:if>"><img src="<$mt:var name="static_uri"$>images/spacer.gif" height="9" width="13" /></a></mt:if>
+            </td>
+        </tr>
+    <mt:if name="__last__">
+    </tbody>
+    </mt:if>
+</mtapp:listing>
